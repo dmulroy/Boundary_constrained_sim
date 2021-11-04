@@ -1,0 +1,3736 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.7.2" />
+<title>Jameoba.Spheros API documentation</title>
+<meta name="description" content="This module contains classes for single and multiple Sphero Mini/Bolt to
+be used with ROS." />
+<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
+<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>Jameoba.Spheros</code></h1>
+</header>
+<section id="section-intro">
+<p>This module contains classes for single and multiple Sphero Mini/Bolt to
+be used with ROS.</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;
+This module contains classes for single and multiple Sphero Mini/Bolt to
+be used with ROS.
+&#34;&#34;&#34;
+
+###################################################
+from Sphero_mini.sphero_mini import sphero_mini
+from bluepy.btle import BTLEInternalError, BTLEDisconnectError
+from pysphero.core import Sphero as PySphero
+from pysphero.driving import StabilizationIndex
+from pysphero.device_api import Quaternion, Attitude, \
+        Accelerometer, AccelOne,  Locator, Velocity, Speed, CoreTime, \
+        Gyroscope, AmbientLight
+from pysphero.device_api import Color
+from pysphero.device_api.sensor import SensorCommand
+from pysphero.packet import Packet
+from pysphero.exceptions import PySpheroTimeoutError
+from numpy import ndarray, zeros, ones
+from enum import Enum
+from time import time
+###################################################
+
+
+###################################################
+# ------------------ Constants ------------------ #
+###################################################
+
+
+###################################################
+MINI = 0
+BOLT = 1
+MAC_ADDRESS = {MINI: [&#34;F1:F3:18:C4:B0:C7&#34;,
+                                          &#34;F8:DE:83:C4:BC:40&#34;,
+                                          &#34;D3:FC:0F:51:23:A6&#34;,
+                                          &#34;E6:41:28:6D:4A:85&#34;,
+                                          &#34;F4:69:1E:5A:40:53&#34;,
+                                          &#34;CA:FC:91:5F:EF:C8&#34;,
+                                          &#34;D9:60:B1:CD:98:CA&#34;],
+                           BOLT: [&#34;D7:76:84:A6:AA:12&#34;,
+                                          &#34;EB:CD:F0:3B:51:CD&#34;,
+                                          &#34;F8:AD:2E:C4:76:1F&#34;,
+                                          &#34;F9:15:B8:0C:F3:C4&#34;,
+                                          &#34;FC:B6:17:AD:5E:D4&#34;,
+                                          &#34;EF:AA:45:E4:D3:D9&#34;,
+                                          &#34;C8:F4:16:90:92:6C&#34;,
+                                          &#34;FC:AA:EA:88:C2:8A&#34;,
+                                          &#34;F6:EA:ED:72:50:70&#34;,
+                                          &#34;E6:0F:87:57:6D:EB&#34;,
+                                          &#34;D7:A4:A0:08:C0:E3&#34;,
+                                          &#34;CE:85:C6:6F:AB:4F&#34;,
+                                          &#34;DC:E8:A6:EC:DA:75&#34;,
+                                          &#34;E8:82:68:53:B2:74&#34;,
+                                          &#34;E9:78:63:9F:0A:67&#34;,
+                                          &#34;C7:61:70:28:38:F6&#34;]}
+
+
+class CustomPySpheroCommand(Enum):
+        start_IR_broadcast = 0x27
+        start_evading = 0x33
+        start_following = 0x28
+        stop_IR_broadcast = 0x29
+        stop_evading = 0x34
+        stop_following = 0x32
+###################################################
+
+
+###################################################
+# ----------------- Exceptions ------------------ #
+###################################################
+
+
+###################################################
+class JAMEOBAException(Exception):
+        &#34;&#34;&#34;Base class for all Jameoba exceptions.
+
+        Parameters
+        ----------
+        message : str
+                Message to be displayed in the error.
+
+        Attributes
+        ----------
+        message : str
+                Message to be displayed in the error.
+        &#34;&#34;&#34;
+
+        def __init__(self, message):
+                &#34;&#34;&#34;Constructor for Jameoba exceptions.
+
+                Parameters
+                ----------
+                message : str
+                        Message to be displayed in the error.
+                &#34;&#34;&#34;
+
+                self.message = message
+
+        def __str__(self):
+                &#34;&#34;&#34;Method to transform the class into a str.
+
+                Returns
+                -------
+                str
+                        The message that is being displayed.
+                &#34;&#34;&#34;
+
+                return self.message
+###################################################
+
+
+###################################################
+class CantConnectError(JAMEOBAException):
+        def __init__(self, message):
+                &#34;&#34;&#34;Constructor for CantConnectError exceptions.
+
+                Parameters
+                ----------
+                message : str
+                        Message to be displayed in the error.
+                &#34;&#34;&#34;
+
+                super().__init__(message)
+###################################################
+
+
+###################################################
+# --------------- Sphero classes ---------------- #
+###################################################
+
+
+###################################################
+class Sphero:
+        &#34;&#34;&#34;The super class of a single Sphero.
+
+        Parameters
+        ----------
+        tag_id : int
+                The Apriltag ID of the Sphero.
+        verbosity : int
+                The verbosity level of the instance.
+
+        Attributes
+        ----------
+        id : int
+                The Apriltag ID of the Sphero.
+        verb : int
+                The verbosity level of this class instance.
+        connected : bool
+                True if the Sphero is connected.
+        is_follower : bool
+                True if the Sphero is following.
+        is_leader : bool
+                True if the Sphero is leading.
+        _heading : int
+                The desired heading angle for the Sphero.
+        _speed : int
+                The desired speed for the Sphero.
+        &#34;&#34;&#34;
+
+        def __init__(self, tag_id=0, verbosity=1):
+                &#34;&#34;&#34;Constructor for Sphero class.
+
+                Parameters
+                ----------
+                tag_id : int
+                        The Apriltag ID of the Sphero.
+                verbosity : int
+                        The verbosity level of the instance.
+
+                Yields
+                ------
+                Sphero
+                        A Sphero instance.
+                &#34;&#34;&#34;
+
+                self.id = tag_id
+                self.verb = verbosity
+                self.connected = False
+                self.is_follower = False
+                self.is_leader = False
+                self._heading = 0
+                self._speed = 0
+
+        def __del__(self):
+                &#34;&#34;&#34; Destructor of the Sphero class. &#34;&#34;&#34;
+
+                print(&#34;\r  \r&#34;, end=&#39;&#39;)
+                self.disconnect()
+
+        def disconnect(self):
+                &#34;&#34;&#34; Method to put the Sphero to sleep and disconnect it. &#34;&#34;&#34;
+
+                pass
+
+        def send(self, speed=None, heading=None):
+                &#34;&#34;&#34;Method to send speed and heading command to the Sphero.
+
+                Parameters
+                ----------
+                speed : int or None
+                        Desired speed of the Sphero.
+                heading : int or None
+                        Desired heading of the Sphero.
+                &#34;&#34;&#34;
+
+                pass
+
+        def stop(self):
+                &#34;&#34;&#34; Method to stop the Sphero. &#34;&#34;&#34;
+
+                pass
+
+        def init_heading(self):
+                &#34;&#34;&#34; Method to set the initial heading angle for the Sphero. &#34;&#34;&#34;
+
+                pass
+
+        def set_color(self, rgb):
+                &#34;&#34;&#34;Method to set the color of the Sphero.
+
+                Parameters
+                ----------
+                rgb : tuple of int
+                        Tuple containing the RGB values of the desired color.
+                &#34;&#34;&#34;
+
+                pass
+
+        def set_as_leader(self, channel=0):
+                &#34;&#34;&#34;Method to set the Sphero as a leader.
+
+                Parameters
+                ----------
+                channel : int
+                        Channel you want to broadcast to.
+                &#34;&#34;&#34;
+
+                pass
+
+        def set_as_follower(self, channel=0):
+                &#34;&#34;&#34;Method to set the Sphero as a follower.
+
+                Parameters
+                ----------
+                channel : int
+                        Channel you want to listen to.
+                &#34;&#34;&#34;
+
+                pass
+
+        def get_light_sensor_value(self):
+                &#34;&#34;&#34; Method to get the light sensor value. &#34;&#34;&#34;
+
+                pass
+
+        def calibrate_north(self):
+                &#34;&#34;&#34; Method to calibrate the north on the Sphero &#34;&#34;&#34;
+
+                pass
+
+        @property
+        def heading(self):
+                return self._heading
+
+        @property
+        def speed(self):
+                return self._speed
+
+        @heading.setter
+        def heading(self, heading):
+                self._heading = heading % 360
+
+        @speed.setter
+        def speed(self, speed=0):
+                self._speed = max(0, min(speed, 255))
+###################################################
+
+
+###################################################
+class SpheroMini(Sphero):
+        &#34;&#34;&#34;The subclass of Sphero for a single Sphero Mini.
+
+        Parameters
+        ----------
+        tag_id : int
+                The Apriltag ID of the Sphero Mini.
+        verbosity : int
+                The verbosity level of the instance.
+        try_num : int
+                Number of time to try connecting to the Sphero Mini.
+
+        Attributes
+        ----------
+        id : int
+                The Apriltag ID of the Sphero Mini.
+        verb : int
+                The verbosity level of this class instance.
+        connected : bool
+                True if the Sphero Mini is connected.
+        _heading : int
+                The desired heading angle for the Sphero Mini.
+        _speed : int
+                The desired speed for the Sphero Mini.
+        address : str
+                The MAC address of the Sphero Mini.
+        name : str
+                The name of the Sphero Mini.
+        &#34;&#34;&#34;
+
+        def __init__(self, tag_id=0, verbosity=1, try_num=1):
+                &#34;&#34;&#34;Constructor for SpheroMini class.
+
+                Parameters
+                ----------
+                tag_id : int
+                        The Apriltag ID of the Sphero Mini.
+                verbosity : int
+                        The verbosity level of the instance.
+                try_num : int
+                        Number of time to try connecting to the Sphero Mini.
+
+                Yields
+                ------
+                SpheroMini
+                        A SpheroMini instance.
+                &#34;&#34;&#34;
+
+                # Create an instance of Sphero
+                super().__init__(tag_id, verbosity)
+
+                # Add values for Sphero Mini
+                self.address = MAC_ADDRESS[MINI][self.id]
+                self.name = &#34;Sphero Mini {0}&#34;.format(self.id)
+
+                # Connect to the Sphero
+                if self.verb == 0:
+                        print(&#34;\nConnecting to {0}&#34;.format(self.name))
+
+                try_count = 1
+                while not self.connected:
+                        if try_count &lt;= try_num:
+                                try:
+                                        if self.verb == 0:
+                                                print(&#34;\rTry {0} of {1}&#34;.format(try_count, try_num), end=&#34;&#34;)
+                                        self.sphero = sphero_mini(self.address, verbosity=verbosity)
+                                        self.connected = True
+                                except BTLEDisconnectError:
+                                        try_count += 1
+
+                        else:
+                                raise CantConnectError(&#34;Can&#39;t connect to {} after {} attempts.&#34;.format(self.name, try_count - 1))
+
+                if self.verb == 0:
+                        print(&#34;\nConnected  to {0}\n&#34;.format(self.name))
+
+                self.connected = True
+
+        def disconnect(self):
+                &#34;&#34;&#34; Method to put the Sphero Mini to sleep and disconnect it. &#34;&#34;&#34;
+
+                if self.connected:
+                        try:
+                                self.sphero.sleep()
+                                self.sphero.disconnect()
+                        except BTLEInternalError:
+                                print(&#34;The device is already disconnected.&#34;)
+
+        def send(self, speed=None, heading=None):
+                &#34;&#34;&#34;Method to send speed and heading command to the Sphero Mini.
+
+                Parameters
+                ----------
+                speed : int or None
+                        Desired speed of the Sphero Mini.
+                heading : int or None
+                        Desired heading of the Sphero Mini.
+                &#34;&#34;&#34;
+
+                if speed is not None:
+                        self.speed = speed
+                if heading is not None:
+                        self.heading = heading
+
+                self.sphero.roll(speed=self.speed, heading=self.heading)
+
+        def stop(self):
+                &#34;&#34;&#34; Method to stop the Sphero Mini. &#34;&#34;&#34;
+
+                self.sphero.roll(speed=0, heading=self.heading)
+
+        def init_heading(self):
+                &#34;&#34;&#34; Method to set the initial heading angle for the Sphero Mini. &#34;&#34;&#34;
+
+                self.sphero.stabilization(False)
+                self.sphero.roll(speed=0, heading=0)
+                self.sphero.setBackLEDIntensity(brightness=255)
+
+                print(&#34;Head the backLED toward the left of the camera frame.&#34;)
+                input(&#34;Press Enter to continue...&#34;)
+
+                self.sphero.resetHeading()
+                self.sphero.setBackLEDIntensity(brightness=0)
+                self.sphero.stabilization(True)
+
+        def set_color(self, rgb):
+                &#34;&#34;&#34;Method to set the color of the Sphero Mini.
+
+                Parameters
+                ----------
+                rgb : tuple of int
+                        Tuple containing the RGB values of the desired color.
+                &#34;&#34;&#34;
+
+                self.sphero.setLEDColor(red=rgb[0], green=rgb[1], blue=rgb[2])
+
+        def set_as_leader(self, channel=0):
+                &#34;&#34;&#34;Method to set the Sphero as a leader.
+
+                Parameters
+                ----------
+                channel : int
+                        Channel you want to broadcast to.
+                &#34;&#34;&#34;
+
+                print(&#34;This function is not available on Sphero Mini.&#34;)
+
+        def set_as_follower(self, channel=0):
+                &#34;&#34;&#34;Method to set the Sphero as a follower.
+
+                Parameters
+                ----------
+                channel : int
+                        Channel you want to listen to.
+                &#34;&#34;&#34;
+
+                print(&#34;This function is not available on Sphero Mini.&#34;)
+
+        def get_light_sensor_value(self):
+                &#34;&#34;&#34; Method to get the light sensor value. &#34;&#34;&#34;
+
+                print(&#34;This function is not available on Sphero Mini.&#34;)
+
+        def calibrate_north(self):
+                &#34;&#34;&#34; Method to calibrate the north on the Sphero &#34;&#34;&#34;
+
+                print(&#34;This function is not available on Sphero Mini.&#34;)
+###################################################
+
+
+###################################################
+class SpheroBolt(Sphero):
+        &#34;&#34;&#34;The subclass of Sphero for a single Sphero Bolt.
+
+        Parameters
+        ----------
+        tag_id : int
+                The Apriltag ID of the Sphero Bolt.
+        verbosity : int
+                The verbosity level of the instance.
+        try_num : int
+                Number of time to try connecting to the Sphero Bolt.
+
+        Attributes
+        ----------
+        id : int
+                The Apriltag ID of the Sphero Bolt.
+        verb : int
+                The verbosity level of this class instance.
+        connected : bool
+                True if the Sphero Bolt is connected.
+        _heading : int
+                The desired heading angle for the Sphero Bolt.
+        _speed : int
+                The desired speed for the Sphero Bolt.
+        address : str
+                The MAC address of the Sphero Bolt.
+        name : str
+                The name of the Sphero Bolt.
+        toerr : int
+                Number of time the Sphero encountered a TimeOut Error
+        &#34;&#34;&#34;
+
+        def __init__(self, tag_id=0, verbosity=1, try_num=1):
+                &#34;&#34;&#34;Constructor for SpheroBolt class.
+
+                Parameters
+                ----------
+                tag_id : int
+                        The Apriltag ID of the Sphero Bolt.
+                verbosity : int
+                        The verbosity level of the instance.
+                try_num : int
+                        Number of time to try connecting to the Sphero Bolt.
+
+                Yields
+                ------
+                SpheroBolt
+                        A SpheroBolt instance.
+                &#34;&#34;&#34;
+
+                # Create an instance of Sphero
+                super().__init__(tag_id, verbosity)
+
+                # Add values for Sphero Bolt
+                self.address = MAC_ADDRESS[BOLT][self.id]
+                self.name = &#34;Sphero Bolt {0}&#34;.format(self.id)
+
+                # Connect to the Sphero
+                if self.verb == 0:
+                        print(&#34;\nConnecting to {0}&#34;.format(self.name))
+
+                try_count = 1
+                while not self.connected:
+                        if try_count &lt;= try_num:
+                                try:
+                                        if self.verb == 0:
+                                                print(&#34;\rTry {0} of {1}&#34;.format(try_count, try_num), end=&#34;&#34;)
+                                        self.sphero = PySphero(mac_address=self.address)
+                                        self.connected = True
+                                except BTLEDisconnectError:
+                                        try_count += 1
+
+                        else:
+                                raise CantConnectError(&#34;Can&#39;t connect to {} after {} attempts.&#34;.format(self.name, try_count - 1))
+
+                # Call __enter__ as required by the class (because not used with &#34;with&#34;)
+                self.sphero.__enter__()
+                self.sphero.power.wake()
+
+                if self.verb == 0:
+                        print(&#34;\nConnected to {0}\n&#34;.format(self.name))
+
+                self.connected = True
+                self.not_received = True
+                self.resp = {}
+                self.toerr = 0
+
+        def disconnect(self):
+                &#34;&#34;&#34; Method to put the Sphero Bolt to sleep and disconnect it. &#34;&#34;&#34;
+
+                if self.connected:
+                        try:
+                                if self.is_follower:
+                                        self.sphero.sensor.request(command_id=CustomPySpheroCommand.stop_following,
+                                                                                           target_id=0x12,)
+                                if self.is_leader:
+                                        self.sphero.sensor.request(command_id=CustomPySpheroCommand.stop_IR_broadcast,
+                                                                                           target_id=0x12, )
+                                self.sphero.power.enter_soft_sleep()
+                                self.sphero.sphero_core.close()
+                        except BTLEInternalError:
+                                print(&#34;The device is already disconnected.&#34;)
+
+        def send(self, speed=None, heading=None):
+                &#34;&#34;&#34;Method to send speed and heading command to the Sphero Bolt.
+
+                Parameters
+                ----------
+                speed : int or None
+                        Desired speed of the Sphero Bolt.
+                heading : int or None
+                        Desired heading of the Sphero Bolt.
+                &#34;&#34;&#34;
+
+                if speed is not None:
+                        self.speed = speed
+                if heading is not None:
+                        self.heading = heading
+
+                try:
+                        self.sphero.driving.drive_with_heading(self.speed, self.heading)
+                except PySpheroTimeoutError:
+                        self.toerr += 1
+
+        def stop(self):
+                &#34;&#34;&#34; Method to stop the Sphero Bolt. &#34;&#34;&#34;
+
+                self.sphero.driving.drive_with_heading(0, self.heading)
+
+        def init_heading(self):
+                &#34;&#34;&#34; Method to set the initial heading angle for the Sphero Bolt. &#34;&#34;&#34;
+
+                self.sphero.driving.drive_with_heading(0, 0)
+                self.sphero.driving.set_stabilization(StabilizationIndex.no_control_system)
+                self.sphero.user_io.set_all_leds_8_bit_mask(Color(), Color(0, 0, 255))
+
+                print(&#34;Head the backLED toward the left of the camera frame.&#34;)
+                input(&#34;Press Enter to continue...&#34;)
+
+                self.sphero.driving.reset_yaw()
+                self.sphero.user_io.set_all_leds_8_bit_mask(Color(), Color())
+                self.sphero.driving.set_stabilization(StabilizationIndex.full_control_system)
+
+        def set_color(self, rgb):
+                &#34;&#34;&#34;Method to set the color of the Sphero Bolt.
+
+                Parameters
+                ----------
+                rgb : tuple of int
+                        Tuple containing the RGB values of the desired color.
+                &#34;&#34;&#34;
+
+                c = Color(rgb[0], rgb[1], rgb[2])
+                self.sphero.user_io.set_all_leds_8_bit_mask(c, c)
+                self.sphero.user_io.set_led_matrix_one_color(c)
+
+        def set_as_leader(self, channel=0):
+                &#34;&#34;&#34;Method to set the Sphero as a leader.
+
+                Parameters
+                ----------
+                channel : int
+                        Channel you want to broadcast to.
+                &#34;&#34;&#34;
+
+                self.is_leader = True
+                self.sphero.sensor.request(command_id=CustomPySpheroCommand.start_IR_broadcast,
+                                                                   target_id=0x12,
+                                                                   data=[2*channel, 2*channel+1])
+
+        def set_as_follower(self, channel=0):
+                &#34;&#34;&#34;Method to set the Sphero as a follower.
+
+                Parameters
+                ----------
+                channel : int
+                        Channel you want to listen to.
+                &#34;&#34;&#34;
+
+                self.is_follower = True
+                self.sphero.sensor.request(command_id=CustomPySpheroCommand.start_following,
+                                                                   target_id=0x12,
+                                                                   data=[2*channel, 2*channel+1])
+
+        def get_light_sensor_value(self):
+                &#34;&#34;&#34; Method to get the light sensor value.
+
+                Return
+                ------
+                float
+                        The ligth sensor value in lux.
+                &#34;&#34;&#34;
+
+                value = self.sphero.sensor.get_ambient_light_sensor_value()
+                return value
+
+        def calibrate_north(self):
+                &#34;&#34;&#34; Method to calibrate the north on the Sphero &#34;&#34;&#34;
+
+                self.sphero.sensor.magnetometer_calibrate_to_north()
+
+        def notify_north(self):
+                &#34;&#34;&#34; Method to notify the North? NOT WORKING, TO LOOK IN THE FUTURE. &#34;&#34;&#34;
+
+                self.sphero.sensor.notify(command_id=SensorCommand.magnetometer_north_yaw_notify, callback=self.notify_callback)
+
+        def notify_callback(self, response: Packet):
+                &#34;&#34;&#34; Notify callback. NOT WORKING, TO LOOK IN THE FUTURE.
+
+                Parameters
+                ----------
+                response : Packet
+                        The response from the Sphero
+                &#34;&#34;&#34;
+
+                bytes_list = response.data
+                res = 0
+                for b in bytes_list:
+                        res += res * 256 + int(b)
+
+                print(&#34;{{}} : &#34;.format(self.id) + str(bytes_list) + &#34; -&gt; {}&#34;.format(res))
+
+                self.sphero.driving.drive_with_heading(speed=0, heading=res)
+
+                self.sphero.driving.reset_yaw()
+
+                self.sphero.driving.drive_with_heading(speed=0, heading=360-res)
+
+        def get_sensor_values(self, sensor):
+                &#34;&#34;&#34; Method to get the value of the given sensors.
+
+                Parameters
+                ----------
+                sensor : Quaternion, Attitude, Accelerometer, AccelOne,  Locator, Velocity, Speed, CoreTime, Gyroscope or AmbientLight
+                        list of the sensors.
+
+                Return
+                ------
+                dict
+                        A dictionary with all the sensor data.
+                &#34;&#34;&#34;
+
+                self.resp = {}
+                self.not_received = True
+                self.sphero.sensor.set_notify(self.sensors_callback, sensor, timeout=2)
+                t = time()
+                while self.not_received:
+                        if time() - t &gt; 2:
+                                self.sphero.sensor.cancel_notify_sensors()
+                                break
+                        continue
+
+                return self.resp
+
+        def sensors_callback(self, response):
+                self.sphero.sensor.cancel_notify_sensors()
+                self.resp = response
+                self.not_received = False
+###################################################
+
+
+###################################################
+class MultiSphero:
+        &#34;&#34;&#34;The super class of multiple Sphero.
+
+        Parameters
+        ----------
+        tag_ids : tuple of int
+                The Apriltag IDs of the Spheros.
+        verbosity : int
+                The verbosity level of the instance.
+
+        Attributes
+        ----------
+        ids : tuple of int
+                The Apriltag IDs of the Spheros.
+        verb : int
+                The verbosity level of this class instance.
+        num : int
+                The number of Sphero in this swarm.
+        headings : ndarray
+                The desired heading angles for all the Spheros.
+        speeds : ndarray
+                The desired speeds for all the Sphero.
+        spheros : ndarray of Sphero
+                A numpy array containing all the Sphero instances.
+        _lf_channel : int
+                The IR channel for the leader/followers method.
+        &#34;&#34;&#34;
+
+        def __init__(self, tag_ids=(), verbosity=0):
+                &#34;&#34;&#34;Constructor for MultiSphero class.
+
+                Parameters
+                ----------
+                tag_ids : tuple of int
+                        The Apriltag IDs of the Spheros.
+                verbosity : int
+                        The verbosity level of the instance.
+
+                Yields
+                ------
+                MultiSphero
+                        A MultiSphero instance.
+                &#34;&#34;&#34;
+
+                self.ids = tag_ids
+                self.verb = verbosity
+                self.num = len(tag_ids)
+                self.headings = zeros(self.num)
+                self.speeds = zeros(self.num)
+                self.spheros = zeros(self.num, dtype=Sphero)
+                self._lf_channel = 0
+
+        def __del__(self):
+                &#34;&#34;&#34; Destructor for MultiSphero class. &#34;&#34;&#34;
+
+                print(&#34;\r  \r&#34;, end=&#39;&#39;)
+                for sphero in self.spheros:
+                        sphero.disconnect()
+
+        def set_colors(self, ids=None, color=None):
+                &#34;&#34;&#34;Method to set the colors for the Spheros
+
+                If no ids are provided, all the Spheros will have the color of the
+                first element on the color tuple
+
+                Parameters
+                ----------
+                ids : tuple of int or None
+                        The Apriltags IDs of the Spheros to change the color.
+                color : tuple of int or None
+                        The color to change to in RGB values.
+                &#34;&#34;&#34;
+
+                if type(color) is not tuple:
+                        pass
+                elif len(color) is not 3:
+                        pass
+
+                if ids is None:
+                        c = color
+                        for sphero in self.spheros:
+                                sphero.set_color(c)
+                else:
+                        for (i, val) in enumerate(ids):
+                                try:
+                                        ind = self.ids.index(val)
+                                        self.spheros[ind] = color
+                                except ValueError:
+                                        print(&#34;Invalid id.&#34;)
+
+        def set_headings(self, ids=None, heading=None):
+                &#34;&#34;&#34;Method to set the headings for the Spheros
+
+                If no ids are provided, all the Spheros will have the heading of the
+                first element on the heading tuple
+
+                Parameters
+                ----------
+                ids : tuple of int or None
+                        The Apriltags IDs of the Spheros to change the headings.
+                heading : tuple of int
+                        The headings to change to.
+                &#34;&#34;&#34;
+
+                if ids is None:
+                        if type(heading) is tuple:
+                                h = heading[0]
+                        else:
+                                h = heading
+                        self.headings = ones(self.num) * h
+                else:
+                        for (i, val) in enumerate(ids):
+                                try:
+                                        ind = self.ids.index(val)
+                                        self.headings[ind] = heading[i] % 360
+                                except ValueError:
+                                        print(&#34;Invalid id.&#34;)
+
+                for (i, sphero) in enumerate(self.spheros):
+                        sphero.heading = self.headings[i]
+
+        def set_speeds(self, ids=None, speed=None):
+                &#34;&#34;&#34;Method to set the speeds for the Spheros
+
+                If no ids are provided, all the Spheros will have the speeds of the
+                first element on the speed tuple
+
+                Parameters
+                ----------
+                ids : tuple of int or None
+                        The Apriltags IDs of the Spheros to change the speeds.
+                speed : tuple of int
+                        The speeds to change to.
+                &#34;&#34;&#34;
+
+                if ids is None:
+                        if type(speed) is tuple:
+                                s = speed[0]
+                        else:
+                                s = speed
+                        self.speeds = ones(self.num) * s
+                else:
+                        for (i, val) in enumerate(ids):
+                                try:
+                                        ind = self.ids.index(val)
+                                        self.spheros[ind] = max(0, min(speed[i], 255))
+                                except ValueError:
+                                        print(&#34;Invalid id.&#34;)
+
+                for (i, sphero) in enumerate(self.spheros):
+                        sphero.speed = self.speeds[i]
+
+        def send(self, ids=None):
+                &#34;&#34;&#34;Method to send the heading and speed of specific Spheros.
+
+                Parameters
+                ----------
+                ids : tuple of int or None
+                        The Apriltags IDs of the Spheros to send the data.
+                &#34;&#34;&#34;
+
+                if ids is None:
+                        for (i, sphero) in enumerate(self.spheros):
+                                sphero.send()
+                else:
+                        if type(ids) is int:
+                                self.spheros[ids].send()
+                        else:
+                                for i in ids:
+                                        self.spheros[i].send()
+
+        def stop(self, ids=None):
+                &#34;&#34;&#34;Method to stop specific Spheros.
+
+                Parameters
+                ----------
+                ids : tuple of int or None
+                        The Apriltags IDs of the Spheros to stop.
+                &#34;&#34;&#34;
+
+                if ids is None:
+                        for (i, sphero) in enumerate(self.spheros):
+                                sphero.stop()
+                else:
+                        if type(ids) is int:
+                                self.spheros[ids].stop()
+                        else:
+                                for i in ids:
+                                        self.spheros[i].stop()
+
+        def init_heading(self):
+                &#34;&#34;&#34; Method to initialize the initial angle of multiple Spheros. &#34;&#34;&#34;
+
+                pass
+
+        def setup_leader_followers(self, channel=0):
+                &#34;&#34;&#34; Method to setup a leader/followers of multiple Spheros. &#34;&#34;&#34;
+
+                pass
+
+        def calibrate_north(self):
+                &#34;&#34;&#34; Method to calibrate north on the spheros &#34;&#34;&#34;
+
+                pass
+
+        @property
+        def lf_channel(self):
+                return self._lf_channel
+
+        @lf_channel.setter
+        def lf_channel(self, channel):
+                if type(channel) is not int:
+                        print(&#34;lf_channel should be an int.&#34;)
+                else:
+                        self._lf_channel = min(max(channel, 0), 4)
+###################################################
+
+
+###################################################
+class MultiSpheroMini(MultiSphero):
+        &#34;&#34;&#34;The subclass of multiple Sphero Mini.
+
+        Parameters
+        ----------
+        tag_ids : tuple of int
+                The Apriltag IDs of each Sphero Mini.
+        verbosity : int
+                The verbosity level of the instance.
+        try_num : int
+                Number of time to try connecting to each Sphero Mini.
+
+        Attributes
+        ----------
+        ids : tuple of int
+                The Apriltag IDs of each Sphero Mini.
+        verb : int
+                The verbosity level of this class instance.
+        num : int
+                The number of Sphero Mini in this swarm.
+        headings : ndarray
+                The desired heading angles for all the Sphero Mini.
+        speeds : ndarray
+                The desired speeds for all the Sphero Mini.
+        spheros : ndarray of SpheroMini
+                A numpy array containing all the Sphero Mini instances.
+        &#34;&#34;&#34;
+
+        def __init__(self, tag_ids=(), verbosity=0, try_num=1):
+                &#34;&#34;&#34;Constructor for MultiSpheroMini class.
+
+                Parameters
+                ----------
+                tag_ids : tuple of int
+                        The Apriltag IDs of all the Sphero Mini.
+                verbosity : int
+                        The verbosity level of the instance.
+                try_num : int
+                        Number of time to try connecting to all the Sphero Mini.
+
+                Yields
+                ------
+                MultiSpheroMini
+                        A MultiSpheroMini instance.
+                &#34;&#34;&#34;
+
+                super().__init__(tag_ids=tag_ids, verbosity=verbosity)
+
+                self.spheros = zeros(self.num, dtype=SpheroMini)
+
+                if self.verb == 0:
+                        print(&#34;\n[Connecting to Swarm]&#34;)
+
+                for (i, ids) in enumerate(self.ids):
+                        if self.verb == 0:
+                                print(&#34;\rConnecting to ID {0} ({1}/{2})...&#34;.format(ids, i + 1, self.num), end=&#39;&#39;)
+
+                        try:
+                                self.spheros[i] = SpheroMini(tag_id=ids, verbosity=-1, try_num=try_num)
+                        except CantConnectError:
+                                print(&#34;\nCan&#39;t connect to Sphero {0}. Exiting...&#34;.format(ids))
+                                exit()
+
+                if self.verb == 0:
+                        print(&#34;\n[Connected to Swarm]\n&#34;)
+
+        def init_heading(self):
+                &#34;&#34;&#34; Method to initialize the initial angle of multiple Spheros. &#34;&#34;&#34;
+
+                for s in self.spheros:
+                        s.sphero.stabilization(False)
+                        s.sphero.roll(speed=0, heading=0)
+                        s.sphero.setBackLEDIntensity(brightness=255)
+
+                print(&#34;*** Head the backLED toward the left of the camera frame. ***&#34;)
+                input(&#34;Press Enter to continue...&#34;)
+
+                print(&#34;\nLoop started\n&#34;)
+
+                for s in self.spheros:
+                        s.sphero.resetHeading()
+                        s.sphero.setBackLEDIntensity(brightness=0)
+                        s.sphero.stabilization(True)
+
+        def setup_leader_followers(self, channel=0):
+                &#34;&#34;&#34; Method to setup a leader/followers of multiple Spheros. &#34;&#34;&#34;
+
+                print(&#34;This function is not available with Sphero Mini.&#34;)
+
+        def calibrate_north(self):
+                &#34;&#34;&#34; Method to calibrate north on the spheros &#34;&#34;&#34;
+
+                print(&#34;This function is not available with Sphero Mini.&#34;)
+###################################################
+
+
+###################################################
+class MultiSpheroBolt(MultiSphero):
+        &#34;&#34;&#34;The subclass of multiple Sphero Bolt.
+
+        Parameters
+        ----------
+        tag_ids : tuple of int
+                The Apriltag IDs of each Sphero Bolt.
+        verbosity : int
+                The verbosity level of the instance.
+        try_num : int
+                Number of time to try connecting to each Sphero Bolt.
+
+        Attributes
+        ----------
+        ids : tuple of int
+                The Apriltag IDs of each Sphero Bolt.
+        verb : int
+                The verbosity level of this class instance.
+        num : int
+                The number of Sphero Bolt in this swarm.
+        headings : ndarray
+                The desired heading angles for all the Sphero Bolt.
+        speeds : ndarray
+                The desired speeds for all the Sphero Bolt.
+        spheros : ndarray of SpheroBolt
+                A numpy array containing all the Sphero Bolt instances.
+        &#34;&#34;&#34;
+
+        def __init__(self, tag_ids=(), verbosity=0, try_num=1):
+                &#34;&#34;&#34;Constructor for MultiSpheroBolt class.
+
+                Parameters
+                ----------
+                tag_ids : tuple of int
+                        The Apriltag IDs of all the Sphero Bolt.
+                verbosity : int
+                        The verbosity level of the instance.
+                try_num : int
+                        Number of time to try connecting to all the Sphero Bolt.
+
+                Yields
+                ------
+                MultiSpheroBolt
+                        A MultiSpheroBolt instance.
+                &#34;&#34;&#34;
+
+                super().__init__(tag_ids=tag_ids, verbosity=verbosity)
+
+                self.spheros = zeros(self.num, dtype=SpheroBolt)
+
+                if self.verb == 0:
+                        print(&#34;\n[Connecting to Swarm]&#34;)
+
+                for (i, ids) in enumerate(self.ids):
+                        if self.verb == 0:
+                                print(&#34;\rConnecting to ID {0} ({1}/{2})...&#34;.format(ids, i + 1, self.num), end=&#39;&#39;)
+
+                        try:
+                                self.spheros[i] = SpheroBolt(tag_id=ids, verbosity=-1, try_num=try_num)
+                        except CantConnectError:
+                                print(&#34;\nCan&#39;t connect to Sphero {0}. Exiting...&#34;.format(ids))
+                                exit()
+
+                if self.verb == 0:
+                        print(&#34;\n[Connected to Swarm]\n&#34;)
+
+        def init_heading(self):
+                &#34;&#34;&#34; Method to initialize the initial angle of multiple Spheros. &#34;&#34;&#34;
+
+                for s in self.spheros:
+                        s.sphero.driving.drive_with_heading(0, 0)
+                        s.sphero.driving.set_stabilization(StabilizationIndex.no_control_system)
+                        s.sphero.user_io.set_all_leds_8_bit_mask(Color(), Color(0, 0, 255))
+
+                print(&#34;*** Head the backLED toward the left of the camera frame. ***&#34;)
+                input(&#34;Press Enter to continue...&#34;)
+
+                print(&#34;\nLoop started\n&#34;)
+
+                for s in self.spheros:
+                        s.sphero.driving.reset_yaw()
+                        s.sphero.user_io.set_all_leds_8_bit_mask(Color(), Color())
+                        s.sphero.driving.set_stabilization(StabilizationIndex.full_control_system)
+
+        def setup_leader_followers(self, channel=0):
+                &#34;&#34;&#34; Method to setup a leader/followers of multiple Spheros. &#34;&#34;&#34;
+
+                if type(channel) is not int:
+                        print(&#34;The channel should be an int.&#34;)
+                else:
+                        self.lf_channel = channel
+
+                        for (i, s) in enumerate(self.spheros):
+                                if i == 0:
+                                        s.set_as_leader(channel=self.lf_channel)
+                                else:
+                                        s.set_as_follower(channel=self.lf_channel)
+
+        def calibrate_north(self):
+                &#34;&#34;&#34; Method to calibrate north on the spheros &#34;&#34;&#34;
+
+                for (i, s) in enumerate(self.spheros):
+                        s.calibrate_north()
+
+        def notify_north(self):
+                &#34;&#34;&#34; Method to notify the North? &#34;&#34;&#34;
+
+                for (i, s) in enumerate(self.spheros):
+                        s.notify_north()
+###################################################</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="Jameoba.Spheros.CantConnectError"><code class="flex name class">
+<span>class <span class="ident">CantConnectError</span></span>
+<span>(</span><span>message)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Base class for all Jameoba exceptions.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>message</code></strong> :&ensp;<code>str</code></dt>
+<dd>Message to be displayed in the error.</dd>
+</dl>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>message</code></strong> :&ensp;<code>str</code></dt>
+<dd>Message to be displayed in the error.</dd>
+</dl>
+<p>Constructor for CantConnectError exceptions.</p>
+<h2 id="parameters_1">Parameters</h2>
+<dl>
+<dt><strong><code>message</code></strong> :&ensp;<code>str</code></dt>
+<dd>Message to be displayed in the error.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CantConnectError(JAMEOBAException):
+        def __init__(self, message):
+                &#34;&#34;&#34;Constructor for CantConnectError exceptions.
+
+                Parameters
+                ----------
+                message : str
+                        Message to be displayed in the error.
+                &#34;&#34;&#34;
+
+                super().__init__(message)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="Jameoba.Spheros.JAMEOBAException" href="#Jameoba.Spheros.JAMEOBAException">JAMEOBAException</a></li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+</dd>
+<dt id="Jameoba.Spheros.CustomPySpheroCommand"><code class="flex name class">
+<span>class <span class="ident">CustomPySpheroCommand</span></span>
+<span>(</span><span>*args, **kwargs)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>An enumeration.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class CustomPySpheroCommand(Enum):
+        start_IR_broadcast = 0x27
+        start_evading = 0x33
+        start_following = 0x28
+        stop_IR_broadcast = 0x29
+        stop_evading = 0x34
+        stop_following = 0x32</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>enum.Enum</li>
+</ul>
+<h3>Class variables</h3>
+<dl>
+<dt id="Jameoba.Spheros.CustomPySpheroCommand.start_IR_broadcast"><code class="name">var <span class="ident">start_IR_broadcast</span></code></dt>
+<dd>
+<section class="desc"><p>An enumeration.</p></section>
+</dd>
+<dt id="Jameoba.Spheros.CustomPySpheroCommand.start_evading"><code class="name">var <span class="ident">start_evading</span></code></dt>
+<dd>
+<section class="desc"><p>An enumeration.</p></section>
+</dd>
+<dt id="Jameoba.Spheros.CustomPySpheroCommand.start_following"><code class="name">var <span class="ident">start_following</span></code></dt>
+<dd>
+<section class="desc"><p>An enumeration.</p></section>
+</dd>
+<dt id="Jameoba.Spheros.CustomPySpheroCommand.stop_IR_broadcast"><code class="name">var <span class="ident">stop_IR_broadcast</span></code></dt>
+<dd>
+<section class="desc"><p>An enumeration.</p></section>
+</dd>
+<dt id="Jameoba.Spheros.CustomPySpheroCommand.stop_evading"><code class="name">var <span class="ident">stop_evading</span></code></dt>
+<dd>
+<section class="desc"><p>An enumeration.</p></section>
+</dd>
+<dt id="Jameoba.Spheros.CustomPySpheroCommand.stop_following"><code class="name">var <span class="ident">stop_following</span></code></dt>
+<dd>
+<section class="desc"><p>An enumeration.</p></section>
+</dd>
+</dl>
+</dd>
+<dt id="Jameoba.Spheros.JAMEOBAException"><code class="flex name class">
+<span>class <span class="ident">JAMEOBAException</span></span>
+<span>(</span><span>message)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Base class for all Jameoba exceptions.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>message</code></strong> :&ensp;<code>str</code></dt>
+<dd>Message to be displayed in the error.</dd>
+</dl>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>message</code></strong> :&ensp;<code>str</code></dt>
+<dd>Message to be displayed in the error.</dd>
+</dl>
+<p>Constructor for Jameoba exceptions.</p>
+<h2 id="parameters_1">Parameters</h2>
+<dl>
+<dt><strong><code>message</code></strong> :&ensp;<code>str</code></dt>
+<dd>Message to be displayed in the error.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class JAMEOBAException(Exception):
+        &#34;&#34;&#34;Base class for all Jameoba exceptions.
+
+        Parameters
+        ----------
+        message : str
+                Message to be displayed in the error.
+
+        Attributes
+        ----------
+        message : str
+                Message to be displayed in the error.
+        &#34;&#34;&#34;
+
+        def __init__(self, message):
+                &#34;&#34;&#34;Constructor for Jameoba exceptions.
+
+                Parameters
+                ----------
+                message : str
+                        Message to be displayed in the error.
+                &#34;&#34;&#34;
+
+                self.message = message
+
+        def __str__(self):
+                &#34;&#34;&#34;Method to transform the class into a str.
+
+                Returns
+                -------
+                str
+                        The message that is being displayed.
+                &#34;&#34;&#34;
+
+                return self.message</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="Jameoba.Spheros.CantConnectError" href="#Jameoba.Spheros.CantConnectError">CantConnectError</a></li>
+</ul>
+</dd>
+<dt id="Jameoba.Spheros.MultiSphero"><code class="flex name class">
+<span>class <span class="ident">MultiSphero</span></span>
+<span>(</span><span>tag_ids=(), verbosity=0)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>The super class of multiple Sphero.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>tag_ids</code></strong> :&ensp;<code>tuple</code> of <code>int</code></dt>
+<dd>The Apriltag IDs of the Spheros.</dd>
+<dt><strong><code>verbosity</code></strong> :&ensp;<code>int</code></dt>
+<dd>The verbosity level of the instance.</dd>
+</dl>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>ids</code></strong> :&ensp;<code>tuple</code> of <code>int</code></dt>
+<dd>The Apriltag IDs of the Spheros.</dd>
+<dt><strong><code>verb</code></strong> :&ensp;<code>int</code></dt>
+<dd>The verbosity level of this class instance.</dd>
+<dt><strong><code>num</code></strong> :&ensp;<code>int</code></dt>
+<dd>The number of Sphero in this swarm.</dd>
+<dt><strong><code>headings</code></strong> :&ensp;<code>ndarray</code></dt>
+<dd>The desired heading angles for all the Spheros.</dd>
+<dt><strong><code>speeds</code></strong> :&ensp;<code>ndarray</code></dt>
+<dd>The desired speeds for all the Sphero.</dd>
+<dt><strong><code>spheros</code></strong> :&ensp;<code>ndarray</code> of <a title="Jameoba.Spheros.Sphero" href="#Jameoba.Spheros.Sphero"><code>Sphero</code></a></dt>
+<dd>A numpy array containing all the Sphero instances.</dd>
+<dt><strong><code>_lf_channel</code></strong> :&ensp;<code>int</code></dt>
+<dd>The IR channel for the leader/followers method.</dd>
+</dl>
+<p>Constructor for MultiSphero class.</p>
+<h2 id="parameters_1">Parameters</h2>
+<dl>
+<dt><strong><code>tag_ids</code></strong> :&ensp;<code>tuple</code> of <code>int</code></dt>
+<dd>The Apriltag IDs of the Spheros.</dd>
+<dt><strong><code>verbosity</code></strong> :&ensp;<code>int</code></dt>
+<dd>The verbosity level of the instance.</dd>
+</dl>
+<h2 id="yields">Yields</h2>
+<dl>
+<dt><a title="Jameoba.Spheros.MultiSphero" href="#Jameoba.Spheros.MultiSphero"><code>MultiSphero</code></a></dt>
+<dd>A MultiSphero instance.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class MultiSphero:
+        &#34;&#34;&#34;The super class of multiple Sphero.
+
+        Parameters
+        ----------
+        tag_ids : tuple of int
+                The Apriltag IDs of the Spheros.
+        verbosity : int
+                The verbosity level of the instance.
+
+        Attributes
+        ----------
+        ids : tuple of int
+                The Apriltag IDs of the Spheros.
+        verb : int
+                The verbosity level of this class instance.
+        num : int
+                The number of Sphero in this swarm.
+        headings : ndarray
+                The desired heading angles for all the Spheros.
+        speeds : ndarray
+                The desired speeds for all the Sphero.
+        spheros : ndarray of Sphero
+                A numpy array containing all the Sphero instances.
+        _lf_channel : int
+                The IR channel for the leader/followers method.
+        &#34;&#34;&#34;
+
+        def __init__(self, tag_ids=(), verbosity=0):
+                &#34;&#34;&#34;Constructor for MultiSphero class.
+
+                Parameters
+                ----------
+                tag_ids : tuple of int
+                        The Apriltag IDs of the Spheros.
+                verbosity : int
+                        The verbosity level of the instance.
+
+                Yields
+                ------
+                MultiSphero
+                        A MultiSphero instance.
+                &#34;&#34;&#34;
+
+                self.ids = tag_ids
+                self.verb = verbosity
+                self.num = len(tag_ids)
+                self.headings = zeros(self.num)
+                self.speeds = zeros(self.num)
+                self.spheros = zeros(self.num, dtype=Sphero)
+                self._lf_channel = 0
+
+        def __del__(self):
+                &#34;&#34;&#34; Destructor for MultiSphero class. &#34;&#34;&#34;
+
+                print(&#34;\r  \r&#34;, end=&#39;&#39;)
+                for sphero in self.spheros:
+                        sphero.disconnect()
+
+        def set_colors(self, ids=None, color=None):
+                &#34;&#34;&#34;Method to set the colors for the Spheros
+
+                If no ids are provided, all the Spheros will have the color of the
+                first element on the color tuple
+
+                Parameters
+                ----------
+                ids : tuple of int or None
+                        The Apriltags IDs of the Spheros to change the color.
+                color : tuple of int or None
+                        The color to change to in RGB values.
+                &#34;&#34;&#34;
+
+                if type(color) is not tuple:
+                        pass
+                elif len(color) is not 3:
+                        pass
+
+                if ids is None:
+                        c = color
+                        for sphero in self.spheros:
+                                sphero.set_color(c)
+                else:
+                        for (i, val) in enumerate(ids):
+                                try:
+                                        ind = self.ids.index(val)
+                                        self.spheros[ind] = color
+                                except ValueError:
+                                        print(&#34;Invalid id.&#34;)
+
+        def set_headings(self, ids=None, heading=None):
+                &#34;&#34;&#34;Method to set the headings for the Spheros
+
+                If no ids are provided, all the Spheros will have the heading of the
+                first element on the heading tuple
+
+                Parameters
+                ----------
+                ids : tuple of int or None
+                        The Apriltags IDs of the Spheros to change the headings.
+                heading : tuple of int
+                        The headings to change to.
+                &#34;&#34;&#34;
+
+                if ids is None:
+                        if type(heading) is tuple:
+                                h = heading[0]
+                        else:
+                                h = heading
+                        self.headings = ones(self.num) * h
+                else:
+                        for (i, val) in enumerate(ids):
+                                try:
+                                        ind = self.ids.index(val)
+                                        self.headings[ind] = heading[i] % 360
+                                except ValueError:
+                                        print(&#34;Invalid id.&#34;)
+
+                for (i, sphero) in enumerate(self.spheros):
+                        sphero.heading = self.headings[i]
+
+        def set_speeds(self, ids=None, speed=None):
+                &#34;&#34;&#34;Method to set the speeds for the Spheros
+
+                If no ids are provided, all the Spheros will have the speeds of the
+                first element on the speed tuple
+
+                Parameters
+                ----------
+                ids : tuple of int or None
+                        The Apriltags IDs of the Spheros to change the speeds.
+                speed : tuple of int
+                        The speeds to change to.
+                &#34;&#34;&#34;
+
+                if ids is None:
+                        if type(speed) is tuple:
+                                s = speed[0]
+                        else:
+                                s = speed
+                        self.speeds = ones(self.num) * s
+                else:
+                        for (i, val) in enumerate(ids):
+                                try:
+                                        ind = self.ids.index(val)
+                                        self.spheros[ind] = max(0, min(speed[i], 255))
+                                except ValueError:
+                                        print(&#34;Invalid id.&#34;)
+
+                for (i, sphero) in enumerate(self.spheros):
+                        sphero.speed = self.speeds[i]
+
+        def send(self, ids=None):
+                &#34;&#34;&#34;Method to send the heading and speed of specific Spheros.
+
+                Parameters
+                ----------
+                ids : tuple of int or None
+                        The Apriltags IDs of the Spheros to send the data.
+                &#34;&#34;&#34;
+
+                if ids is None:
+                        for (i, sphero) in enumerate(self.spheros):
+                                sphero.send()
+                else:
+                        if type(ids) is int:
+                                self.spheros[ids].send()
+                        else:
+                                for i in ids:
+                                        self.spheros[i].send()
+
+        def stop(self, ids=None):
+                &#34;&#34;&#34;Method to stop specific Spheros.
+
+                Parameters
+                ----------
+                ids : tuple of int or None
+                        The Apriltags IDs of the Spheros to stop.
+                &#34;&#34;&#34;
+
+                if ids is None:
+                        for (i, sphero) in enumerate(self.spheros):
+                                sphero.stop()
+                else:
+                        if type(ids) is int:
+                                self.spheros[ids].stop()
+                        else:
+                                for i in ids:
+                                        self.spheros[i].stop()
+
+        def init_heading(self):
+                &#34;&#34;&#34; Method to initialize the initial angle of multiple Spheros. &#34;&#34;&#34;
+
+                pass
+
+        def setup_leader_followers(self, channel=0):
+                &#34;&#34;&#34; Method to setup a leader/followers of multiple Spheros. &#34;&#34;&#34;
+
+                pass
+
+        def calibrate_north(self):
+                &#34;&#34;&#34; Method to calibrate north on the spheros &#34;&#34;&#34;
+
+                pass
+
+        @property
+        def lf_channel(self):
+                return self._lf_channel
+
+        @lf_channel.setter
+        def lf_channel(self, channel):
+                if type(channel) is not int:
+                        print(&#34;lf_channel should be an int.&#34;)
+                else:
+                        self._lf_channel = min(max(channel, 0), 4)</code></pre>
+</details>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="Jameoba.Spheros.MultiSpheroMini" href="#Jameoba.Spheros.MultiSpheroMini">MultiSpheroMini</a></li>
+<li><a title="Jameoba.Spheros.MultiSpheroBolt" href="#Jameoba.Spheros.MultiSpheroBolt">MultiSpheroBolt</a></li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="Jameoba.Spheros.MultiSphero.lf_channel"><code class="name">var <span class="ident">lf_channel</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def lf_channel(self):
+        return self._lf_channel</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="Jameoba.Spheros.MultiSphero.calibrate_north"><code class="name flex">
+<span>def <span class="ident">calibrate_north</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Method to calibrate north on the spheros</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def calibrate_north(self):
+        &#34;&#34;&#34; Method to calibrate north on the spheros &#34;&#34;&#34;
+
+        pass</code></pre>
+</details>
+</dd>
+<dt id="Jameoba.Spheros.MultiSphero.init_heading"><code class="name flex">
+<span>def <span class="ident">init_heading</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Method to initialize the initial angle of multiple Spheros.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def init_heading(self):
+        &#34;&#34;&#34; Method to initialize the initial angle of multiple Spheros. &#34;&#34;&#34;
+
+        pass</code></pre>
+</details>
+</dd>
+<dt id="Jameoba.Spheros.MultiSphero.send"><code class="name flex">
+<span>def <span class="ident">send</span></span>(<span>self, ids=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Method to send the heading and speed of specific Spheros.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>ids</code></strong> :&ensp;<code>tuple</code> of <code>int</code> or <code>None</code></dt>
+<dd>The Apriltags IDs of the Spheros to send the data.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def send(self, ids=None):
+        &#34;&#34;&#34;Method to send the heading and speed of specific Spheros.
+
+        Parameters
+        ----------
+        ids : tuple of int or None
+                The Apriltags IDs of the Spheros to send the data.
+        &#34;&#34;&#34;
+
+        if ids is None:
+                for (i, sphero) in enumerate(self.spheros):
+                        sphero.send()
+        else:
+                if type(ids) is int:
+                        self.spheros[ids].send()
+                else:
+                        for i in ids:
+                                self.spheros[i].send()</code></pre>
+</details>
+</dd>
+<dt id="Jameoba.Spheros.MultiSphero.set_colors"><code class="name flex">
+<span>def <span class="ident">set_colors</span></span>(<span>self, ids=None, color=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Method to set the colors for the Spheros</p>
+<p>If no ids are provided, all the Spheros will have the color of the
+first element on the color tuple</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>ids</code></strong> :&ensp;<code>tuple</code> of <code>int</code> or <code>None</code></dt>
+<dd>The Apriltags IDs of the Spheros to change the color.</dd>
+<dt><strong><code>color</code></strong> :&ensp;<code>tuple</code> of <code>int</code> or <code>None</code></dt>
+<dd>The color to change to in RGB values.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_colors(self, ids=None, color=None):
+        &#34;&#34;&#34;Method to set the colors for the Spheros
+
+        If no ids are provided, all the Spheros will have the color of the
+        first element on the color tuple
+
+        Parameters
+        ----------
+        ids : tuple of int or None
+                The Apriltags IDs of the Spheros to change the color.
+        color : tuple of int or None
+                The color to change to in RGB values.
+        &#34;&#34;&#34;
+
+        if type(color) is not tuple:
+                pass
+        elif len(color) is not 3:
+                pass
+
+        if ids is None:
+                c = color
+                for sphero in self.spheros:
+                        sphero.set_color(c)
+        else:
+                for (i, val) in enumerate(ids):
+                        try:
+                                ind = self.ids.index(val)
+                                self.spheros[ind] = color
+                        except ValueError:
+                                print(&#34;Invalid id.&#34;)</code></pre>
+</details>
+</dd>
+<dt id="Jameoba.Spheros.MultiSphero.set_headings"><code class="name flex">
+<span>def <span class="ident">set_headings</span></span>(<span>self, ids=None, heading=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Method to set the headings for the Spheros</p>
+<p>If no ids are provided, all the Spheros will have the heading of the
+first element on the heading tuple</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>ids</code></strong> :&ensp;<code>tuple</code> of <code>int</code> or <code>None</code></dt>
+<dd>The Apriltags IDs of the Spheros to change the headings.</dd>
+<dt><strong><code>heading</code></strong> :&ensp;<code>tuple</code> of <code>int</code></dt>
+<dd>The headings to change to.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_headings(self, ids=None, heading=None):
+        &#34;&#34;&#34;Method to set the headings for the Spheros
+
+        If no ids are provided, all the Spheros will have the heading of the
+        first element on the heading tuple
+
+        Parameters
+        ----------
+        ids : tuple of int or None
+                The Apriltags IDs of the Spheros to change the headings.
+        heading : tuple of int
+                The headings to change to.
+        &#34;&#34;&#34;
+
+        if ids is None:
+                if type(heading) is tuple:
+                        h = heading[0]
+                else:
+                        h = heading
+                self.headings = ones(self.num) * h
+        else:
+                for (i, val) in enumerate(ids):
+                        try:
+                                ind = self.ids.index(val)
+                                self.headings[ind] = heading[i] % 360
+                        except ValueError:
+                                print(&#34;Invalid id.&#34;)
+
+        for (i, sphero) in enumerate(self.spheros):
+                sphero.heading = self.headings[i]</code></pre>
+</details>
+</dd>
+<dt id="Jameoba.Spheros.MultiSphero.set_speeds"><code class="name flex">
+<span>def <span class="ident">set_speeds</span></span>(<span>self, ids=None, speed=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Method to set the speeds for the Spheros</p>
+<p>If no ids are provided, all the Spheros will have the speeds of the
+first element on the speed tuple</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>ids</code></strong> :&ensp;<code>tuple</code> of <code>int</code> or <code>None</code></dt>
+<dd>The Apriltags IDs of the Spheros to change the speeds.</dd>
+<dt><strong><code>speed</code></strong> :&ensp;<code>tuple</code> of <code>int</code></dt>
+<dd>The speeds to change to.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_speeds(self, ids=None, speed=None):
+        &#34;&#34;&#34;Method to set the speeds for the Spheros
+
+        If no ids are provided, all the Spheros will have the speeds of the
+        first element on the speed tuple
+
+        Parameters
+        ----------
+        ids : tuple of int or None
+                The Apriltags IDs of the Spheros to change the speeds.
+        speed : tuple of int
+                The speeds to change to.
+        &#34;&#34;&#34;
+
+        if ids is None:
+                if type(speed) is tuple:
+                        s = speed[0]
+                else:
+                        s = speed
+                self.speeds = ones(self.num) * s
+        else:
+                for (i, val) in enumerate(ids):
+                        try:
+                                ind = self.ids.index(val)
+                                self.spheros[ind] = max(0, min(speed[i], 255))
+                        except ValueError:
+                                print(&#34;Invalid id.&#34;)
+
+        for (i, sphero) in enumerate(self.spheros):
+                sphero.speed = self.speeds[i]</code></pre>
+</details>
+</dd>
+<dt id="Jameoba.Spheros.MultiSphero.setup_leader_followers"><code class="name flex">
+<span>def <span class="ident">setup_leader_followers</span></span>(<span>self, channel=0)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Method to setup a leader/followers of multiple Spheros.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def setup_leader_followers(self, channel=0):
+        &#34;&#34;&#34; Method to setup a leader/followers of multiple Spheros. &#34;&#34;&#34;
+
+        pass</code></pre>
+</details>
+</dd>
+<dt id="Jameoba.Spheros.MultiSphero.stop"><code class="name flex">
+<span>def <span class="ident">stop</span></span>(<span>self, ids=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Method to stop specific Spheros.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>ids</code></strong> :&ensp;<code>tuple</code> of <code>int</code> or <code>None</code></dt>
+<dd>The Apriltags IDs of the Spheros to stop.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def stop(self, ids=None):
+        &#34;&#34;&#34;Method to stop specific Spheros.
+
+        Parameters
+        ----------
+        ids : tuple of int or None
+                The Apriltags IDs of the Spheros to stop.
+        &#34;&#34;&#34;
+
+        if ids is None:
+                for (i, sphero) in enumerate(self.spheros):
+                        sphero.stop()
+        else:
+                if type(ids) is int:
+                        self.spheros[ids].stop()
+                else:
+                        for i in ids:
+                                self.spheros[i].stop()</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="Jameoba.Spheros.MultiSpheroBolt"><code class="flex name class">
+<span>class <span class="ident">MultiSpheroBolt</span></span>
+<span>(</span><span>tag_ids=(), verbosity=0, try_num=1)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>The subclass of multiple Sphero Bolt.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>tag_ids</code></strong> :&ensp;<code>tuple</code> of <code>int</code></dt>
+<dd>The Apriltag IDs of each Sphero Bolt.</dd>
+<dt><strong><code>verbosity</code></strong> :&ensp;<code>int</code></dt>
+<dd>The verbosity level of the instance.</dd>
+<dt><strong><code>try_num</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of time to try connecting to each Sphero Bolt.</dd>
+</dl>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>ids</code></strong> :&ensp;<code>tuple</code> of <code>int</code></dt>
+<dd>The Apriltag IDs of each Sphero Bolt.</dd>
+<dt><strong><code>verb</code></strong> :&ensp;<code>int</code></dt>
+<dd>The verbosity level of this class instance.</dd>
+<dt><strong><code>num</code></strong> :&ensp;<code>int</code></dt>
+<dd>The number of Sphero Bolt in this swarm.</dd>
+<dt><strong><code>headings</code></strong> :&ensp;<code>ndarray</code></dt>
+<dd>The desired heading angles for all the Sphero Bolt.</dd>
+<dt><strong><code>speeds</code></strong> :&ensp;<code>ndarray</code></dt>
+<dd>The desired speeds for all the Sphero Bolt.</dd>
+<dt><strong><code>spheros</code></strong> :&ensp;<code>ndarray</code> of <a title="Jameoba.Spheros.SpheroBolt" href="#Jameoba.Spheros.SpheroBolt"><code>SpheroBolt</code></a></dt>
+<dd>A numpy array containing all the Sphero Bolt instances.</dd>
+</dl>
+<p>Constructor for MultiSpheroBolt class.</p>
+<h2 id="parameters_1">Parameters</h2>
+<dl>
+<dt><strong><code>tag_ids</code></strong> :&ensp;<code>tuple</code> of <code>int</code></dt>
+<dd>The Apriltag IDs of all the Sphero Bolt.</dd>
+<dt><strong><code>verbosity</code></strong> :&ensp;<code>int</code></dt>
+<dd>The verbosity level of the instance.</dd>
+<dt><strong><code>try_num</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of time to try connecting to all the Sphero Bolt.</dd>
+</dl>
+<h2 id="yields">Yields</h2>
+<dl>
+<dt><a title="Jameoba.Spheros.MultiSpheroBolt" href="#Jameoba.Spheros.MultiSpheroBolt"><code>MultiSpheroBolt</code></a></dt>
+<dd>A MultiSpheroBolt instance.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class MultiSpheroBolt(MultiSphero):
+        &#34;&#34;&#34;The subclass of multiple Sphero Bolt.
+
+        Parameters
+        ----------
+        tag_ids : tuple of int
+                The Apriltag IDs of each Sphero Bolt.
+        verbosity : int
+                The verbosity level of the instance.
+        try_num : int
+                Number of time to try connecting to each Sphero Bolt.
+
+        Attributes
+        ----------
+        ids : tuple of int
+                The Apriltag IDs of each Sphero Bolt.
+        verb : int
+                The verbosity level of this class instance.
+        num : int
+                The number of Sphero Bolt in this swarm.
+        headings : ndarray
+                The desired heading angles for all the Sphero Bolt.
+        speeds : ndarray
+                The desired speeds for all the Sphero Bolt.
+        spheros : ndarray of SpheroBolt
+                A numpy array containing all the Sphero Bolt instances.
+        &#34;&#34;&#34;
+
+        def __init__(self, tag_ids=(), verbosity=0, try_num=1):
+                &#34;&#34;&#34;Constructor for MultiSpheroBolt class.
+
+                Parameters
+                ----------
+                tag_ids : tuple of int
+                        The Apriltag IDs of all the Sphero Bolt.
+                verbosity : int
+                        The verbosity level of the instance.
+                try_num : int
+                        Number of time to try connecting to all the Sphero Bolt.
+
+                Yields
+                ------
+                MultiSpheroBolt
+                        A MultiSpheroBolt instance.
+                &#34;&#34;&#34;
+
+                super().__init__(tag_ids=tag_ids, verbosity=verbosity)
+
+                self.spheros = zeros(self.num, dtype=SpheroBolt)
+
+                if self.verb == 0:
+                        print(&#34;\n[Connecting to Swarm]&#34;)
+
+                for (i, ids) in enumerate(self.ids):
+                        if self.verb == 0:
+                                print(&#34;\rConnecting to ID {0} ({1}/{2})...&#34;.format(ids, i + 1, self.num), end=&#39;&#39;)
+
+                        try:
+                                self.spheros[i] = SpheroBolt(tag_id=ids, verbosity=-1, try_num=try_num)
+                        except CantConnectError:
+                                print(&#34;\nCan&#39;t connect to Sphero {0}. Exiting...&#34;.format(ids))
+                                exit()
+
+                if self.verb == 0:
+                        print(&#34;\n[Connected to Swarm]\n&#34;)
+
+        def init_heading(self):
+                &#34;&#34;&#34; Method to initialize the initial angle of multiple Spheros. &#34;&#34;&#34;
+
+                for s in self.spheros:
+                        s.sphero.driving.drive_with_heading(0, 0)
+                        s.sphero.driving.set_stabilization(StabilizationIndex.no_control_system)
+                        s.sphero.user_io.set_all_leds_8_bit_mask(Color(), Color(0, 0, 255))
+
+                print(&#34;*** Head the backLED toward the left of the camera frame. ***&#34;)
+                input(&#34;Press Enter to continue...&#34;)
+
+                print(&#34;\nLoop started\n&#34;)
+
+                for s in self.spheros:
+                        s.sphero.driving.reset_yaw()
+                        s.sphero.user_io.set_all_leds_8_bit_mask(Color(), Color())
+                        s.sphero.driving.set_stabilization(StabilizationIndex.full_control_system)
+
+        def setup_leader_followers(self, channel=0):
+                &#34;&#34;&#34; Method to setup a leader/followers of multiple Spheros. &#34;&#34;&#34;
+
+                if type(channel) is not int:
+                        print(&#34;The channel should be an int.&#34;)
+                else:
+                        self.lf_channel = channel
+
+                        for (i, s) in enumerate(self.spheros):
+                                if i == 0:
+                                        s.set_as_leader(channel=self.lf_channel)
+                                else:
+                                        s.set_as_follower(channel=self.lf_channel)
+
+        def calibrate_north(self):
+                &#34;&#34;&#34; Method to calibrate north on the spheros &#34;&#34;&#34;
+
+                for (i, s) in enumerate(self.spheros):
+                        s.calibrate_north()
+
+        def notify_north(self):
+                &#34;&#34;&#34; Method to notify the North? &#34;&#34;&#34;
+
+                for (i, s) in enumerate(self.spheros):
+                        s.notify_north()</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="Jameoba.Spheros.MultiSphero" href="#Jameoba.Spheros.MultiSphero">MultiSphero</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="Jameoba.Spheros.MultiSpheroBolt.notify_north"><code class="name flex">
+<span>def <span class="ident">notify_north</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Method to notify the North?</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def notify_north(self):
+        &#34;&#34;&#34; Method to notify the North? &#34;&#34;&#34;
+
+        for (i, s) in enumerate(self.spheros):
+                s.notify_north()</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="Jameoba.Spheros.MultiSphero" href="#Jameoba.Spheros.MultiSphero">MultiSphero</a></b></code>:
+<ul class="hlist">
+<li><code><a title="Jameoba.Spheros.MultiSphero.calibrate_north" href="#Jameoba.Spheros.MultiSphero.calibrate_north">calibrate_north</a></code></li>
+<li><code><a title="Jameoba.Spheros.MultiSphero.init_heading" href="#Jameoba.Spheros.MultiSphero.init_heading">init_heading</a></code></li>
+<li><code><a title="Jameoba.Spheros.MultiSphero.send" href="#Jameoba.Spheros.MultiSphero.send">send</a></code></li>
+<li><code><a title="Jameoba.Spheros.MultiSphero.set_colors" href="#Jameoba.Spheros.MultiSphero.set_colors">set_colors</a></code></li>
+<li><code><a title="Jameoba.Spheros.MultiSphero.set_headings" href="#Jameoba.Spheros.MultiSphero.set_headings">set_headings</a></code></li>
+<li><code><a title="Jameoba.Spheros.MultiSphero.set_speeds" href="#Jameoba.Spheros.MultiSphero.set_speeds">set_speeds</a></code></li>
+<li><code><a title="Jameoba.Spheros.MultiSphero.setup_leader_followers" href="#Jameoba.Spheros.MultiSphero.setup_leader_followers">setup_leader_followers</a></code></li>
+<li><code><a title="Jameoba.Spheros.MultiSphero.stop" href="#Jameoba.Spheros.MultiSphero.stop">stop</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="Jameoba.Spheros.MultiSpheroMini"><code class="flex name class">
+<span>class <span class="ident">MultiSpheroMini</span></span>
+<span>(</span><span>tag_ids=(), verbosity=0, try_num=1)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>The subclass of multiple Sphero Mini.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>tag_ids</code></strong> :&ensp;<code>tuple</code> of <code>int</code></dt>
+<dd>The Apriltag IDs of each Sphero Mini.</dd>
+<dt><strong><code>verbosity</code></strong> :&ensp;<code>int</code></dt>
+<dd>The verbosity level of the instance.</dd>
+<dt><strong><code>try_num</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of time to try connecting to each Sphero Mini.</dd>
+</dl>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>ids</code></strong> :&ensp;<code>tuple</code> of <code>int</code></dt>
+<dd>The Apriltag IDs of each Sphero Mini.</dd>
+<dt><strong><code>verb</code></strong> :&ensp;<code>int</code></dt>
+<dd>The verbosity level of this class instance.</dd>
+<dt><strong><code>num</code></strong> :&ensp;<code>int</code></dt>
+<dd>The number of Sphero Mini in this swarm.</dd>
+<dt><strong><code>headings</code></strong> :&ensp;<code>ndarray</code></dt>
+<dd>The desired heading angles for all the Sphero Mini.</dd>
+<dt><strong><code>speeds</code></strong> :&ensp;<code>ndarray</code></dt>
+<dd>The desired speeds for all the Sphero Mini.</dd>
+<dt><strong><code>spheros</code></strong> :&ensp;<code>ndarray</code> of <a title="Jameoba.Spheros.SpheroMini" href="#Jameoba.Spheros.SpheroMini"><code>SpheroMini</code></a></dt>
+<dd>A numpy array containing all the Sphero Mini instances.</dd>
+</dl>
+<p>Constructor for MultiSpheroMini class.</p>
+<h2 id="parameters_1">Parameters</h2>
+<dl>
+<dt><strong><code>tag_ids</code></strong> :&ensp;<code>tuple</code> of <code>int</code></dt>
+<dd>The Apriltag IDs of all the Sphero Mini.</dd>
+<dt><strong><code>verbosity</code></strong> :&ensp;<code>int</code></dt>
+<dd>The verbosity level of the instance.</dd>
+<dt><strong><code>try_num</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of time to try connecting to all the Sphero Mini.</dd>
+</dl>
+<h2 id="yields">Yields</h2>
+<dl>
+<dt><a title="Jameoba.Spheros.MultiSpheroMini" href="#Jameoba.Spheros.MultiSpheroMini"><code>MultiSpheroMini</code></a></dt>
+<dd>A MultiSpheroMini instance.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class MultiSpheroMini(MultiSphero):
+        &#34;&#34;&#34;The subclass of multiple Sphero Mini.
+
+        Parameters
+        ----------
+        tag_ids : tuple of int
+                The Apriltag IDs of each Sphero Mini.
+        verbosity : int
+                The verbosity level of the instance.
+        try_num : int
+                Number of time to try connecting to each Sphero Mini.
+
+        Attributes
+        ----------
+        ids : tuple of int
+                The Apriltag IDs of each Sphero Mini.
+        verb : int
+                The verbosity level of this class instance.
+        num : int
+                The number of Sphero Mini in this swarm.
+        headings : ndarray
+                The desired heading angles for all the Sphero Mini.
+        speeds : ndarray
+                The desired speeds for all the Sphero Mini.
+        spheros : ndarray of SpheroMini
+                A numpy array containing all the Sphero Mini instances.
+        &#34;&#34;&#34;
+
+        def __init__(self, tag_ids=(), verbosity=0, try_num=1):
+                &#34;&#34;&#34;Constructor for MultiSpheroMini class.
+
+                Parameters
+                ----------
+                tag_ids : tuple of int
+                        The Apriltag IDs of all the Sphero Mini.
+                verbosity : int
+                        The verbosity level of the instance.
+                try_num : int
+                        Number of time to try connecting to all the Sphero Mini.
+
+                Yields
+                ------
+                MultiSpheroMini
+                        A MultiSpheroMini instance.
+                &#34;&#34;&#34;
+
+                super().__init__(tag_ids=tag_ids, verbosity=verbosity)
+
+                self.spheros = zeros(self.num, dtype=SpheroMini)
+
+                if self.verb == 0:
+                        print(&#34;\n[Connecting to Swarm]&#34;)
+
+                for (i, ids) in enumerate(self.ids):
+                        if self.verb == 0:
+                                print(&#34;\rConnecting to ID {0} ({1}/{2})...&#34;.format(ids, i + 1, self.num), end=&#39;&#39;)
+
+                        try:
+                                self.spheros[i] = SpheroMini(tag_id=ids, verbosity=-1, try_num=try_num)
+                        except CantConnectError:
+                                print(&#34;\nCan&#39;t connect to Sphero {0}. Exiting...&#34;.format(ids))
+                                exit()
+
+                if self.verb == 0:
+                        print(&#34;\n[Connected to Swarm]\n&#34;)
+
+        def init_heading(self):
+                &#34;&#34;&#34; Method to initialize the initial angle of multiple Spheros. &#34;&#34;&#34;
+
+                for s in self.spheros:
+                        s.sphero.stabilization(False)
+                        s.sphero.roll(speed=0, heading=0)
+                        s.sphero.setBackLEDIntensity(brightness=255)
+
+                print(&#34;*** Head the backLED toward the left of the camera frame. ***&#34;)
+                input(&#34;Press Enter to continue...&#34;)
+
+                print(&#34;\nLoop started\n&#34;)
+
+                for s in self.spheros:
+                        s.sphero.resetHeading()
+                        s.sphero.setBackLEDIntensity(brightness=0)
+                        s.sphero.stabilization(True)
+
+        def setup_leader_followers(self, channel=0):
+                &#34;&#34;&#34; Method to setup a leader/followers of multiple Spheros. &#34;&#34;&#34;
+
+                print(&#34;This function is not available with Sphero Mini.&#34;)
+
+        def calibrate_north(self):
+                &#34;&#34;&#34; Method to calibrate north on the spheros &#34;&#34;&#34;
+
+                print(&#34;This function is not available with Sphero Mini.&#34;)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="Jameoba.Spheros.MultiSphero" href="#Jameoba.Spheros.MultiSphero">MultiSphero</a></li>
+</ul>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="Jameoba.Spheros.MultiSphero" href="#Jameoba.Spheros.MultiSphero">MultiSphero</a></b></code>:
+<ul class="hlist">
+<li><code><a title="Jameoba.Spheros.MultiSphero.calibrate_north" href="#Jameoba.Spheros.MultiSphero.calibrate_north">calibrate_north</a></code></li>
+<li><code><a title="Jameoba.Spheros.MultiSphero.init_heading" href="#Jameoba.Spheros.MultiSphero.init_heading">init_heading</a></code></li>
+<li><code><a title="Jameoba.Spheros.MultiSphero.send" href="#Jameoba.Spheros.MultiSphero.send">send</a></code></li>
+<li><code><a title="Jameoba.Spheros.MultiSphero.set_colors" href="#Jameoba.Spheros.MultiSphero.set_colors">set_colors</a></code></li>
+<li><code><a title="Jameoba.Spheros.MultiSphero.set_headings" href="#Jameoba.Spheros.MultiSphero.set_headings">set_headings</a></code></li>
+<li><code><a title="Jameoba.Spheros.MultiSphero.set_speeds" href="#Jameoba.Spheros.MultiSphero.set_speeds">set_speeds</a></code></li>
+<li><code><a title="Jameoba.Spheros.MultiSphero.setup_leader_followers" href="#Jameoba.Spheros.MultiSphero.setup_leader_followers">setup_leader_followers</a></code></li>
+<li><code><a title="Jameoba.Spheros.MultiSphero.stop" href="#Jameoba.Spheros.MultiSphero.stop">stop</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="Jameoba.Spheros.Sphero"><code class="flex name class">
+<span>class <span class="ident">Sphero</span></span>
+<span>(</span><span>tag_id=0, verbosity=1)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>The super class of a single Sphero.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>tag_id</code></strong> :&ensp;<code>int</code></dt>
+<dd>The Apriltag ID of the Sphero.</dd>
+<dt><strong><code>verbosity</code></strong> :&ensp;<code>int</code></dt>
+<dd>The verbosity level of the instance.</dd>
+</dl>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>id</code></strong> :&ensp;<code>int</code></dt>
+<dd>The Apriltag ID of the Sphero.</dd>
+<dt><strong><code>verb</code></strong> :&ensp;<code>int</code></dt>
+<dd>The verbosity level of this class instance.</dd>
+<dt><strong><code>connected</code></strong> :&ensp;<code>bool</code></dt>
+<dd>True if the Sphero is connected.</dd>
+<dt><strong><code>is_follower</code></strong> :&ensp;<code>bool</code></dt>
+<dd>True if the Sphero is following.</dd>
+<dt><strong><code>is_leader</code></strong> :&ensp;<code>bool</code></dt>
+<dd>True if the Sphero is leading.</dd>
+<dt><strong><code>_heading</code></strong> :&ensp;<code>int</code></dt>
+<dd>The desired heading angle for the Sphero.</dd>
+<dt><strong><code>_speed</code></strong> :&ensp;<code>int</code></dt>
+<dd>The desired speed for the Sphero.</dd>
+</dl>
+<p>Constructor for Sphero class.</p>
+<h2 id="parameters_1">Parameters</h2>
+<dl>
+<dt><strong><code>tag_id</code></strong> :&ensp;<code>int</code></dt>
+<dd>The Apriltag ID of the Sphero.</dd>
+<dt><strong><code>verbosity</code></strong> :&ensp;<code>int</code></dt>
+<dd>The verbosity level of the instance.</dd>
+</dl>
+<h2 id="yields">Yields</h2>
+<dl>
+<dt><a title="Jameoba.Spheros.Sphero" href="#Jameoba.Spheros.Sphero"><code>Sphero</code></a></dt>
+<dd>A Sphero instance.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class Sphero:
+        &#34;&#34;&#34;The super class of a single Sphero.
+
+        Parameters
+        ----------
+        tag_id : int
+                The Apriltag ID of the Sphero.
+        verbosity : int
+                The verbosity level of the instance.
+
+        Attributes
+        ----------
+        id : int
+                The Apriltag ID of the Sphero.
+        verb : int
+                The verbosity level of this class instance.
+        connected : bool
+                True if the Sphero is connected.
+        is_follower : bool
+                True if the Sphero is following.
+        is_leader : bool
+                True if the Sphero is leading.
+        _heading : int
+                The desired heading angle for the Sphero.
+        _speed : int
+                The desired speed for the Sphero.
+        &#34;&#34;&#34;
+
+        def __init__(self, tag_id=0, verbosity=1):
+                &#34;&#34;&#34;Constructor for Sphero class.
+
+                Parameters
+                ----------
+                tag_id : int
+                        The Apriltag ID of the Sphero.
+                verbosity : int
+                        The verbosity level of the instance.
+
+                Yields
+                ------
+                Sphero
+                        A Sphero instance.
+                &#34;&#34;&#34;
+
+                self.id = tag_id
+                self.verb = verbosity
+                self.connected = False
+                self.is_follower = False
+                self.is_leader = False
+                self._heading = 0
+                self._speed = 0
+
+        def __del__(self):
+                &#34;&#34;&#34; Destructor of the Sphero class. &#34;&#34;&#34;
+
+                print(&#34;\r  \r&#34;, end=&#39;&#39;)
+                self.disconnect()
+
+        def disconnect(self):
+                &#34;&#34;&#34; Method to put the Sphero to sleep and disconnect it. &#34;&#34;&#34;
+
+                pass
+
+        def send(self, speed=None, heading=None):
+                &#34;&#34;&#34;Method to send speed and heading command to the Sphero.
+
+                Parameters
+                ----------
+                speed : int or None
+                        Desired speed of the Sphero.
+                heading : int or None
+                        Desired heading of the Sphero.
+                &#34;&#34;&#34;
+
+                pass
+
+        def stop(self):
+                &#34;&#34;&#34; Method to stop the Sphero. &#34;&#34;&#34;
+
+                pass
+
+        def init_heading(self):
+                &#34;&#34;&#34; Method to set the initial heading angle for the Sphero. &#34;&#34;&#34;
+
+                pass
+
+        def set_color(self, rgb):
+                &#34;&#34;&#34;Method to set the color of the Sphero.
+
+                Parameters
+                ----------
+                rgb : tuple of int
+                        Tuple containing the RGB values of the desired color.
+                &#34;&#34;&#34;
+
+                pass
+
+        def set_as_leader(self, channel=0):
+                &#34;&#34;&#34;Method to set the Sphero as a leader.
+
+                Parameters
+                ----------
+                channel : int
+                        Channel you want to broadcast to.
+                &#34;&#34;&#34;
+
+                pass
+
+        def set_as_follower(self, channel=0):
+                &#34;&#34;&#34;Method to set the Sphero as a follower.
+
+                Parameters
+                ----------
+                channel : int
+                        Channel you want to listen to.
+                &#34;&#34;&#34;
+
+                pass
+
+        def get_light_sensor_value(self):
+                &#34;&#34;&#34; Method to get the light sensor value. &#34;&#34;&#34;
+
+                pass
+
+        def calibrate_north(self):
+                &#34;&#34;&#34; Method to calibrate the north on the Sphero &#34;&#34;&#34;
+
+                pass
+
+        @property
+        def heading(self):
+                return self._heading
+
+        @property
+        def speed(self):
+                return self._speed
+
+        @heading.setter
+        def heading(self, heading):
+                self._heading = heading % 360
+
+        @speed.setter
+        def speed(self, speed=0):
+                self._speed = max(0, min(speed, 255))</code></pre>
+</details>
+<h3>Subclasses</h3>
+<ul class="hlist">
+<li><a title="Jameoba.Spheros.SpheroMini" href="#Jameoba.Spheros.SpheroMini">SpheroMini</a></li>
+<li><a title="Jameoba.Spheros.SpheroBolt" href="#Jameoba.Spheros.SpheroBolt">SpheroBolt</a></li>
+</ul>
+<h3>Instance variables</h3>
+<dl>
+<dt id="Jameoba.Spheros.Sphero.heading"><code class="name">var <span class="ident">heading</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def heading(self):
+        return self._heading</code></pre>
+</details>
+</dd>
+<dt id="Jameoba.Spheros.Sphero.speed"><code class="name">var <span class="ident">speed</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def speed(self):
+        return self._speed</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="Jameoba.Spheros.Sphero.calibrate_north"><code class="name flex">
+<span>def <span class="ident">calibrate_north</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Method to calibrate the north on the Sphero</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def calibrate_north(self):
+        &#34;&#34;&#34; Method to calibrate the north on the Sphero &#34;&#34;&#34;
+
+        pass</code></pre>
+</details>
+</dd>
+<dt id="Jameoba.Spheros.Sphero.disconnect"><code class="name flex">
+<span>def <span class="ident">disconnect</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Method to put the Sphero to sleep and disconnect it.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def disconnect(self):
+        &#34;&#34;&#34; Method to put the Sphero to sleep and disconnect it. &#34;&#34;&#34;
+
+        pass</code></pre>
+</details>
+</dd>
+<dt id="Jameoba.Spheros.Sphero.get_light_sensor_value"><code class="name flex">
+<span>def <span class="ident">get_light_sensor_value</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Method to get the light sensor value.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_light_sensor_value(self):
+        &#34;&#34;&#34; Method to get the light sensor value. &#34;&#34;&#34;
+
+        pass</code></pre>
+</details>
+</dd>
+<dt id="Jameoba.Spheros.Sphero.init_heading"><code class="name flex">
+<span>def <span class="ident">init_heading</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Method to set the initial heading angle for the Sphero.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def init_heading(self):
+        &#34;&#34;&#34; Method to set the initial heading angle for the Sphero. &#34;&#34;&#34;
+
+        pass</code></pre>
+</details>
+</dd>
+<dt id="Jameoba.Spheros.Sphero.send"><code class="name flex">
+<span>def <span class="ident">send</span></span>(<span>self, speed=None, heading=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Method to send speed and heading command to the Sphero.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>speed</code></strong> :&ensp;<code>int</code> or <code>None</code></dt>
+<dd>Desired speed of the Sphero.</dd>
+<dt><strong><code>heading</code></strong> :&ensp;<code>int</code> or <code>None</code></dt>
+<dd>Desired heading of the Sphero.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def send(self, speed=None, heading=None):
+        &#34;&#34;&#34;Method to send speed and heading command to the Sphero.
+
+        Parameters
+        ----------
+        speed : int or None
+                Desired speed of the Sphero.
+        heading : int or None
+                Desired heading of the Sphero.
+        &#34;&#34;&#34;
+
+        pass</code></pre>
+</details>
+</dd>
+<dt id="Jameoba.Spheros.Sphero.set_as_follower"><code class="name flex">
+<span>def <span class="ident">set_as_follower</span></span>(<span>self, channel=0)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Method to set the Sphero as a follower.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>channel</code></strong> :&ensp;<code>int</code></dt>
+<dd>Channel you want to listen to.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_as_follower(self, channel=0):
+        &#34;&#34;&#34;Method to set the Sphero as a follower.
+
+        Parameters
+        ----------
+        channel : int
+                Channel you want to listen to.
+        &#34;&#34;&#34;
+
+        pass</code></pre>
+</details>
+</dd>
+<dt id="Jameoba.Spheros.Sphero.set_as_leader"><code class="name flex">
+<span>def <span class="ident">set_as_leader</span></span>(<span>self, channel=0)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Method to set the Sphero as a leader.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>channel</code></strong> :&ensp;<code>int</code></dt>
+<dd>Channel you want to broadcast to.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_as_leader(self, channel=0):
+        &#34;&#34;&#34;Method to set the Sphero as a leader.
+
+        Parameters
+        ----------
+        channel : int
+                Channel you want to broadcast to.
+        &#34;&#34;&#34;
+
+        pass</code></pre>
+</details>
+</dd>
+<dt id="Jameoba.Spheros.Sphero.set_color"><code class="name flex">
+<span>def <span class="ident">set_color</span></span>(<span>self, rgb)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Method to set the color of the Sphero.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>rgb</code></strong> :&ensp;<code>tuple</code> of <code>int</code></dt>
+<dd>Tuple containing the RGB values of the desired color.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_color(self, rgb):
+        &#34;&#34;&#34;Method to set the color of the Sphero.
+
+        Parameters
+        ----------
+        rgb : tuple of int
+                Tuple containing the RGB values of the desired color.
+        &#34;&#34;&#34;
+
+        pass</code></pre>
+</details>
+</dd>
+<dt id="Jameoba.Spheros.Sphero.stop"><code class="name flex">
+<span>def <span class="ident">stop</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Method to stop the Sphero.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def stop(self):
+        &#34;&#34;&#34; Method to stop the Sphero. &#34;&#34;&#34;
+
+        pass</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="Jameoba.Spheros.SpheroBolt"><code class="flex name class">
+<span>class <span class="ident">SpheroBolt</span></span>
+<span>(</span><span>tag_id=0, verbosity=1, try_num=1)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>The subclass of Sphero for a single Sphero Bolt.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>tag_id</code></strong> :&ensp;<code>int</code></dt>
+<dd>The Apriltag ID of the Sphero Bolt.</dd>
+<dt><strong><code>verbosity</code></strong> :&ensp;<code>int</code></dt>
+<dd>The verbosity level of the instance.</dd>
+<dt><strong><code>try_num</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of time to try connecting to the Sphero Bolt.</dd>
+</dl>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>id</code></strong> :&ensp;<code>int</code></dt>
+<dd>The Apriltag ID of the Sphero Bolt.</dd>
+<dt><strong><code>verb</code></strong> :&ensp;<code>int</code></dt>
+<dd>The verbosity level of this class instance.</dd>
+<dt><strong><code>connected</code></strong> :&ensp;<code>bool</code></dt>
+<dd>True if the Sphero Bolt is connected.</dd>
+<dt><strong><code>_heading</code></strong> :&ensp;<code>int</code></dt>
+<dd>The desired heading angle for the Sphero Bolt.</dd>
+<dt><strong><code>_speed</code></strong> :&ensp;<code>int</code></dt>
+<dd>The desired speed for the Sphero Bolt.</dd>
+<dt><strong><code>address</code></strong> :&ensp;<code>str</code></dt>
+<dd>The MAC address of the Sphero Bolt.</dd>
+<dt><strong><code>name</code></strong> :&ensp;<code>str</code></dt>
+<dd>The name of the Sphero Bolt.</dd>
+<dt><strong><code>toerr</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of time the Sphero encountered a TimeOut Error</dd>
+</dl>
+<p>Constructor for SpheroBolt class.</p>
+<h2 id="parameters_1">Parameters</h2>
+<dl>
+<dt><strong><code>tag_id</code></strong> :&ensp;<code>int</code></dt>
+<dd>The Apriltag ID of the Sphero Bolt.</dd>
+<dt><strong><code>verbosity</code></strong> :&ensp;<code>int</code></dt>
+<dd>The verbosity level of the instance.</dd>
+<dt><strong><code>try_num</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of time to try connecting to the Sphero Bolt.</dd>
+</dl>
+<h2 id="yields">Yields</h2>
+<dl>
+<dt><a title="Jameoba.Spheros.SpheroBolt" href="#Jameoba.Spheros.SpheroBolt"><code>SpheroBolt</code></a></dt>
+<dd>A SpheroBolt instance.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SpheroBolt(Sphero):
+        &#34;&#34;&#34;The subclass of Sphero for a single Sphero Bolt.
+
+        Parameters
+        ----------
+        tag_id : int
+                The Apriltag ID of the Sphero Bolt.
+        verbosity : int
+                The verbosity level of the instance.
+        try_num : int
+                Number of time to try connecting to the Sphero Bolt.
+
+        Attributes
+        ----------
+        id : int
+                The Apriltag ID of the Sphero Bolt.
+        verb : int
+                The verbosity level of this class instance.
+        connected : bool
+                True if the Sphero Bolt is connected.
+        _heading : int
+                The desired heading angle for the Sphero Bolt.
+        _speed : int
+                The desired speed for the Sphero Bolt.
+        address : str
+                The MAC address of the Sphero Bolt.
+        name : str
+                The name of the Sphero Bolt.
+        toerr : int
+                Number of time the Sphero encountered a TimeOut Error
+        &#34;&#34;&#34;
+
+        def __init__(self, tag_id=0, verbosity=1, try_num=1):
+                &#34;&#34;&#34;Constructor for SpheroBolt class.
+
+                Parameters
+                ----------
+                tag_id : int
+                        The Apriltag ID of the Sphero Bolt.
+                verbosity : int
+                        The verbosity level of the instance.
+                try_num : int
+                        Number of time to try connecting to the Sphero Bolt.
+
+                Yields
+                ------
+                SpheroBolt
+                        A SpheroBolt instance.
+                &#34;&#34;&#34;
+
+                # Create an instance of Sphero
+                super().__init__(tag_id, verbosity)
+
+                # Add values for Sphero Bolt
+                self.address = MAC_ADDRESS[BOLT][self.id]
+                self.name = &#34;Sphero Bolt {0}&#34;.format(self.id)
+
+                # Connect to the Sphero
+                if self.verb == 0:
+                        print(&#34;\nConnecting to {0}&#34;.format(self.name))
+
+                try_count = 1
+                while not self.connected:
+                        if try_count &lt;= try_num:
+                                try:
+                                        if self.verb == 0:
+                                                print(&#34;\rTry {0} of {1}&#34;.format(try_count, try_num), end=&#34;&#34;)
+                                        self.sphero = PySphero(mac_address=self.address)
+                                        self.connected = True
+                                except BTLEDisconnectError:
+                                        try_count += 1
+
+                        else:
+                                raise CantConnectError(&#34;Can&#39;t connect to {} after {} attempts.&#34;.format(self.name, try_count - 1))
+
+                # Call __enter__ as required by the class (because not used with &#34;with&#34;)
+                self.sphero.__enter__()
+                self.sphero.power.wake()
+
+                if self.verb == 0:
+                        print(&#34;\nConnected to {0}\n&#34;.format(self.name))
+
+                self.connected = True
+                self.not_received = True
+                self.resp = {}
+                self.toerr = 0
+
+        def disconnect(self):
+                &#34;&#34;&#34; Method to put the Sphero Bolt to sleep and disconnect it. &#34;&#34;&#34;
+
+                if self.connected:
+                        try:
+                                if self.is_follower:
+                                        self.sphero.sensor.request(command_id=CustomPySpheroCommand.stop_following,
+                                                                                           target_id=0x12,)
+                                if self.is_leader:
+                                        self.sphero.sensor.request(command_id=CustomPySpheroCommand.stop_IR_broadcast,
+                                                                                           target_id=0x12, )
+                                self.sphero.power.enter_soft_sleep()
+                                self.sphero.sphero_core.close()
+                        except BTLEInternalError:
+                                print(&#34;The device is already disconnected.&#34;)
+
+        def send(self, speed=None, heading=None):
+                &#34;&#34;&#34;Method to send speed and heading command to the Sphero Bolt.
+
+                Parameters
+                ----------
+                speed : int or None
+                        Desired speed of the Sphero Bolt.
+                heading : int or None
+                        Desired heading of the Sphero Bolt.
+                &#34;&#34;&#34;
+
+                if speed is not None:
+                        self.speed = speed
+                if heading is not None:
+                        self.heading = heading
+
+                try:
+                        self.sphero.driving.drive_with_heading(self.speed, self.heading)
+                except PySpheroTimeoutError:
+                        self.toerr += 1
+
+        def stop(self):
+                &#34;&#34;&#34; Method to stop the Sphero Bolt. &#34;&#34;&#34;
+
+                self.sphero.driving.drive_with_heading(0, self.heading)
+
+        def init_heading(self):
+                &#34;&#34;&#34; Method to set the initial heading angle for the Sphero Bolt. &#34;&#34;&#34;
+
+                self.sphero.driving.drive_with_heading(0, 0)
+                self.sphero.driving.set_stabilization(StabilizationIndex.no_control_system)
+                self.sphero.user_io.set_all_leds_8_bit_mask(Color(), Color(0, 0, 255))
+
+                print(&#34;Head the backLED toward the left of the camera frame.&#34;)
+                input(&#34;Press Enter to continue...&#34;)
+
+                self.sphero.driving.reset_yaw()
+                self.sphero.user_io.set_all_leds_8_bit_mask(Color(), Color())
+                self.sphero.driving.set_stabilization(StabilizationIndex.full_control_system)
+
+        def set_color(self, rgb):
+                &#34;&#34;&#34;Method to set the color of the Sphero Bolt.
+
+                Parameters
+                ----------
+                rgb : tuple of int
+                        Tuple containing the RGB values of the desired color.
+                &#34;&#34;&#34;
+
+                c = Color(rgb[0], rgb[1], rgb[2])
+                self.sphero.user_io.set_all_leds_8_bit_mask(c, c)
+                self.sphero.user_io.set_led_matrix_one_color(c)
+
+        def set_as_leader(self, channel=0):
+                &#34;&#34;&#34;Method to set the Sphero as a leader.
+
+                Parameters
+                ----------
+                channel : int
+                        Channel you want to broadcast to.
+                &#34;&#34;&#34;
+
+                self.is_leader = True
+                self.sphero.sensor.request(command_id=CustomPySpheroCommand.start_IR_broadcast,
+                                                                   target_id=0x12,
+                                                                   data=[2*channel, 2*channel+1])
+
+        def set_as_follower(self, channel=0):
+                &#34;&#34;&#34;Method to set the Sphero as a follower.
+
+                Parameters
+                ----------
+                channel : int
+                        Channel you want to listen to.
+                &#34;&#34;&#34;
+
+                self.is_follower = True
+                self.sphero.sensor.request(command_id=CustomPySpheroCommand.start_following,
+                                                                   target_id=0x12,
+                                                                   data=[2*channel, 2*channel+1])
+
+        def get_light_sensor_value(self):
+                &#34;&#34;&#34; Method to get the light sensor value.
+
+                Return
+                ------
+                float
+                        The ligth sensor value in lux.
+                &#34;&#34;&#34;
+
+                value = self.sphero.sensor.get_ambient_light_sensor_value()
+                return value
+
+        def calibrate_north(self):
+                &#34;&#34;&#34; Method to calibrate the north on the Sphero &#34;&#34;&#34;
+
+                self.sphero.sensor.magnetometer_calibrate_to_north()
+
+        def notify_north(self):
+                &#34;&#34;&#34; Method to notify the North? NOT WORKING, TO LOOK IN THE FUTURE. &#34;&#34;&#34;
+
+                self.sphero.sensor.notify(command_id=SensorCommand.magnetometer_north_yaw_notify, callback=self.notify_callback)
+
+        def notify_callback(self, response: Packet):
+                &#34;&#34;&#34; Notify callback. NOT WORKING, TO LOOK IN THE FUTURE.
+
+                Parameters
+                ----------
+                response : Packet
+                        The response from the Sphero
+                &#34;&#34;&#34;
+
+                bytes_list = response.data
+                res = 0
+                for b in bytes_list:
+                        res += res * 256 + int(b)
+
+                print(&#34;{{}} : &#34;.format(self.id) + str(bytes_list) + &#34; -&gt; {}&#34;.format(res))
+
+                self.sphero.driving.drive_with_heading(speed=0, heading=res)
+
+                self.sphero.driving.reset_yaw()
+
+                self.sphero.driving.drive_with_heading(speed=0, heading=360-res)
+
+        def get_sensor_values(self, sensor):
+                &#34;&#34;&#34; Method to get the value of the given sensors.
+
+                Parameters
+                ----------
+                sensor : Quaternion, Attitude, Accelerometer, AccelOne,  Locator, Velocity, Speed, CoreTime, Gyroscope or AmbientLight
+                        list of the sensors.
+
+                Return
+                ------
+                dict
+                        A dictionary with all the sensor data.
+                &#34;&#34;&#34;
+
+                self.resp = {}
+                self.not_received = True
+                self.sphero.sensor.set_notify(self.sensors_callback, sensor, timeout=2)
+                t = time()
+                while self.not_received:
+                        if time() - t &gt; 2:
+                                self.sphero.sensor.cancel_notify_sensors()
+                                break
+                        continue
+
+                return self.resp
+
+        def sensors_callback(self, response):
+                self.sphero.sensor.cancel_notify_sensors()
+                self.resp = response
+                self.not_received = False</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="Jameoba.Spheros.Sphero" href="#Jameoba.Spheros.Sphero">Sphero</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="Jameoba.Spheros.SpheroBolt.disconnect"><code class="name flex">
+<span>def <span class="ident">disconnect</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Method to put the Sphero Bolt to sleep and disconnect it.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def disconnect(self):
+        &#34;&#34;&#34; Method to put the Sphero Bolt to sleep and disconnect it. &#34;&#34;&#34;
+
+        if self.connected:
+                try:
+                        if self.is_follower:
+                                self.sphero.sensor.request(command_id=CustomPySpheroCommand.stop_following,
+                                                                                   target_id=0x12,)
+                        if self.is_leader:
+                                self.sphero.sensor.request(command_id=CustomPySpheroCommand.stop_IR_broadcast,
+                                                                                   target_id=0x12, )
+                        self.sphero.power.enter_soft_sleep()
+                        self.sphero.sphero_core.close()
+                except BTLEInternalError:
+                        print(&#34;The device is already disconnected.&#34;)</code></pre>
+</details>
+</dd>
+<dt id="Jameoba.Spheros.SpheroBolt.get_light_sensor_value"><code class="name flex">
+<span>def <span class="ident">get_light_sensor_value</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Method to get the light sensor value.</p>
+<h2 id="return">Return</h2>
+<dl>
+<dt><strong><code>float</code></strong></dt>
+<dd>The ligth sensor value in lux.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_light_sensor_value(self):
+        &#34;&#34;&#34; Method to get the light sensor value.
+
+        Return
+        ------
+        float
+                The ligth sensor value in lux.
+        &#34;&#34;&#34;
+
+        value = self.sphero.sensor.get_ambient_light_sensor_value()
+        return value</code></pre>
+</details>
+</dd>
+<dt id="Jameoba.Spheros.SpheroBolt.get_sensor_values"><code class="name flex">
+<span>def <span class="ident">get_sensor_values</span></span>(<span>self, sensor)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Method to get the value of the given sensors.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>sensor</code></strong> :&ensp;<code>Quaternion</code>, <code>Attitude</code>, <code>Accelerometer</code>, <code>AccelOne</code>,
+<code>Locator</code>, <code>Velocity</code>, <code>Speed</code>, <code>CoreTime</code>, <code>Gyroscope</code> or <code>AmbientLight</code></dt>
+<dd>list of the sensors.</dd>
+</dl>
+<h2 id="return">Return</h2>
+<dl>
+<dt><strong><code>dict</code></strong></dt>
+<dd>A dictionary with all the sensor data.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_sensor_values(self, sensor):
+        &#34;&#34;&#34; Method to get the value of the given sensors.
+
+        Parameters
+        ----------
+        sensor : Quaternion, Attitude, Accelerometer, AccelOne,  Locator, Velocity, Speed, CoreTime, Gyroscope or AmbientLight
+                list of the sensors.
+
+        Return
+        ------
+        dict
+                A dictionary with all the sensor data.
+        &#34;&#34;&#34;
+
+        self.resp = {}
+        self.not_received = True
+        self.sphero.sensor.set_notify(self.sensors_callback, sensor, timeout=2)
+        t = time()
+        while self.not_received:
+                if time() - t &gt; 2:
+                        self.sphero.sensor.cancel_notify_sensors()
+                        break
+                continue
+
+        return self.resp</code></pre>
+</details>
+</dd>
+<dt id="Jameoba.Spheros.SpheroBolt.init_heading"><code class="name flex">
+<span>def <span class="ident">init_heading</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Method to set the initial heading angle for the Sphero Bolt.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def init_heading(self):
+        &#34;&#34;&#34; Method to set the initial heading angle for the Sphero Bolt. &#34;&#34;&#34;
+
+        self.sphero.driving.drive_with_heading(0, 0)
+        self.sphero.driving.set_stabilization(StabilizationIndex.no_control_system)
+        self.sphero.user_io.set_all_leds_8_bit_mask(Color(), Color(0, 0, 255))
+
+        print(&#34;Head the backLED toward the left of the camera frame.&#34;)
+        input(&#34;Press Enter to continue...&#34;)
+
+        self.sphero.driving.reset_yaw()
+        self.sphero.user_io.set_all_leds_8_bit_mask(Color(), Color())
+        self.sphero.driving.set_stabilization(StabilizationIndex.full_control_system)</code></pre>
+</details>
+</dd>
+<dt id="Jameoba.Spheros.SpheroBolt.notify_callback"><code class="name flex">
+<span>def <span class="ident">notify_callback</span></span>(<span>self, response)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Notify callback. NOT WORKING, TO LOOK IN THE FUTURE.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>response</code></strong> :&ensp;<code>Packet</code></dt>
+<dd>The response from the Sphero</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def notify_callback(self, response: Packet):
+        &#34;&#34;&#34; Notify callback. NOT WORKING, TO LOOK IN THE FUTURE.
+
+        Parameters
+        ----------
+        response : Packet
+                The response from the Sphero
+        &#34;&#34;&#34;
+
+        bytes_list = response.data
+        res = 0
+        for b in bytes_list:
+                res += res * 256 + int(b)
+
+        print(&#34;{{}} : &#34;.format(self.id) + str(bytes_list) + &#34; -&gt; {}&#34;.format(res))
+
+        self.sphero.driving.drive_with_heading(speed=0, heading=res)
+
+        self.sphero.driving.reset_yaw()
+
+        self.sphero.driving.drive_with_heading(speed=0, heading=360-res)</code></pre>
+</details>
+</dd>
+<dt id="Jameoba.Spheros.SpheroBolt.notify_north"><code class="name flex">
+<span>def <span class="ident">notify_north</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Method to notify the North? NOT WORKING, TO LOOK IN THE FUTURE.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def notify_north(self):
+        &#34;&#34;&#34; Method to notify the North? NOT WORKING, TO LOOK IN THE FUTURE. &#34;&#34;&#34;
+
+        self.sphero.sensor.notify(command_id=SensorCommand.magnetometer_north_yaw_notify, callback=self.notify_callback)</code></pre>
+</details>
+</dd>
+<dt id="Jameoba.Spheros.SpheroBolt.send"><code class="name flex">
+<span>def <span class="ident">send</span></span>(<span>self, speed=None, heading=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Method to send speed and heading command to the Sphero Bolt.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>speed</code></strong> :&ensp;<code>int</code> or <code>None</code></dt>
+<dd>Desired speed of the Sphero Bolt.</dd>
+<dt><strong><code>heading</code></strong> :&ensp;<code>int</code> or <code>None</code></dt>
+<dd>Desired heading of the Sphero Bolt.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def send(self, speed=None, heading=None):
+        &#34;&#34;&#34;Method to send speed and heading command to the Sphero Bolt.
+
+        Parameters
+        ----------
+        speed : int or None
+                Desired speed of the Sphero Bolt.
+        heading : int or None
+                Desired heading of the Sphero Bolt.
+        &#34;&#34;&#34;
+
+        if speed is not None:
+                self.speed = speed
+        if heading is not None:
+                self.heading = heading
+
+        try:
+                self.sphero.driving.drive_with_heading(self.speed, self.heading)
+        except PySpheroTimeoutError:
+                self.toerr += 1</code></pre>
+</details>
+</dd>
+<dt id="Jameoba.Spheros.SpheroBolt.sensors_callback"><code class="name flex">
+<span>def <span class="ident">sensors_callback</span></span>(<span>self, response)</span>
+</code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def sensors_callback(self, response):
+        self.sphero.sensor.cancel_notify_sensors()
+        self.resp = response
+        self.not_received = False</code></pre>
+</details>
+</dd>
+<dt id="Jameoba.Spheros.SpheroBolt.set_color"><code class="name flex">
+<span>def <span class="ident">set_color</span></span>(<span>self, rgb)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Method to set the color of the Sphero Bolt.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>rgb</code></strong> :&ensp;<code>tuple</code> of <code>int</code></dt>
+<dd>Tuple containing the RGB values of the desired color.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_color(self, rgb):
+        &#34;&#34;&#34;Method to set the color of the Sphero Bolt.
+
+        Parameters
+        ----------
+        rgb : tuple of int
+                Tuple containing the RGB values of the desired color.
+        &#34;&#34;&#34;
+
+        c = Color(rgb[0], rgb[1], rgb[2])
+        self.sphero.user_io.set_all_leds_8_bit_mask(c, c)
+        self.sphero.user_io.set_led_matrix_one_color(c)</code></pre>
+</details>
+</dd>
+<dt id="Jameoba.Spheros.SpheroBolt.stop"><code class="name flex">
+<span>def <span class="ident">stop</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Method to stop the Sphero Bolt.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def stop(self):
+        &#34;&#34;&#34; Method to stop the Sphero Bolt. &#34;&#34;&#34;
+
+        self.sphero.driving.drive_with_heading(0, self.heading)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="Jameoba.Spheros.Sphero" href="#Jameoba.Spheros.Sphero">Sphero</a></b></code>:
+<ul class="hlist">
+<li><code><a title="Jameoba.Spheros.Sphero.calibrate_north" href="#Jameoba.Spheros.Sphero.calibrate_north">calibrate_north</a></code></li>
+<li><code><a title="Jameoba.Spheros.Sphero.set_as_follower" href="#Jameoba.Spheros.Sphero.set_as_follower">set_as_follower</a></code></li>
+<li><code><a title="Jameoba.Spheros.Sphero.set_as_leader" href="#Jameoba.Spheros.Sphero.set_as_leader">set_as_leader</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+<dt id="Jameoba.Spheros.SpheroMini"><code class="flex name class">
+<span>class <span class="ident">SpheroMini</span></span>
+<span>(</span><span>tag_id=0, verbosity=1, try_num=1)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>The subclass of Sphero for a single Sphero Mini.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>tag_id</code></strong> :&ensp;<code>int</code></dt>
+<dd>The Apriltag ID of the Sphero Mini.</dd>
+<dt><strong><code>verbosity</code></strong> :&ensp;<code>int</code></dt>
+<dd>The verbosity level of the instance.</dd>
+<dt><strong><code>try_num</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of time to try connecting to the Sphero Mini.</dd>
+</dl>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>id</code></strong> :&ensp;<code>int</code></dt>
+<dd>The Apriltag ID of the Sphero Mini.</dd>
+<dt><strong><code>verb</code></strong> :&ensp;<code>int</code></dt>
+<dd>The verbosity level of this class instance.</dd>
+<dt><strong><code>connected</code></strong> :&ensp;<code>bool</code></dt>
+<dd>True if the Sphero Mini is connected.</dd>
+<dt><strong><code>_heading</code></strong> :&ensp;<code>int</code></dt>
+<dd>The desired heading angle for the Sphero Mini.</dd>
+<dt><strong><code>_speed</code></strong> :&ensp;<code>int</code></dt>
+<dd>The desired speed for the Sphero Mini.</dd>
+<dt><strong><code>address</code></strong> :&ensp;<code>str</code></dt>
+<dd>The MAC address of the Sphero Mini.</dd>
+<dt><strong><code>name</code></strong> :&ensp;<code>str</code></dt>
+<dd>The name of the Sphero Mini.</dd>
+</dl>
+<p>Constructor for SpheroMini class.</p>
+<h2 id="parameters_1">Parameters</h2>
+<dl>
+<dt><strong><code>tag_id</code></strong> :&ensp;<code>int</code></dt>
+<dd>The Apriltag ID of the Sphero Mini.</dd>
+<dt><strong><code>verbosity</code></strong> :&ensp;<code>int</code></dt>
+<dd>The verbosity level of the instance.</dd>
+<dt><strong><code>try_num</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of time to try connecting to the Sphero Mini.</dd>
+</dl>
+<h2 id="yields">Yields</h2>
+<dl>
+<dt><a title="Jameoba.Spheros.SpheroMini" href="#Jameoba.Spheros.SpheroMini"><code>SpheroMini</code></a></dt>
+<dd>A SpheroMini instance.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SpheroMini(Sphero):
+        &#34;&#34;&#34;The subclass of Sphero for a single Sphero Mini.
+
+        Parameters
+        ----------
+        tag_id : int
+                The Apriltag ID of the Sphero Mini.
+        verbosity : int
+                The verbosity level of the instance.
+        try_num : int
+                Number of time to try connecting to the Sphero Mini.
+
+        Attributes
+        ----------
+        id : int
+                The Apriltag ID of the Sphero Mini.
+        verb : int
+                The verbosity level of this class instance.
+        connected : bool
+                True if the Sphero Mini is connected.
+        _heading : int
+                The desired heading angle for the Sphero Mini.
+        _speed : int
+                The desired speed for the Sphero Mini.
+        address : str
+                The MAC address of the Sphero Mini.
+        name : str
+                The name of the Sphero Mini.
+        &#34;&#34;&#34;
+
+        def __init__(self, tag_id=0, verbosity=1, try_num=1):
+                &#34;&#34;&#34;Constructor for SpheroMini class.
+
+                Parameters
+                ----------
+                tag_id : int
+                        The Apriltag ID of the Sphero Mini.
+                verbosity : int
+                        The verbosity level of the instance.
+                try_num : int
+                        Number of time to try connecting to the Sphero Mini.
+
+                Yields
+                ------
+                SpheroMini
+                        A SpheroMini instance.
+                &#34;&#34;&#34;
+
+                # Create an instance of Sphero
+                super().__init__(tag_id, verbosity)
+
+                # Add values for Sphero Mini
+                self.address = MAC_ADDRESS[MINI][self.id]
+                self.name = &#34;Sphero Mini {0}&#34;.format(self.id)
+
+                # Connect to the Sphero
+                if self.verb == 0:
+                        print(&#34;\nConnecting to {0}&#34;.format(self.name))
+
+                try_count = 1
+                while not self.connected:
+                        if try_count &lt;= try_num:
+                                try:
+                                        if self.verb == 0:
+                                                print(&#34;\rTry {0} of {1}&#34;.format(try_count, try_num), end=&#34;&#34;)
+                                        self.sphero = sphero_mini(self.address, verbosity=verbosity)
+                                        self.connected = True
+                                except BTLEDisconnectError:
+                                        try_count += 1
+
+                        else:
+                                raise CantConnectError(&#34;Can&#39;t connect to {} after {} attempts.&#34;.format(self.name, try_count - 1))
+
+                if self.verb == 0:
+                        print(&#34;\nConnected  to {0}\n&#34;.format(self.name))
+
+                self.connected = True
+
+        def disconnect(self):
+                &#34;&#34;&#34; Method to put the Sphero Mini to sleep and disconnect it. &#34;&#34;&#34;
+
+                if self.connected:
+                        try:
+                                self.sphero.sleep()
+                                self.sphero.disconnect()
+                        except BTLEInternalError:
+                                print(&#34;The device is already disconnected.&#34;)
+
+        def send(self, speed=None, heading=None):
+                &#34;&#34;&#34;Method to send speed and heading command to the Sphero Mini.
+
+                Parameters
+                ----------
+                speed : int or None
+                        Desired speed of the Sphero Mini.
+                heading : int or None
+                        Desired heading of the Sphero Mini.
+                &#34;&#34;&#34;
+
+                if speed is not None:
+                        self.speed = speed
+                if heading is not None:
+                        self.heading = heading
+
+                self.sphero.roll(speed=self.speed, heading=self.heading)
+
+        def stop(self):
+                &#34;&#34;&#34; Method to stop the Sphero Mini. &#34;&#34;&#34;
+
+                self.sphero.roll(speed=0, heading=self.heading)
+
+        def init_heading(self):
+                &#34;&#34;&#34; Method to set the initial heading angle for the Sphero Mini. &#34;&#34;&#34;
+
+                self.sphero.stabilization(False)
+                self.sphero.roll(speed=0, heading=0)
+                self.sphero.setBackLEDIntensity(brightness=255)
+
+                print(&#34;Head the backLED toward the left of the camera frame.&#34;)
+                input(&#34;Press Enter to continue...&#34;)
+
+                self.sphero.resetHeading()
+                self.sphero.setBackLEDIntensity(brightness=0)
+                self.sphero.stabilization(True)
+
+        def set_color(self, rgb):
+                &#34;&#34;&#34;Method to set the color of the Sphero Mini.
+
+                Parameters
+                ----------
+                rgb : tuple of int
+                        Tuple containing the RGB values of the desired color.
+                &#34;&#34;&#34;
+
+                self.sphero.setLEDColor(red=rgb[0], green=rgb[1], blue=rgb[2])
+
+        def set_as_leader(self, channel=0):
+                &#34;&#34;&#34;Method to set the Sphero as a leader.
+
+                Parameters
+                ----------
+                channel : int
+                        Channel you want to broadcast to.
+                &#34;&#34;&#34;
+
+                print(&#34;This function is not available on Sphero Mini.&#34;)
+
+        def set_as_follower(self, channel=0):
+                &#34;&#34;&#34;Method to set the Sphero as a follower.
+
+                Parameters
+                ----------
+                channel : int
+                        Channel you want to listen to.
+                &#34;&#34;&#34;
+
+                print(&#34;This function is not available on Sphero Mini.&#34;)
+
+        def get_light_sensor_value(self):
+                &#34;&#34;&#34; Method to get the light sensor value. &#34;&#34;&#34;
+
+                print(&#34;This function is not available on Sphero Mini.&#34;)
+
+        def calibrate_north(self):
+                &#34;&#34;&#34; Method to calibrate the north on the Sphero &#34;&#34;&#34;
+
+                print(&#34;This function is not available on Sphero Mini.&#34;)</code></pre>
+</details>
+<h3>Ancestors</h3>
+<ul class="hlist">
+<li><a title="Jameoba.Spheros.Sphero" href="#Jameoba.Spheros.Sphero">Sphero</a></li>
+</ul>
+<h3>Methods</h3>
+<dl>
+<dt id="Jameoba.Spheros.SpheroMini.disconnect"><code class="name flex">
+<span>def <span class="ident">disconnect</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Method to put the Sphero Mini to sleep and disconnect it.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def disconnect(self):
+        &#34;&#34;&#34; Method to put the Sphero Mini to sleep and disconnect it. &#34;&#34;&#34;
+
+        if self.connected:
+                try:
+                        self.sphero.sleep()
+                        self.sphero.disconnect()
+                except BTLEInternalError:
+                        print(&#34;The device is already disconnected.&#34;)</code></pre>
+</details>
+</dd>
+<dt id="Jameoba.Spheros.SpheroMini.init_heading"><code class="name flex">
+<span>def <span class="ident">init_heading</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Method to set the initial heading angle for the Sphero Mini.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def init_heading(self):
+        &#34;&#34;&#34; Method to set the initial heading angle for the Sphero Mini. &#34;&#34;&#34;
+
+        self.sphero.stabilization(False)
+        self.sphero.roll(speed=0, heading=0)
+        self.sphero.setBackLEDIntensity(brightness=255)
+
+        print(&#34;Head the backLED toward the left of the camera frame.&#34;)
+        input(&#34;Press Enter to continue...&#34;)
+
+        self.sphero.resetHeading()
+        self.sphero.setBackLEDIntensity(brightness=0)
+        self.sphero.stabilization(True)</code></pre>
+</details>
+</dd>
+<dt id="Jameoba.Spheros.SpheroMini.send"><code class="name flex">
+<span>def <span class="ident">send</span></span>(<span>self, speed=None, heading=None)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Method to send speed and heading command to the Sphero Mini.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>speed</code></strong> :&ensp;<code>int</code> or <code>None</code></dt>
+<dd>Desired speed of the Sphero Mini.</dd>
+<dt><strong><code>heading</code></strong> :&ensp;<code>int</code> or <code>None</code></dt>
+<dd>Desired heading of the Sphero Mini.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def send(self, speed=None, heading=None):
+        &#34;&#34;&#34;Method to send speed and heading command to the Sphero Mini.
+
+        Parameters
+        ----------
+        speed : int or None
+                Desired speed of the Sphero Mini.
+        heading : int or None
+                Desired heading of the Sphero Mini.
+        &#34;&#34;&#34;
+
+        if speed is not None:
+                self.speed = speed
+        if heading is not None:
+                self.heading = heading
+
+        self.sphero.roll(speed=self.speed, heading=self.heading)</code></pre>
+</details>
+</dd>
+<dt id="Jameoba.Spheros.SpheroMini.set_color"><code class="name flex">
+<span>def <span class="ident">set_color</span></span>(<span>self, rgb)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Method to set the color of the Sphero Mini.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>rgb</code></strong> :&ensp;<code>tuple</code> of <code>int</code></dt>
+<dd>Tuple containing the RGB values of the desired color.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def set_color(self, rgb):
+        &#34;&#34;&#34;Method to set the color of the Sphero Mini.
+
+        Parameters
+        ----------
+        rgb : tuple of int
+                Tuple containing the RGB values of the desired color.
+        &#34;&#34;&#34;
+
+        self.sphero.setLEDColor(red=rgb[0], green=rgb[1], blue=rgb[2])</code></pre>
+</details>
+</dd>
+<dt id="Jameoba.Spheros.SpheroMini.stop"><code class="name flex">
+<span>def <span class="ident">stop</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Method to stop the Sphero Mini.</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def stop(self):
+        &#34;&#34;&#34; Method to stop the Sphero Mini. &#34;&#34;&#34;
+
+        self.sphero.roll(speed=0, heading=self.heading)</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Inherited members</h3>
+<ul class="hlist">
+<li><code><b><a title="Jameoba.Spheros.Sphero" href="#Jameoba.Spheros.Sphero">Sphero</a></b></code>:
+<ul class="hlist">
+<li><code><a title="Jameoba.Spheros.Sphero.calibrate_north" href="#Jameoba.Spheros.Sphero.calibrate_north">calibrate_north</a></code></li>
+<li><code><a title="Jameoba.Spheros.Sphero.get_light_sensor_value" href="#Jameoba.Spheros.Sphero.get_light_sensor_value">get_light_sensor_value</a></code></li>
+<li><code><a title="Jameoba.Spheros.Sphero.set_as_follower" href="#Jameoba.Spheros.Sphero.set_as_follower">set_as_follower</a></code></li>
+<li><code><a title="Jameoba.Spheros.Sphero.set_as_leader" href="#Jameoba.Spheros.Sphero.set_as_leader">set_as_leader</a></code></li>
+</ul>
+</li>
+</ul>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="Jameoba" href="index.html">Jameoba</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="Jameoba.Spheros.CantConnectError" href="#Jameoba.Spheros.CantConnectError">CantConnectError</a></code></h4>
+</li>
+<li>
+<h4><code><a title="Jameoba.Spheros.CustomPySpheroCommand" href="#Jameoba.Spheros.CustomPySpheroCommand">CustomPySpheroCommand</a></code></h4>
+<ul class="two-column">
+<li><code><a title="Jameoba.Spheros.CustomPySpheroCommand.start_IR_broadcast" href="#Jameoba.Spheros.CustomPySpheroCommand.start_IR_broadcast">start_IR_broadcast</a></code></li>
+<li><code><a title="Jameoba.Spheros.CustomPySpheroCommand.start_evading" href="#Jameoba.Spheros.CustomPySpheroCommand.start_evading">start_evading</a></code></li>
+<li><code><a title="Jameoba.Spheros.CustomPySpheroCommand.start_following" href="#Jameoba.Spheros.CustomPySpheroCommand.start_following">start_following</a></code></li>
+<li><code><a title="Jameoba.Spheros.CustomPySpheroCommand.stop_IR_broadcast" href="#Jameoba.Spheros.CustomPySpheroCommand.stop_IR_broadcast">stop_IR_broadcast</a></code></li>
+<li><code><a title="Jameoba.Spheros.CustomPySpheroCommand.stop_evading" href="#Jameoba.Spheros.CustomPySpheroCommand.stop_evading">stop_evading</a></code></li>
+<li><code><a title="Jameoba.Spheros.CustomPySpheroCommand.stop_following" href="#Jameoba.Spheros.CustomPySpheroCommand.stop_following">stop_following</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="Jameoba.Spheros.JAMEOBAException" href="#Jameoba.Spheros.JAMEOBAException">JAMEOBAException</a></code></h4>
+</li>
+<li>
+<h4><code><a title="Jameoba.Spheros.MultiSphero" href="#Jameoba.Spheros.MultiSphero">MultiSphero</a></code></h4>
+<ul class="">
+<li><code><a title="Jameoba.Spheros.MultiSphero.calibrate_north" href="#Jameoba.Spheros.MultiSphero.calibrate_north">calibrate_north</a></code></li>
+<li><code><a title="Jameoba.Spheros.MultiSphero.init_heading" href="#Jameoba.Spheros.MultiSphero.init_heading">init_heading</a></code></li>
+<li><code><a title="Jameoba.Spheros.MultiSphero.lf_channel" href="#Jameoba.Spheros.MultiSphero.lf_channel">lf_channel</a></code></li>
+<li><code><a title="Jameoba.Spheros.MultiSphero.send" href="#Jameoba.Spheros.MultiSphero.send">send</a></code></li>
+<li><code><a title="Jameoba.Spheros.MultiSphero.set_colors" href="#Jameoba.Spheros.MultiSphero.set_colors">set_colors</a></code></li>
+<li><code><a title="Jameoba.Spheros.MultiSphero.set_headings" href="#Jameoba.Spheros.MultiSphero.set_headings">set_headings</a></code></li>
+<li><code><a title="Jameoba.Spheros.MultiSphero.set_speeds" href="#Jameoba.Spheros.MultiSphero.set_speeds">set_speeds</a></code></li>
+<li><code><a title="Jameoba.Spheros.MultiSphero.setup_leader_followers" href="#Jameoba.Spheros.MultiSphero.setup_leader_followers">setup_leader_followers</a></code></li>
+<li><code><a title="Jameoba.Spheros.MultiSphero.stop" href="#Jameoba.Spheros.MultiSphero.stop">stop</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="Jameoba.Spheros.MultiSpheroBolt" href="#Jameoba.Spheros.MultiSpheroBolt">MultiSpheroBolt</a></code></h4>
+<ul class="">
+<li><code><a title="Jameoba.Spheros.MultiSpheroBolt.notify_north" href="#Jameoba.Spheros.MultiSpheroBolt.notify_north">notify_north</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="Jameoba.Spheros.MultiSpheroMini" href="#Jameoba.Spheros.MultiSpheroMini">MultiSpheroMini</a></code></h4>
+</li>
+<li>
+<h4><code><a title="Jameoba.Spheros.Sphero" href="#Jameoba.Spheros.Sphero">Sphero</a></code></h4>
+<ul class="">
+<li><code><a title="Jameoba.Spheros.Sphero.calibrate_north" href="#Jameoba.Spheros.Sphero.calibrate_north">calibrate_north</a></code></li>
+<li><code><a title="Jameoba.Spheros.Sphero.disconnect" href="#Jameoba.Spheros.Sphero.disconnect">disconnect</a></code></li>
+<li><code><a title="Jameoba.Spheros.Sphero.get_light_sensor_value" href="#Jameoba.Spheros.Sphero.get_light_sensor_value">get_light_sensor_value</a></code></li>
+<li><code><a title="Jameoba.Spheros.Sphero.heading" href="#Jameoba.Spheros.Sphero.heading">heading</a></code></li>
+<li><code><a title="Jameoba.Spheros.Sphero.init_heading" href="#Jameoba.Spheros.Sphero.init_heading">init_heading</a></code></li>
+<li><code><a title="Jameoba.Spheros.Sphero.send" href="#Jameoba.Spheros.Sphero.send">send</a></code></li>
+<li><code><a title="Jameoba.Spheros.Sphero.set_as_follower" href="#Jameoba.Spheros.Sphero.set_as_follower">set_as_follower</a></code></li>
+<li><code><a title="Jameoba.Spheros.Sphero.set_as_leader" href="#Jameoba.Spheros.Sphero.set_as_leader">set_as_leader</a></code></li>
+<li><code><a title="Jameoba.Spheros.Sphero.set_color" href="#Jameoba.Spheros.Sphero.set_color">set_color</a></code></li>
+<li><code><a title="Jameoba.Spheros.Sphero.speed" href="#Jameoba.Spheros.Sphero.speed">speed</a></code></li>
+<li><code><a title="Jameoba.Spheros.Sphero.stop" href="#Jameoba.Spheros.Sphero.stop">stop</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="Jameoba.Spheros.SpheroBolt" href="#Jameoba.Spheros.SpheroBolt">SpheroBolt</a></code></h4>
+<ul class="">
+<li><code><a title="Jameoba.Spheros.SpheroBolt.disconnect" href="#Jameoba.Spheros.SpheroBolt.disconnect">disconnect</a></code></li>
+<li><code><a title="Jameoba.Spheros.SpheroBolt.get_light_sensor_value" href="#Jameoba.Spheros.SpheroBolt.get_light_sensor_value">get_light_sensor_value</a></code></li>
+<li><code><a title="Jameoba.Spheros.SpheroBolt.get_sensor_values" href="#Jameoba.Spheros.SpheroBolt.get_sensor_values">get_sensor_values</a></code></li>
+<li><code><a title="Jameoba.Spheros.SpheroBolt.init_heading" href="#Jameoba.Spheros.SpheroBolt.init_heading">init_heading</a></code></li>
+<li><code><a title="Jameoba.Spheros.SpheroBolt.notify_callback" href="#Jameoba.Spheros.SpheroBolt.notify_callback">notify_callback</a></code></li>
+<li><code><a title="Jameoba.Spheros.SpheroBolt.notify_north" href="#Jameoba.Spheros.SpheroBolt.notify_north">notify_north</a></code></li>
+<li><code><a title="Jameoba.Spheros.SpheroBolt.send" href="#Jameoba.Spheros.SpheroBolt.send">send</a></code></li>
+<li><code><a title="Jameoba.Spheros.SpheroBolt.sensors_callback" href="#Jameoba.Spheros.SpheroBolt.sensors_callback">sensors_callback</a></code></li>
+<li><code><a title="Jameoba.Spheros.SpheroBolt.set_color" href="#Jameoba.Spheros.SpheroBolt.set_color">set_color</a></code></li>
+<li><code><a title="Jameoba.Spheros.SpheroBolt.stop" href="#Jameoba.Spheros.SpheroBolt.stop">stop</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="Jameoba.Spheros.SpheroMini" href="#Jameoba.Spheros.SpheroMini">SpheroMini</a></code></h4>
+<ul class="">
+<li><code><a title="Jameoba.Spheros.SpheroMini.disconnect" href="#Jameoba.Spheros.SpheroMini.disconnect">disconnect</a></code></li>
+<li><code><a title="Jameoba.Spheros.SpheroMini.init_heading" href="#Jameoba.Spheros.SpheroMini.init_heading">init_heading</a></code></li>
+<li><code><a title="Jameoba.Spheros.SpheroMini.send" href="#Jameoba.Spheros.SpheroMini.send">send</a></code></li>
+<li><code><a title="Jameoba.Spheros.SpheroMini.set_color" href="#Jameoba.Spheros.SpheroMini.set_color">set_color</a></code></li>
+<li><code><a title="Jameoba.Spheros.SpheroMini.stop" href="#Jameoba.Spheros.SpheroMini.stop">stop</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.2</a>.</p>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad()</script>
+</body>
+</html>

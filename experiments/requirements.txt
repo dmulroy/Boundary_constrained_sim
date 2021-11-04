@@ -1,0 +1,11 @@
+#
+####### requirements.txt #######
+#
+screeninfo
+numpy
+pid_controller
+bluepy
+pysphero==0.0.5
+defusedxml
+rospkg
+#

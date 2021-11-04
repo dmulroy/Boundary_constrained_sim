@@ -1,0 +1,1659 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.7.2" />
+<title>Jameoba.Tracker API documentation</title>
+<meta name="description" content="This module contains the classes to track Apriltags to get the position
+of multiple Sphero Mini/Bolt and the position of the target. This module
+is to …" />
+<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
+<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>Jameoba.Tracker</code></h1>
+</header>
+<section id="section-intro">
+<p>This module contains the classes to track Apriltags to get the position
+of multiple Sphero Mini/Bolt and the position of the target. This module
+is to be used with ROS.</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;
+This module contains the classes to track Apriltags to get the position
+of multiple Sphero Mini/Bolt and the position of the target. This module
+is to be used with ROS.
+&#34;&#34;&#34;
+
+###################################################
+import os
+import csv
+import cv2
+import datetime
+from numpy import ndarray, array, ones, transpose, dot, \
+        identity, roll, zeros, sqrt as npsqrt
+from numpy.linalg import norm
+from math import pi, cos, sin, atan2, sqrt
+import apriltags3py.apriltags3 as at
+import rospy
+from rospy import Publisher
+from std_msgs.msg import String
+from time import time
+import screeninfo
+###################################################
+
+
+###################################################
+# ------------------ Constants ------------------ #
+###################################################
+
+
+###################################################
+CAM_FRONT = 0
+CAM_OVER = 1
+CAM_BRIO = 2
+
+CAMERA_PARAMS = {CAM_FRONT: (556.5, 557.8, 316.2, 222.1),
+                 CAM_OVER: (809.2, 803.5, 367.7, 238.2),
+                 CAM_BRIO: (1118.3, 1112.9, 991.2, 548.7)}
+
+K = {CAM_OVER: array([[1377.02, 0., 593.42],
+                      [0., 1380.58, 454.02],
+                      [0., 0., 1.]]),
+     CAM_BRIO: array([[1118.93, 0., 992.82],
+                      [0., 1113.48, 545.99],
+                      [0., 0., 1.]])}
+
+D = {CAM_OVER: array([4.57e-02, -3.73e-01, 2.42e-02, -5.05e-03, 3.06e-01]),
+     CAM_BRIO: array([2.48e-01, -7.49e-01, 5.96e-03, 7.79e-03, 5.19e-01])}
+
+CROP = {CAM_OVER: (0, 50, 1080, 1800),
+        CAM_BRIO: (0, 500, 720, 1200)}
+
+RES_480P = 0
+RES_720P = 1
+RES_1080P = 2
+RES_1440P = 3
+RES_4K = 4
+
+RESOLUTION = {RES_480P: (640, 480),
+              RES_720P: (1280, 720),
+              RES_1080P: (1920, 1080),
+              RES_1440P: (2560, 1440),
+              RES_4K: (3840, 2160)}
+
+TAG_SMALL = 0
+TAG_BIG = 1
+
+TAG_SIZE = {TAG_SMALL: 0.03,
+            TAG_BIG: 0.05}
+###################################################
+
+
+###################################################
+# ------------------- Classes ------------------- #
+###################################################
+
+
+###################################################
+class AprilTagTracker:
+        &#34;&#34;&#34;Class that use Apriltags to track tags positions.
+
+        This class use Apriltags to track robots and publish
+        their positions on the /state ROS topic. It also display
+        and save the video. The tracking data can also be drew
+        over the video.
+
+        Parameters
+        ----------
+        num : int
+                Number of tags to track.
+        cam_choice : int, optional
+                The choice of camera that is used.
+        res_choice : int, optional
+                The resolution to use.
+        tag_choice : int, optional
+                The tags to use.
+        trail_length : int, optional
+                The length of the trail behind the tags in number of length.
+        save_data : bool, optional
+                Save data or not.
+        save_video : bool, optional
+                Save the video or not.
+        crop_image : bool, optional
+                Crop the image or not.
+        testname : str or None, optional
+                Name of the current test.
+        unwarped : bool, optional
+                Unwarp the video or not.
+
+        Attributes
+        ----------
+        camera_index : int
+                The computer camera index.
+        origin : tuple of int
+                Origin of the tracking. Automatically set to the initial mean position.
+        state : dict
+                Message sent on the /state ROS topic.
+        number_of_tags : int
+                Number of tags to track.
+        cam_choice : int
+                The choice of camera.
+        res_choice : int
+                The choice of resolution.
+        tag_choice : int
+                The choice of tags.
+        trail_length : int
+                The length of the trail behind the tags in number of length.
+        save_data : bool
+                Save data or not.
+        save_video : bool
+                Save video or not.
+        crop_image : bool
+                Crop image or not.
+        unwarped : bool
+                Unwarp the video or not.
+        data_dir : str
+                Name of the directory in which to store the data.
+        filename : str
+                Data filename.
+        video_name : str
+                Video filename.
+        video_no_overlay_name : str
+                Video with no overlay filename.
+        pt : ndarray
+                Numpy array which contains the pixel coordinate of the tags.
+        ptmean : ndarray
+                Numpy array which contains the pixel coordinate of the mean of the tags.
+        arrow_vec : ndarray
+                Numpy array which contains the pixel coordinate af the direction arrow of each tags.
+        crop_params : tuple of int
+                Parameters used while cropping the video.
+        pub : Publisher
+                The publisher used to publish on the /state ROS topic.
+        &#34;&#34;&#34;
+
+        def __init__(self, num, cam_choice=CAM_BRIO, res_choice=RES_1080P, tag_choice=TAG_BIG, trail_length=20,
+                     save_data=False, save_video=False, crop_image=False, testname=None, unwarped=False):
+                &#34;&#34;&#34;Constructor of the SpheroController class.
+
+                Parameters
+                ----------
+                num : int
+                        Number of tags to track.
+                cam_choice : int, optional
+                        The choice of camera that is used.
+                res_choice : int, optional
+                        The resolution to use.
+                tag_choice : int, optional
+                        The tags to use.
+                trail_length : int, optional
+                        The length of the trail behind the tags in number of length.
+                save_data : bool, optional
+                        Save data or not.
+                save_video : bool, optional
+                        Save the video or not.
+                crop_image : bool, optional
+                        Crop the image or not.
+                testname : str or None, optional
+                        Name of the current test.
+                unwarped : bool, optional
+                        Unwarp the video or not.
+
+                Yields
+                ------
+                AprilTagTracker
+                        A tracker for Apriltags that publish messages on the /state ROS topic.
+                &#34;&#34;&#34;
+
+                self.camera_index = 0
+                self.origin = (0, 0)
+                self.state = {}  # The tuples are (x [cm], y [cm], theta [deg])
+
+                # Set some variables
+                self.number_of_tags = num
+                self.cam_choice = cam_choice
+                self.res_choice = res_choice
+                self.tag_choice = tag_choice
+                self.trail_length = trail_length
+                self.save_data = save_data
+                self.save_video = save_video
+                self.crop_image = crop_image
+                self.unwarped = unwarped
+
+                if not os.path.exists(&#39;Data/&#39;):
+                        os.mkdir(&#39;Data&#39;)
+
+                if testname is None:
+                        date = datetime.datetime.now()
+                        self.data_dir = &#39;Data/&#39; + date.strftime(&#34;%Y-%m-%d %Hh%M/&#34;)
+                else:
+                        self.data_dir = &#39;Data/&#39; + testname + &#34;/&#34;
+
+                # Change the directory name if it already exist
+                k = 1
+                if os.path.exists(self.data_dir):
+                        self.data_dir = self.data_dir[:-1] + &#34;_0/&#34;
+
+                while os.path.exists(self.data_dir):
+                        self.data_dir = self.data_dir.replace(&#34;_&#34; + str(k - 1) + &#34;/&#34;, &#34;_&#34; + str(k) + &#34;/&#34;)
+                        k += 1
+
+                self.filename = self.data_dir + &#34;data.csv&#34;
+                self.video_name = self.data_dir + &#34;video.avi&#34;
+                self.video_no_overlay_name = self.video_name.replace(&#34;.avi&#34;, &#34;_no_overlay.avi&#34;)
+
+                if self.save_data or self.save_video:
+                        os.mkdir(self.data_dir[:-1])
+
+                for i in range(self.number_of_tags):
+                        self.state[str(i)] = (0, 0, 0)
+
+                self.pt = ones((self.trail_length, 2, self.number_of_tags))
+                self.ptmean = ones((self.trail_length, 2))
+                self.arrow_vec = ones((2, self.number_of_tags))
+
+                self.crop_params = CROP[self.cam_choice]
+
+                # Setup the tracker
+                self._tracker_setup()
+
+                self.pub = rospy.Publisher(&#39;state&#39;, String, queue_size=2)
+                rospy.init_node(&#39;AprilTags&#39;, anonymous=False)
+
+                self.last = time()
+
+        def __del__(self):
+                &#34;&#34;&#34; Destructor of the AprilTagTracker class. &#34;&#34;&#34;
+
+                self.camera.release()  # Cleanup the camera, stop saving video and close any open windows
+                if self.save_video:
+                        self.out.release()
+                        self.out_no_overlay.release()
+                cv2.destroyAllWindows()
+
+        def _tracker_setup(self):
+                &#34;&#34;&#34; Method to setup the tracker setting. &#34;&#34;&#34;
+
+                # Grab the reference to the camera
+                self.camera = cv2.VideoCapture(self.camera_index)  # IMPORTANT: 0 for default webcam, 1 for usb webcam
+                self.camera.set(3, RESOLUTION[self.res_choice][0])
+                self.camera.set(4, RESOLUTION[self.res_choice][1])
+                print(&#34;video received&#34;)
+
+                w, h = RESOLUTION[self.res_choice]
+
+                # Generate new camera matrix from parameters
+                self.newcameramatrix, roi = cv2.getOptimalNewCameraMatrix(K[self.cam_choice], D[self.cam_choice], (w, h), 0)
+
+                # Generate look-up tables for remapping the camera image
+                self.mapx, self.mapy = cv2.initUndistortRectifyMap(K[self.cam_choice], D[self.cam_choice], None, self.newcameramatrix, (w, h), 5)
+
+                screen = screeninfo.get_monitors()[0]
+                cv2.namedWindow(&#39;Camera&#39;, cv2.WND_PROP_FULLSCREEN)
+                cv2.moveWindow(&#39;Camera&#39;, screen.x - 1, screen.y - 1)
+                cv2.setWindowProperty(&#39;Camera&#39;, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+
+                self.detector = at.Detector(searchpath=[&#39;apriltags3py/apriltags&#39;], families=&#34;tag36h11&#34;, nthreads=2,
+                                            quad_decimate=1.0, quad_sigma=0.0, refine_edges=1, decode_sharpening=0.25, debug=0)
+
+                if self.crop_image:
+                        self.dx = self.crop_params[1]
+                        self.dy = self.crop_params[0]
+                else:
+                        self.dx = 0
+                        self.dy = 0
+
+                if self.save_data:
+                        self.writer = csv.writer(open(self.filename, &#39;w&#39;), quotechar=&#39;|&#39;, quoting=csv.QUOTE_MINIMAL)
+                        header_row = [&#39;&#39;] * self.number_of_tags * 3
+                        for i in range(self.number_of_tags):
+                                key = str(i)
+                                header_row[3 * i] = &#39;X&#39; + key
+                                header_row[3 * i + 1] = &#39;Y&#39; + key
+                                header_row[3 * i + 2] = &#39;Theta&#39; + key
+                        self.writer.writerow(header_row)
+
+                if self.save_video:
+                        fourcc = cv2.VideoWriter_fourcc(*&#39;XVID&#39;)
+                        self.out = cv2.VideoWriter(self.video_name, fourcc, 5.0, RESOLUTION[self.res_choice])
+                        self.out_no_overlay = cv2.VideoWriter(self.video_no_overlay_name, fourcc, 5.0, RESOLUTION[self.res_choice])
+
+        @staticmethod
+        def _is_rotation_matrix(r):
+                &#34;&#34;&#34;Method to check if the matrix is a rotation matrix.
+
+                Returns
+                -------
+                bool
+                        Return True if this is a rotation matrix.
+                &#34;&#34;&#34;
+
+                rt = transpose(r)
+                should_be_identity = dot(rt, r)
+                i = identity(3, dtype=r.dtype)
+                n = norm(i - should_be_identity)
+                return n &lt; 1e-6
+
+        def _rotation_matrix_to_euler_angles(self, r):
+                &#34;&#34;&#34;Method to get euler angle from a rotation matrix.
+
+                Returns
+                -------
+                ndarray
+                        Return the x, y and z axis rotation.
+                &#34;&#34;&#34;
+
+                assert (self._is_rotation_matrix(r))
+
+                sy = sqrt(r[0, 0] * r[0, 0] + r[1, 0] * r[1, 0])
+
+                singular = sy &lt; 1e-6
+
+                if not singular:
+                        x = atan2(r[2, 1], r[2, 2])
+                        y = atan2(-r[2, 0], sy)
+                        z = atan2(r[1, 0], r[0, 0])
+                else:
+                        x = atan2(-r[1, 2], r[1, 1])
+                        y = atan2(-r[2, 0], sy)
+                        z = 0
+
+                return array([x, y, z])
+
+        def start_tracking(self, show_mean=False, show_tags=False, show_tags_arrow=False, pub_freq=5., focus_frames=0):
+                &#34;&#34;&#34;Method to start the tracker loop.
+
+                Parameters
+                ----------
+                show_mean : bool
+                        Show the trail of the mean of all the tags.
+                show_tags : bool
+                        Show the trail of each tags.
+                show_tags_arrow : bool
+                        Show the direction arrow of each tags.
+                pub_freq : float
+                        Maximun publish frequency on the /state ROS topic.
+                focus_frames : int
+                        Number of frames to ignore to let the camera focus.
+                &#34;&#34;&#34;
+
+                running = True
+                frame_index = 0
+
+                # Let the camera focus itself
+                for i in range(focus_frames):
+                        (grabbed, frame) = self.camera.read()
+                        cv2.imshow(&#39;Camera&#39;, frame)
+                        k = cv2.waitKey(1)
+                        if k == 27:
+                                running = False
+                                break
+
+                while running:
+                        # grab the current frame
+                        (grabbed, frame) = self.camera.read()
+                        if not grabbed:
+                                break
+
+                        if self.save_video:
+                                self.out_no_overlay.write(frame)
+
+                        # convert frame to GRAYSCALE
+                        img = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+                        if self.crop_image:  # If you crop the image, then:
+                                img = img[self.crop_params[0]:self.crop_params[2], self.crop_params[1]:self.crop_params[3]]
+                                cv2.rectangle(frame, (self.crop_params[1], self.crop_params[0]), (self.crop_params[3], self.crop_params[2]),
+                                              color=(0, 0, 255), thickness=4)
+
+                        # Detect tags
+                        detections = self.detector.detect(img, estimate_tag_pose=True, camera_params=CAMERA_PARAMS[self.cam_choice],
+                                                          tag_size=TAG_SIZE[self.tag_choice])
+
+                        if frame_index == 0:  # First iteration of the loop
+                                ox = oy = 0
+                                for i, detection in enumerate(detections):
+                                        if 0 &lt;= detection.tag_id &lt; self.number_of_tags:  # Make sure detection is within the tags we want
+                                                self.pt[:, 0, detection.tag_id] *= detection.center[0] + self.dx
+                                                self.pt[:, 1, detection.tag_id] *= detection.center[1] + self.dy
+                                                ox += 100 * detection.pose_t[0][0]
+                                                oy += 100 * detection.pose_t[1][0]
+
+                                self.origin = (ox / self.number_of_tags, oy / self.number_of_tags)
+
+                                self.ptmean[:, 0] *= sum(self.pt[0, 0, :])
+                                self.ptmean[:, 1] *= sum(self.pt[0, 1, :])
+
+                        else:
+                                for i, detection in enumerate(detections):
+                                        if 0 &lt;= detection.tag_id &lt; self.number_of_tags:  # Make sure detection is within the tags we want
+                                                key = str(detection.tag_id)
+                                                self.state[key] = (100 * detection.pose_t[0][0] - self.origin[0],
+                                                                   100 * detection.pose_t[1][0] - self.origin[1],
+                                                                   180 * self._rotation_matrix_to_euler_angles(detection.pose_R)[2] / pi)
+                                                self.pt[self.trail_length - 1, 0, detection.tag_id] = detection.center[0] + self.dx
+                                                self.pt[self.trail_length - 1, 1, detection.tag_id] = detection.center[1] + self.dy
+                                                vecx = self.pt[self.trail_length - 1, 0, detection.tag_id] - self.pt[
+                                                        self.trail_length - 2, 0, detection.tag_id]
+                                                vecy = self.pt[self.trail_length - 1, 1, detection.tag_id] - self.pt[
+                                                        self.trail_length - 2, 1, detection.tag_id]
+                                                veclen = npsqrt(vecx ** 2 + vecy ** 2)
+                                                if -1 &lt; vecx &lt; 1 and -1 &lt; vecy &lt; 1:
+                                                        vecx = vecy = 0
+                                                        veclen = 1
+                                                self.arrow_vec[0, detection.tag_id] = 20.0 * float(vecx) / veclen
+                                                self.arrow_vec[1, detection.tag_id] = 20.0 * float(vecy) / veclen
+
+                                self.ptmean[self.trail_length - 1, 0] = sum(self.pt[self.trail_length - 1, 0, :]) / float(
+                                        self.number_of_tags)
+                                self.ptmean[self.trail_length - 1, 1] = sum(self.pt[self.trail_length - 1, 1, :]) / float(
+                                        self.number_of_tags)
+
+                        for i in range(1, self.trail_length):
+                                thickness = int(float(i) * 2.0 / float(self.trail_length - 1)) + 2
+                                if show_tags:
+                                        for j in range(self.number_of_tags):
+                                                cv2.line(frame, (int(self.pt[i - 1, 0, j]), int(self.pt[i - 1, 1, j])),
+                                                         (int(self.pt[i, 0, j]), int(self.pt[i, 1, j])), (0, 255, 0), thickness)
+
+                                if show_mean:
+                                        cv2.line(frame, (int(self.ptmean[i - 1, 0]), int(self.ptmean[i - 1, 1])),
+                                                 (int(self.ptmean[i, 0]), int(self.ptmean[i, 1])), (255, 0, 0), thickness)
+
+                        if show_tags_arrow:
+                                for i in range(self.number_of_tags):
+                                        cv2.line(frame,
+                                                 (int(self.pt[self.trail_length - 1, 0, i]), int(self.pt[self.trail_length - 1, 1, i])),
+                                                 (int(self.pt[self.trail_length - 1, 0, i] + self.arrow_vec[0, i]),
+                                                  int(self.pt[self.trail_length - 1, 1, i] + self.arrow_vec[1, i])), (0, 0, 255), 2)
+
+                        freq = 1.0 / (time() - self.last)  # Cap the publish frequency to let the Photons Controller read the data
+                        if freq &lt;= pub_freq:
+                                self.last = time()
+                                self.pub.publish(String(data=str(self.state)))
+                                if self.save_data:
+                                        data = [0] * self.number_of_tags * 3
+                                        for i in range(self.number_of_tags):
+                                                key = str(i)
+                                                data[3 * i] = self.state[key][0]
+                                                data[3 * i + 1] = self.state[key][1]
+                                                data[3 * i + 2] = self.state[key][2]
+                                        self.writer.writerow(data)
+
+                        newimg = cv2.remap(frame, self.mapx, self.mapy, cv2.INTER_LINEAR)
+
+                        if self.unwarped:
+                                cv2.imshow(&#39;Camera&#39;, newimg)
+                                if self.save_video:
+                                        self.out.write(newimg)
+                        else:
+                                cv2.imshow(&#39;Camera&#39;, frame)
+                                if self.save_video:
+                                        self.out.write(frame)
+
+                        k = cv2.waitKey(1)
+                        frame_index += 1
+
+                        self.ptmean = roll(self.ptmean, -1, axis=0)
+                        self.ptmean[-1] = self.ptmean[-2]
+                        for i in range(self.number_of_tags):
+                                self.pt[:, :, i] = roll(self.pt[:, :, i], -1, axis=0)
+                                self.pt[-1, :, i] = self.pt[-2, :, i]
+
+                        if k == 27:
+                                running = False
+###################################################
+
+
+###################################################
+class TargetTracker:
+        &#34;&#34;&#34;Class that use Apriltags to track the target tag positions.
+
+        Parameters
+        ----------
+        target_id : int
+                The target Apriltag ID.
+        formation : str
+                The desired formation.
+        dist : float
+                The distance from the tag (radius) if the form is &#39;Around&#39; and distance between tags for other forms.
+
+        Attributes
+        ----------
+        tid : int
+                Target Apriltags ID.
+        form : str
+                The formation the robots should produce.
+        dist : float
+                Distance from the tag (radius) if the form is &#39;Around&#39; and distance between tags for other forms.
+        diff
+                The position difference from the target position.
+        last
+                The time of the last time a message was publish on the /target ROS topic.
+        pub
+                The publisher used to publish on the /target ROS topic.
+        &#34;&#34;&#34;
+
+        def __init__(self, target_id=0, formation=&#34;None&#34;, dist=5.):
+                &#34;&#34;&#34;Class that use data from the /state ROS topic to track the target tag positions.
+
+                Parameters
+                ----------
+                target_id : int
+                        The target Apriltag ID.
+                formation : str
+                        The desired formation.
+                dist : float
+                        The distance from the tag (radius) if the form is &#39;Around&#39; and distance between tags for other forms.
+
+                Yields
+                ------
+                TargetTracker
+                        A class that read data from the /state ROS topic and publish messages on the /target ROS topic.
+                &#34;&#34;&#34;
+
+                self.tx = self.ty = 0
+                self.data = {}
+
+                # Get the id of the target tag
+                self.tid = target_id
+                self.form = formation
+                self.dist = dist
+                self.diff = self._get_form_diff()
+                self.last = time()
+                print()
+
+                self.pub = rospy.Publisher(&#39;target&#39;, String, queue_size=2)
+                rospy.init_node(&#39;TargetTracker&#39;, anonymous=False)
+                rospy.Subscriber(&#34;state&#34;, String, self.ros_callback, queue_size=2)
+                rospy.spin()
+
+        def __del__(self):
+                &#34;&#34;&#34; Destructor of the TargetTracker class. &#34;&#34;&#34;
+
+                print(&#34;\b\b  \n&#34;)
+
+        def _get_form_diff(self):
+                &#34;&#34;&#34;Method to get the difference from the target position of each Sphero for the Around formation.
+
+                Returns
+                -------
+                ndarray
+                        A numpy array containing the difference from the target position of each Sphero for the Around formation.
+                &#34;&#34;&#34;
+
+                dang = 2. * pi / self.tid
+                pos = zeros((self.tid, 2))
+                for i in range(self.tid):
+                        ang = i * dang
+                        pos[i, 0] = self.dist * cos(ang)
+                        pos[i, 1] = self.dist * sin(ang)
+
+                return pos
+
+        def ros_callback(self, data):
+                &#34;&#34;&#34;Method used get the position target for each tags. Used with a ROS Subscriber.
+
+                Parameters
+                ----------
+                data : String
+                        Message published on the /state topic containing the position of all tags.
+                &#34;&#34;&#34;
+
+                data_dict = eval(data.data)
+                tx = data_dict[str(self.tid)][0]
+                ty = data_dict[str(self.tid)][1]
+
+                freq = 1. / (time() - self.last)
+                self.last = time()
+
+                print(&#34;\rFrequency : {0:2.2f} Hz   &#34;.format(freq), end=&#39;&#39;)
+
+                if tx != self.tx or ty != self.ty:  # Only update the target value if the target moved
+                        self.tx = tx
+                        self.ty = ty
+
+                        if self.form == &#34;None&#34;:  # No formation
+                                for i in range(self.tid):
+                                        self.data[str(i)] = (tx, ty)
+
+                        elif self.form == &#34;Around&#34;:  # Formation around the target
+                                for i in range(self.tid):
+                                        dx = self.diff[i, 0]
+                                        dy = self.diff[i, 1]
+                                        self.data[str(i)] = (tx + dx, ty + dy)
+
+                        elif self.form == &#34;LineXP&#34;:  # Formation in line on the positive X axis
+                                for i in range(self.tid):
+                                        dx = self.dist * (i + 1)
+                                        self.data[str(i)] = (tx + dx, ty)
+
+                        elif self.form == &#34;LineXN&#34;:  # Formation in line on the negative X axis
+                                for i in range(self.tid):
+                                        dx = self.dist * (i + 1)
+                                        self.data[str(i)] = (tx - dx, ty)
+
+                        elif self.form == &#34;LineYP&#34;:  # Formation in line on the positive Y axis
+                                for i in range(self.tid):
+                                        dy = self.dist * (i + 1)
+                                        self.data[str(i)] = (tx, ty + dy)
+
+                        elif self.form == &#34;LineYN&#34;:  # Formation in line on the negative Y axis
+                                for i in range(self.tid):
+                                        dy = self.dist * (i + 1)
+                                        self.data[str(i)] = (tx, ty - dy)
+
+                        self.pub.publish(String(data=str(self.data)))
+###################################################</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="Jameoba.Tracker.AprilTagTracker"><code class="flex name class">
+<span>class <span class="ident">AprilTagTracker</span></span>
+<span>(</span><span>num, cam_choice=2, res_choice=2, tag_choice=1, trail_length=20, save_data=False, save_video=False, crop_image=False, testname=None, unwarped=False)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Class that use Apriltags to track tags positions.</p>
+<p>This class use Apriltags to track robots and publish
+their positions on the /state ROS topic. It also display
+and save the video. The tracking data can also be drew
+over the video.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>num</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of tags to track.</dd>
+<dt><strong><code>cam_choice</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>The choice of camera that is used.</dd>
+<dt><strong><code>res_choice</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>The resolution to use.</dd>
+<dt><strong><code>tag_choice</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>The tags to use.</dd>
+<dt><strong><code>trail_length</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>The length of the trail behind the tags in number of length.</dd>
+<dt><strong><code>save_data</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>Save data or not.</dd>
+<dt><strong><code>save_video</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>Save the video or not.</dd>
+<dt><strong><code>crop_image</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>Crop the image or not.</dd>
+<dt><strong><code>testname</code></strong> :&ensp;<code>str</code> or <code>None</code>, optional</dt>
+<dd>Name of the current test.</dd>
+<dt><strong><code>unwarped</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>Unwarp the video or not.</dd>
+</dl>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>camera_index</code></strong> :&ensp;<code>int</code></dt>
+<dd>The computer camera index.</dd>
+<dt><strong><code>origin</code></strong> :&ensp;<code>tuple</code> of <code>int</code></dt>
+<dd>Origin of the tracking. Automatically set to the initial mean position.</dd>
+<dt><strong><code>state</code></strong> :&ensp;<code>dict</code></dt>
+<dd>Message sent on the /state ROS topic.</dd>
+<dt><strong><code>number_of_tags</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of tags to track.</dd>
+<dt><strong><code>cam_choice</code></strong> :&ensp;<code>int</code></dt>
+<dd>The choice of camera.</dd>
+<dt><strong><code>res_choice</code></strong> :&ensp;<code>int</code></dt>
+<dd>The choice of resolution.</dd>
+<dt><strong><code>tag_choice</code></strong> :&ensp;<code>int</code></dt>
+<dd>The choice of tags.</dd>
+<dt><strong><code>trail_length</code></strong> :&ensp;<code>int</code></dt>
+<dd>The length of the trail behind the tags in number of length.</dd>
+<dt><strong><code>save_data</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Save data or not.</dd>
+<dt><strong><code>save_video</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Save video or not.</dd>
+<dt><strong><code>crop_image</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Crop image or not.</dd>
+<dt><strong><code>unwarped</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Unwarp the video or not.</dd>
+<dt><strong><code>data_dir</code></strong> :&ensp;<code>str</code></dt>
+<dd>Name of the directory in which to store the data.</dd>
+<dt><strong><code>filename</code></strong> :&ensp;<code>str</code></dt>
+<dd>Data filename.</dd>
+<dt><strong><code>video_name</code></strong> :&ensp;<code>str</code></dt>
+<dd>Video filename.</dd>
+<dt><strong><code>video_no_overlay_name</code></strong> :&ensp;<code>str</code></dt>
+<dd>Video with no overlay filename.</dd>
+<dt><strong><code>pt</code></strong> :&ensp;<code>ndarray</code></dt>
+<dd>Numpy array which contains the pixel coordinate of the tags.</dd>
+<dt><strong><code>ptmean</code></strong> :&ensp;<code>ndarray</code></dt>
+<dd>Numpy array which contains the pixel coordinate of the mean of the tags.</dd>
+<dt><strong><code>arrow_vec</code></strong> :&ensp;<code>ndarray</code></dt>
+<dd>Numpy array which contains the pixel coordinate af the direction arrow of each tags.</dd>
+<dt><strong><code>crop_params</code></strong> :&ensp;<code>tuple</code> of <code>int</code></dt>
+<dd>Parameters used while cropping the video.</dd>
+<dt><strong><code>pub</code></strong> :&ensp;<code>Publisher</code></dt>
+<dd>The publisher used to publish on the /state ROS topic.</dd>
+</dl>
+<p>Constructor of the SpheroController class.</p>
+<h2 id="parameters_1">Parameters</h2>
+<dl>
+<dt><strong><code>num</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of tags to track.</dd>
+<dt><strong><code>cam_choice</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>The choice of camera that is used.</dd>
+<dt><strong><code>res_choice</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>The resolution to use.</dd>
+<dt><strong><code>tag_choice</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>The tags to use.</dd>
+<dt><strong><code>trail_length</code></strong> :&ensp;<code>int</code>, optional</dt>
+<dd>The length of the trail behind the tags in number of length.</dd>
+<dt><strong><code>save_data</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>Save data or not.</dd>
+<dt><strong><code>save_video</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>Save the video or not.</dd>
+<dt><strong><code>crop_image</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>Crop the image or not.</dd>
+<dt><strong><code>testname</code></strong> :&ensp;<code>str</code> or <code>None</code>, optional</dt>
+<dd>Name of the current test.</dd>
+<dt><strong><code>unwarped</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>Unwarp the video or not.</dd>
+</dl>
+<h2 id="yields">Yields</h2>
+<dl>
+<dt><a title="Jameoba.Tracker.AprilTagTracker" href="#Jameoba.Tracker.AprilTagTracker"><code>AprilTagTracker</code></a></dt>
+<dd>A tracker for Apriltags that publish messages on the /state ROS topic.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class AprilTagTracker:
+        &#34;&#34;&#34;Class that use Apriltags to track tags positions.
+
+        This class use Apriltags to track robots and publish
+        their positions on the /state ROS topic. It also display
+        and save the video. The tracking data can also be drew
+        over the video.
+
+        Parameters
+        ----------
+        num : int
+                Number of tags to track.
+        cam_choice : int, optional
+                The choice of camera that is used.
+        res_choice : int, optional
+                The resolution to use.
+        tag_choice : int, optional
+                The tags to use.
+        trail_length : int, optional
+                The length of the trail behind the tags in number of length.
+        save_data : bool, optional
+                Save data or not.
+        save_video : bool, optional
+                Save the video or not.
+        crop_image : bool, optional
+                Crop the image or not.
+        testname : str or None, optional
+                Name of the current test.
+        unwarped : bool, optional
+                Unwarp the video or not.
+
+        Attributes
+        ----------
+        camera_index : int
+                The computer camera index.
+        origin : tuple of int
+                Origin of the tracking. Automatically set to the initial mean position.
+        state : dict
+                Message sent on the /state ROS topic.
+        number_of_tags : int
+                Number of tags to track.
+        cam_choice : int
+                The choice of camera.
+        res_choice : int
+                The choice of resolution.
+        tag_choice : int
+                The choice of tags.
+        trail_length : int
+                The length of the trail behind the tags in number of length.
+        save_data : bool
+                Save data or not.
+        save_video : bool
+                Save video or not.
+        crop_image : bool
+                Crop image or not.
+        unwarped : bool
+                Unwarp the video or not.
+        data_dir : str
+                Name of the directory in which to store the data.
+        filename : str
+                Data filename.
+        video_name : str
+                Video filename.
+        video_no_overlay_name : str
+                Video with no overlay filename.
+        pt : ndarray
+                Numpy array which contains the pixel coordinate of the tags.
+        ptmean : ndarray
+                Numpy array which contains the pixel coordinate of the mean of the tags.
+        arrow_vec : ndarray
+                Numpy array which contains the pixel coordinate af the direction arrow of each tags.
+        crop_params : tuple of int
+                Parameters used while cropping the video.
+        pub : Publisher
+                The publisher used to publish on the /state ROS topic.
+        &#34;&#34;&#34;
+
+        def __init__(self, num, cam_choice=CAM_BRIO, res_choice=RES_1080P, tag_choice=TAG_BIG, trail_length=20,
+                     save_data=False, save_video=False, crop_image=False, testname=None, unwarped=False):
+                &#34;&#34;&#34;Constructor of the SpheroController class.
+
+                Parameters
+                ----------
+                num : int
+                        Number of tags to track.
+                cam_choice : int, optional
+                        The choice of camera that is used.
+                res_choice : int, optional
+                        The resolution to use.
+                tag_choice : int, optional
+                        The tags to use.
+                trail_length : int, optional
+                        The length of the trail behind the tags in number of length.
+                save_data : bool, optional
+                        Save data or not.
+                save_video : bool, optional
+                        Save the video or not.
+                crop_image : bool, optional
+                        Crop the image or not.
+                testname : str or None, optional
+                        Name of the current test.
+                unwarped : bool, optional
+                        Unwarp the video or not.
+
+                Yields
+                ------
+                AprilTagTracker
+                        A tracker for Apriltags that publish messages on the /state ROS topic.
+                &#34;&#34;&#34;
+
+                self.camera_index = 0
+                self.origin = (0, 0)
+                self.state = {}  # The tuples are (x [cm], y [cm], theta [deg])
+
+                # Set some variables
+                self.number_of_tags = num
+                self.cam_choice = cam_choice
+                self.res_choice = res_choice
+                self.tag_choice = tag_choice
+                self.trail_length = trail_length
+                self.save_data = save_data
+                self.save_video = save_video
+                self.crop_image = crop_image
+                self.unwarped = unwarped
+
+                if not os.path.exists(&#39;Data/&#39;):
+                        os.mkdir(&#39;Data&#39;)
+
+                if testname is None:
+                        date = datetime.datetime.now()
+                        self.data_dir = &#39;Data/&#39; + date.strftime(&#34;%Y-%m-%d %Hh%M/&#34;)
+                else:
+                        self.data_dir = &#39;Data/&#39; + testname + &#34;/&#34;
+
+                # Change the directory name if it already exist
+                k = 1
+                if os.path.exists(self.data_dir):
+                        self.data_dir = self.data_dir[:-1] + &#34;_0/&#34;
+
+                while os.path.exists(self.data_dir):
+                        self.data_dir = self.data_dir.replace(&#34;_&#34; + str(k - 1) + &#34;/&#34;, &#34;_&#34; + str(k) + &#34;/&#34;)
+                        k += 1
+
+                self.filename = self.data_dir + &#34;data.csv&#34;
+                self.video_name = self.data_dir + &#34;video.avi&#34;
+                self.video_no_overlay_name = self.video_name.replace(&#34;.avi&#34;, &#34;_no_overlay.avi&#34;)
+
+                if self.save_data or self.save_video:
+                        os.mkdir(self.data_dir[:-1])
+
+                for i in range(self.number_of_tags):
+                        self.state[str(i)] = (0, 0, 0)
+
+                self.pt = ones((self.trail_length, 2, self.number_of_tags))
+                self.ptmean = ones((self.trail_length, 2))
+                self.arrow_vec = ones((2, self.number_of_tags))
+
+                self.crop_params = CROP[self.cam_choice]
+
+                # Setup the tracker
+                self._tracker_setup()
+
+                self.pub = rospy.Publisher(&#39;state&#39;, String, queue_size=2)
+                rospy.init_node(&#39;AprilTags&#39;, anonymous=False)
+
+                self.last = time()
+
+        def __del__(self):
+                &#34;&#34;&#34; Destructor of the AprilTagTracker class. &#34;&#34;&#34;
+
+                self.camera.release()  # Cleanup the camera, stop saving video and close any open windows
+                if self.save_video:
+                        self.out.release()
+                        self.out_no_overlay.release()
+                cv2.destroyAllWindows()
+
+        def _tracker_setup(self):
+                &#34;&#34;&#34; Method to setup the tracker setting. &#34;&#34;&#34;
+
+                # Grab the reference to the camera
+                self.camera = cv2.VideoCapture(self.camera_index)  # IMPORTANT: 0 for default webcam, 1 for usb webcam
+                self.camera.set(3, RESOLUTION[self.res_choice][0])
+                self.camera.set(4, RESOLUTION[self.res_choice][1])
+                print(&#34;video received&#34;)
+
+                w, h = RESOLUTION[self.res_choice]
+
+                # Generate new camera matrix from parameters
+                self.newcameramatrix, roi = cv2.getOptimalNewCameraMatrix(K[self.cam_choice], D[self.cam_choice], (w, h), 0)
+
+                # Generate look-up tables for remapping the camera image
+                self.mapx, self.mapy = cv2.initUndistortRectifyMap(K[self.cam_choice], D[self.cam_choice], None, self.newcameramatrix, (w, h), 5)
+
+                screen = screeninfo.get_monitors()[0]
+                cv2.namedWindow(&#39;Camera&#39;, cv2.WND_PROP_FULLSCREEN)
+                cv2.moveWindow(&#39;Camera&#39;, screen.x - 1, screen.y - 1)
+                cv2.setWindowProperty(&#39;Camera&#39;, cv2.WND_PROP_FULLSCREEN, cv2.WINDOW_FULLSCREEN)
+
+                self.detector = at.Detector(searchpath=[&#39;apriltags3py/apriltags&#39;], families=&#34;tag36h11&#34;, nthreads=2,
+                                            quad_decimate=1.0, quad_sigma=0.0, refine_edges=1, decode_sharpening=0.25, debug=0)
+
+                if self.crop_image:
+                        self.dx = self.crop_params[1]
+                        self.dy = self.crop_params[0]
+                else:
+                        self.dx = 0
+                        self.dy = 0
+
+                if self.save_data:
+                        self.writer = csv.writer(open(self.filename, &#39;w&#39;), quotechar=&#39;|&#39;, quoting=csv.QUOTE_MINIMAL)
+                        header_row = [&#39;&#39;] * self.number_of_tags * 3
+                        for i in range(self.number_of_tags):
+                                key = str(i)
+                                header_row[3 * i] = &#39;X&#39; + key
+                                header_row[3 * i + 1] = &#39;Y&#39; + key
+                                header_row[3 * i + 2] = &#39;Theta&#39; + key
+                        self.writer.writerow(header_row)
+
+                if self.save_video:
+                        fourcc = cv2.VideoWriter_fourcc(*&#39;XVID&#39;)
+                        self.out = cv2.VideoWriter(self.video_name, fourcc, 5.0, RESOLUTION[self.res_choice])
+                        self.out_no_overlay = cv2.VideoWriter(self.video_no_overlay_name, fourcc, 5.0, RESOLUTION[self.res_choice])
+
+        @staticmethod
+        def _is_rotation_matrix(r):
+                &#34;&#34;&#34;Method to check if the matrix is a rotation matrix.
+
+                Returns
+                -------
+                bool
+                        Return True if this is a rotation matrix.
+                &#34;&#34;&#34;
+
+                rt = transpose(r)
+                should_be_identity = dot(rt, r)
+                i = identity(3, dtype=r.dtype)
+                n = norm(i - should_be_identity)
+                return n &lt; 1e-6
+
+        def _rotation_matrix_to_euler_angles(self, r):
+                &#34;&#34;&#34;Method to get euler angle from a rotation matrix.
+
+                Returns
+                -------
+                ndarray
+                        Return the x, y and z axis rotation.
+                &#34;&#34;&#34;
+
+                assert (self._is_rotation_matrix(r))
+
+                sy = sqrt(r[0, 0] * r[0, 0] + r[1, 0] * r[1, 0])
+
+                singular = sy &lt; 1e-6
+
+                if not singular:
+                        x = atan2(r[2, 1], r[2, 2])
+                        y = atan2(-r[2, 0], sy)
+                        z = atan2(r[1, 0], r[0, 0])
+                else:
+                        x = atan2(-r[1, 2], r[1, 1])
+                        y = atan2(-r[2, 0], sy)
+                        z = 0
+
+                return array([x, y, z])
+
+        def start_tracking(self, show_mean=False, show_tags=False, show_tags_arrow=False, pub_freq=5., focus_frames=0):
+                &#34;&#34;&#34;Method to start the tracker loop.
+
+                Parameters
+                ----------
+                show_mean : bool
+                        Show the trail of the mean of all the tags.
+                show_tags : bool
+                        Show the trail of each tags.
+                show_tags_arrow : bool
+                        Show the direction arrow of each tags.
+                pub_freq : float
+                        Maximun publish frequency on the /state ROS topic.
+                focus_frames : int
+                        Number of frames to ignore to let the camera focus.
+                &#34;&#34;&#34;
+
+                running = True
+                frame_index = 0
+
+                # Let the camera focus itself
+                for i in range(focus_frames):
+                        (grabbed, frame) = self.camera.read()
+                        cv2.imshow(&#39;Camera&#39;, frame)
+                        k = cv2.waitKey(1)
+                        if k == 27:
+                                running = False
+                                break
+
+                while running:
+                        # grab the current frame
+                        (grabbed, frame) = self.camera.read()
+                        if not grabbed:
+                                break
+
+                        if self.save_video:
+                                self.out_no_overlay.write(frame)
+
+                        # convert frame to GRAYSCALE
+                        img = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+                        if self.crop_image:  # If you crop the image, then:
+                                img = img[self.crop_params[0]:self.crop_params[2], self.crop_params[1]:self.crop_params[3]]
+                                cv2.rectangle(frame, (self.crop_params[1], self.crop_params[0]), (self.crop_params[3], self.crop_params[2]),
+                                              color=(0, 0, 255), thickness=4)
+
+                        # Detect tags
+                        detections = self.detector.detect(img, estimate_tag_pose=True, camera_params=CAMERA_PARAMS[self.cam_choice],
+                                                          tag_size=TAG_SIZE[self.tag_choice])
+
+                        if frame_index == 0:  # First iteration of the loop
+                                ox = oy = 0
+                                for i, detection in enumerate(detections):
+                                        if 0 &lt;= detection.tag_id &lt; self.number_of_tags:  # Make sure detection is within the tags we want
+                                                self.pt[:, 0, detection.tag_id] *= detection.center[0] + self.dx
+                                                self.pt[:, 1, detection.tag_id] *= detection.center[1] + self.dy
+                                                ox += 100 * detection.pose_t[0][0]
+                                                oy += 100 * detection.pose_t[1][0]
+
+                                self.origin = (ox / self.number_of_tags, oy / self.number_of_tags)
+
+                                self.ptmean[:, 0] *= sum(self.pt[0, 0, :])
+                                self.ptmean[:, 1] *= sum(self.pt[0, 1, :])
+
+                        else:
+                                for i, detection in enumerate(detections):
+                                        if 0 &lt;= detection.tag_id &lt; self.number_of_tags:  # Make sure detection is within the tags we want
+                                                key = str(detection.tag_id)
+                                                self.state[key] = (100 * detection.pose_t[0][0] - self.origin[0],
+                                                                   100 * detection.pose_t[1][0] - self.origin[1],
+                                                                   180 * self._rotation_matrix_to_euler_angles(detection.pose_R)[2] / pi)
+                                                self.pt[self.trail_length - 1, 0, detection.tag_id] = detection.center[0] + self.dx
+                                                self.pt[self.trail_length - 1, 1, detection.tag_id] = detection.center[1] + self.dy
+                                                vecx = self.pt[self.trail_length - 1, 0, detection.tag_id] - self.pt[
+                                                        self.trail_length - 2, 0, detection.tag_id]
+                                                vecy = self.pt[self.trail_length - 1, 1, detection.tag_id] - self.pt[
+                                                        self.trail_length - 2, 1, detection.tag_id]
+                                                veclen = npsqrt(vecx ** 2 + vecy ** 2)
+                                                if -1 &lt; vecx &lt; 1 and -1 &lt; vecy &lt; 1:
+                                                        vecx = vecy = 0
+                                                        veclen = 1
+                                                self.arrow_vec[0, detection.tag_id] = 20.0 * float(vecx) / veclen
+                                                self.arrow_vec[1, detection.tag_id] = 20.0 * float(vecy) / veclen
+
+                                self.ptmean[self.trail_length - 1, 0] = sum(self.pt[self.trail_length - 1, 0, :]) / float(
+                                        self.number_of_tags)
+                                self.ptmean[self.trail_length - 1, 1] = sum(self.pt[self.trail_length - 1, 1, :]) / float(
+                                        self.number_of_tags)
+
+                        for i in range(1, self.trail_length):
+                                thickness = int(float(i) * 2.0 / float(self.trail_length - 1)) + 2
+                                if show_tags:
+                                        for j in range(self.number_of_tags):
+                                                cv2.line(frame, (int(self.pt[i - 1, 0, j]), int(self.pt[i - 1, 1, j])),
+                                                         (int(self.pt[i, 0, j]), int(self.pt[i, 1, j])), (0, 255, 0), thickness)
+
+                                if show_mean:
+                                        cv2.line(frame, (int(self.ptmean[i - 1, 0]), int(self.ptmean[i - 1, 1])),
+                                                 (int(self.ptmean[i, 0]), int(self.ptmean[i, 1])), (255, 0, 0), thickness)
+
+                        if show_tags_arrow:
+                                for i in range(self.number_of_tags):
+                                        cv2.line(frame,
+                                                 (int(self.pt[self.trail_length - 1, 0, i]), int(self.pt[self.trail_length - 1, 1, i])),
+                                                 (int(self.pt[self.trail_length - 1, 0, i] + self.arrow_vec[0, i]),
+                                                  int(self.pt[self.trail_length - 1, 1, i] + self.arrow_vec[1, i])), (0, 0, 255), 2)
+
+                        freq = 1.0 / (time() - self.last)  # Cap the publish frequency to let the Photons Controller read the data
+                        if freq &lt;= pub_freq:
+                                self.last = time()
+                                self.pub.publish(String(data=str(self.state)))
+                                if self.save_data:
+                                        data = [0] * self.number_of_tags * 3
+                                        for i in range(self.number_of_tags):
+                                                key = str(i)
+                                                data[3 * i] = self.state[key][0]
+                                                data[3 * i + 1] = self.state[key][1]
+                                                data[3 * i + 2] = self.state[key][2]
+                                        self.writer.writerow(data)
+
+                        newimg = cv2.remap(frame, self.mapx, self.mapy, cv2.INTER_LINEAR)
+
+                        if self.unwarped:
+                                cv2.imshow(&#39;Camera&#39;, newimg)
+                                if self.save_video:
+                                        self.out.write(newimg)
+                        else:
+                                cv2.imshow(&#39;Camera&#39;, frame)
+                                if self.save_video:
+                                        self.out.write(frame)
+
+                        k = cv2.waitKey(1)
+                        frame_index += 1
+
+                        self.ptmean = roll(self.ptmean, -1, axis=0)
+                        self.ptmean[-1] = self.ptmean[-2]
+                        for i in range(self.number_of_tags):
+                                self.pt[:, :, i] = roll(self.pt[:, :, i], -1, axis=0)
+                                self.pt[-1, :, i] = self.pt[-2, :, i]
+
+                        if k == 27:
+                                running = False</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="Jameoba.Tracker.AprilTagTracker.start_tracking"><code class="name flex">
+<span>def <span class="ident">start_tracking</span></span>(<span>self, show_mean=False, show_tags=False, show_tags_arrow=False, pub_freq=5.0, focus_frames=0)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Method to start the tracker loop.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>show_mean</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Show the trail of the mean of all the tags.</dd>
+<dt><strong><code>show_tags</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Show the trail of each tags.</dd>
+<dt><strong><code>show_tags_arrow</code></strong> :&ensp;<code>bool</code></dt>
+<dd>Show the direction arrow of each tags.</dd>
+<dt><strong><code>pub_freq</code></strong> :&ensp;<code>float</code></dt>
+<dd>Maximun publish frequency on the /state ROS topic.</dd>
+<dt><strong><code>focus_frames</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of frames to ignore to let the camera focus.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def start_tracking(self, show_mean=False, show_tags=False, show_tags_arrow=False, pub_freq=5., focus_frames=0):
+        &#34;&#34;&#34;Method to start the tracker loop.
+
+        Parameters
+        ----------
+        show_mean : bool
+                Show the trail of the mean of all the tags.
+        show_tags : bool
+                Show the trail of each tags.
+        show_tags_arrow : bool
+                Show the direction arrow of each tags.
+        pub_freq : float
+                Maximun publish frequency on the /state ROS topic.
+        focus_frames : int
+                Number of frames to ignore to let the camera focus.
+        &#34;&#34;&#34;
+
+        running = True
+        frame_index = 0
+
+        # Let the camera focus itself
+        for i in range(focus_frames):
+                (grabbed, frame) = self.camera.read()
+                cv2.imshow(&#39;Camera&#39;, frame)
+                k = cv2.waitKey(1)
+                if k == 27:
+                        running = False
+                        break
+
+        while running:
+                # grab the current frame
+                (grabbed, frame) = self.camera.read()
+                if not grabbed:
+                        break
+
+                if self.save_video:
+                        self.out_no_overlay.write(frame)
+
+                # convert frame to GRAYSCALE
+                img = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+
+                if self.crop_image:  # If you crop the image, then:
+                        img = img[self.crop_params[0]:self.crop_params[2], self.crop_params[1]:self.crop_params[3]]
+                        cv2.rectangle(frame, (self.crop_params[1], self.crop_params[0]), (self.crop_params[3], self.crop_params[2]),
+                                      color=(0, 0, 255), thickness=4)
+
+                # Detect tags
+                detections = self.detector.detect(img, estimate_tag_pose=True, camera_params=CAMERA_PARAMS[self.cam_choice],
+                                                  tag_size=TAG_SIZE[self.tag_choice])
+
+                if frame_index == 0:  # First iteration of the loop
+                        ox = oy = 0
+                        for i, detection in enumerate(detections):
+                                if 0 &lt;= detection.tag_id &lt; self.number_of_tags:  # Make sure detection is within the tags we want
+                                        self.pt[:, 0, detection.tag_id] *= detection.center[0] + self.dx
+                                        self.pt[:, 1, detection.tag_id] *= detection.center[1] + self.dy
+                                        ox += 100 * detection.pose_t[0][0]
+                                        oy += 100 * detection.pose_t[1][0]
+
+                        self.origin = (ox / self.number_of_tags, oy / self.number_of_tags)
+
+                        self.ptmean[:, 0] *= sum(self.pt[0, 0, :])
+                        self.ptmean[:, 1] *= sum(self.pt[0, 1, :])
+
+                else:
+                        for i, detection in enumerate(detections):
+                                if 0 &lt;= detection.tag_id &lt; self.number_of_tags:  # Make sure detection is within the tags we want
+                                        key = str(detection.tag_id)
+                                        self.state[key] = (100 * detection.pose_t[0][0] - self.origin[0],
+                                                           100 * detection.pose_t[1][0] - self.origin[1],
+                                                           180 * self._rotation_matrix_to_euler_angles(detection.pose_R)[2] / pi)
+                                        self.pt[self.trail_length - 1, 0, detection.tag_id] = detection.center[0] + self.dx
+                                        self.pt[self.trail_length - 1, 1, detection.tag_id] = detection.center[1] + self.dy
+                                        vecx = self.pt[self.trail_length - 1, 0, detection.tag_id] - self.pt[
+                                                self.trail_length - 2, 0, detection.tag_id]
+                                        vecy = self.pt[self.trail_length - 1, 1, detection.tag_id] - self.pt[
+                                                self.trail_length - 2, 1, detection.tag_id]
+                                        veclen = npsqrt(vecx ** 2 + vecy ** 2)
+                                        if -1 &lt; vecx &lt; 1 and -1 &lt; vecy &lt; 1:
+                                                vecx = vecy = 0
+                                                veclen = 1
+                                        self.arrow_vec[0, detection.tag_id] = 20.0 * float(vecx) / veclen
+                                        self.arrow_vec[1, detection.tag_id] = 20.0 * float(vecy) / veclen
+
+                        self.ptmean[self.trail_length - 1, 0] = sum(self.pt[self.trail_length - 1, 0, :]) / float(
+                                self.number_of_tags)
+                        self.ptmean[self.trail_length - 1, 1] = sum(self.pt[self.trail_length - 1, 1, :]) / float(
+                                self.number_of_tags)
+
+                for i in range(1, self.trail_length):
+                        thickness = int(float(i) * 2.0 / float(self.trail_length - 1)) + 2
+                        if show_tags:
+                                for j in range(self.number_of_tags):
+                                        cv2.line(frame, (int(self.pt[i - 1, 0, j]), int(self.pt[i - 1, 1, j])),
+                                                 (int(self.pt[i, 0, j]), int(self.pt[i, 1, j])), (0, 255, 0), thickness)
+
+                        if show_mean:
+                                cv2.line(frame, (int(self.ptmean[i - 1, 0]), int(self.ptmean[i - 1, 1])),
+                                         (int(self.ptmean[i, 0]), int(self.ptmean[i, 1])), (255, 0, 0), thickness)
+
+                if show_tags_arrow:
+                        for i in range(self.number_of_tags):
+                                cv2.line(frame,
+                                         (int(self.pt[self.trail_length - 1, 0, i]), int(self.pt[self.trail_length - 1, 1, i])),
+                                         (int(self.pt[self.trail_length - 1, 0, i] + self.arrow_vec[0, i]),
+                                          int(self.pt[self.trail_length - 1, 1, i] + self.arrow_vec[1, i])), (0, 0, 255), 2)
+
+                freq = 1.0 / (time() - self.last)  # Cap the publish frequency to let the Photons Controller read the data
+                if freq &lt;= pub_freq:
+                        self.last = time()
+                        self.pub.publish(String(data=str(self.state)))
+                        if self.save_data:
+                                data = [0] * self.number_of_tags * 3
+                                for i in range(self.number_of_tags):
+                                        key = str(i)
+                                        data[3 * i] = self.state[key][0]
+                                        data[3 * i + 1] = self.state[key][1]
+                                        data[3 * i + 2] = self.state[key][2]
+                                self.writer.writerow(data)
+
+                newimg = cv2.remap(frame, self.mapx, self.mapy, cv2.INTER_LINEAR)
+
+                if self.unwarped:
+                        cv2.imshow(&#39;Camera&#39;, newimg)
+                        if self.save_video:
+                                self.out.write(newimg)
+                else:
+                        cv2.imshow(&#39;Camera&#39;, frame)
+                        if self.save_video:
+                                self.out.write(frame)
+
+                k = cv2.waitKey(1)
+                frame_index += 1
+
+                self.ptmean = roll(self.ptmean, -1, axis=0)
+                self.ptmean[-1] = self.ptmean[-2]
+                for i in range(self.number_of_tags):
+                        self.pt[:, :, i] = roll(self.pt[:, :, i], -1, axis=0)
+                        self.pt[-1, :, i] = self.pt[-2, :, i]
+
+                if k == 27:
+                        running = False</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="Jameoba.Tracker.TargetTracker"><code class="flex name class">
+<span>class <span class="ident">TargetTracker</span></span>
+<span>(</span><span>target_id=0, formation='None', dist=5.0)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Class that use Apriltags to track the target tag positions.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>target_id</code></strong> :&ensp;<code>int</code></dt>
+<dd>The target Apriltag ID.</dd>
+<dt><strong><code>formation</code></strong> :&ensp;<code>str</code></dt>
+<dd>The desired formation.</dd>
+<dt><strong><code>dist</code></strong> :&ensp;<code>float</code></dt>
+<dd>The distance from the tag (radius) if the form is 'Around' and distance between tags for other forms.</dd>
+</dl>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>tid</code></strong> :&ensp;<code>int</code></dt>
+<dd>Target Apriltags ID.</dd>
+<dt><strong><code>form</code></strong> :&ensp;<code>str</code></dt>
+<dd>The formation the robots should produce.</dd>
+<dt><strong><code>dist</code></strong> :&ensp;<code>float</code></dt>
+<dd>Distance from the tag (radius) if the form is 'Around' and distance between tags for other forms.</dd>
+<dt><strong><code>diff</code></strong></dt>
+<dd>The position difference from the target position.</dd>
+<dt><strong><code>last</code></strong></dt>
+<dd>The time of the last time a message was publish on the /target ROS topic.</dd>
+<dt><strong><code>pub</code></strong></dt>
+<dd>The publisher used to publish on the /target ROS topic.</dd>
+</dl>
+<p>Class that use data from the /state ROS topic to track the target tag positions.</p>
+<h2 id="parameters_1">Parameters</h2>
+<dl>
+<dt><strong><code>target_id</code></strong> :&ensp;<code>int</code></dt>
+<dd>The target Apriltag ID.</dd>
+<dt><strong><code>formation</code></strong> :&ensp;<code>str</code></dt>
+<dd>The desired formation.</dd>
+<dt><strong><code>dist</code></strong> :&ensp;<code>float</code></dt>
+<dd>The distance from the tag (radius) if the form is 'Around' and distance between tags for other forms.</dd>
+</dl>
+<h2 id="yields">Yields</h2>
+<dl>
+<dt><a title="Jameoba.Tracker.TargetTracker" href="#Jameoba.Tracker.TargetTracker"><code>TargetTracker</code></a></dt>
+<dd>A class that read data from the /state ROS topic and publish messages on the /target ROS topic.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class TargetTracker:
+        &#34;&#34;&#34;Class that use Apriltags to track the target tag positions.
+
+        Parameters
+        ----------
+        target_id : int
+                The target Apriltag ID.
+        formation : str
+                The desired formation.
+        dist : float
+                The distance from the tag (radius) if the form is &#39;Around&#39; and distance between tags for other forms.
+
+        Attributes
+        ----------
+        tid : int
+                Target Apriltags ID.
+        form : str
+                The formation the robots should produce.
+        dist : float
+                Distance from the tag (radius) if the form is &#39;Around&#39; and distance between tags for other forms.
+        diff
+                The position difference from the target position.
+        last
+                The time of the last time a message was publish on the /target ROS topic.
+        pub
+                The publisher used to publish on the /target ROS topic.
+        &#34;&#34;&#34;
+
+        def __init__(self, target_id=0, formation=&#34;None&#34;, dist=5.):
+                &#34;&#34;&#34;Class that use data from the /state ROS topic to track the target tag positions.
+
+                Parameters
+                ----------
+                target_id : int
+                        The target Apriltag ID.
+                formation : str
+                        The desired formation.
+                dist : float
+                        The distance from the tag (radius) if the form is &#39;Around&#39; and distance between tags for other forms.
+
+                Yields
+                ------
+                TargetTracker
+                        A class that read data from the /state ROS topic and publish messages on the /target ROS topic.
+                &#34;&#34;&#34;
+
+                self.tx = self.ty = 0
+                self.data = {}
+
+                # Get the id of the target tag
+                self.tid = target_id
+                self.form = formation
+                self.dist = dist
+                self.diff = self._get_form_diff()
+                self.last = time()
+                print()
+
+                self.pub = rospy.Publisher(&#39;target&#39;, String, queue_size=2)
+                rospy.init_node(&#39;TargetTracker&#39;, anonymous=False)
+                rospy.Subscriber(&#34;state&#34;, String, self.ros_callback, queue_size=2)
+                rospy.spin()
+
+        def __del__(self):
+                &#34;&#34;&#34; Destructor of the TargetTracker class. &#34;&#34;&#34;
+
+                print(&#34;\b\b  \n&#34;)
+
+        def _get_form_diff(self):
+                &#34;&#34;&#34;Method to get the difference from the target position of each Sphero for the Around formation.
+
+                Returns
+                -------
+                ndarray
+                        A numpy array containing the difference from the target position of each Sphero for the Around formation.
+                &#34;&#34;&#34;
+
+                dang = 2. * pi / self.tid
+                pos = zeros((self.tid, 2))
+                for i in range(self.tid):
+                        ang = i * dang
+                        pos[i, 0] = self.dist * cos(ang)
+                        pos[i, 1] = self.dist * sin(ang)
+
+                return pos
+
+        def ros_callback(self, data):
+                &#34;&#34;&#34;Method used get the position target for each tags. Used with a ROS Subscriber.
+
+                Parameters
+                ----------
+                data : String
+                        Message published on the /state topic containing the position of all tags.
+                &#34;&#34;&#34;
+
+                data_dict = eval(data.data)
+                tx = data_dict[str(self.tid)][0]
+                ty = data_dict[str(self.tid)][1]
+
+                freq = 1. / (time() - self.last)
+                self.last = time()
+
+                print(&#34;\rFrequency : {0:2.2f} Hz   &#34;.format(freq), end=&#39;&#39;)
+
+                if tx != self.tx or ty != self.ty:  # Only update the target value if the target moved
+                        self.tx = tx
+                        self.ty = ty
+
+                        if self.form == &#34;None&#34;:  # No formation
+                                for i in range(self.tid):
+                                        self.data[str(i)] = (tx, ty)
+
+                        elif self.form == &#34;Around&#34;:  # Formation around the target
+                                for i in range(self.tid):
+                                        dx = self.diff[i, 0]
+                                        dy = self.diff[i, 1]
+                                        self.data[str(i)] = (tx + dx, ty + dy)
+
+                        elif self.form == &#34;LineXP&#34;:  # Formation in line on the positive X axis
+                                for i in range(self.tid):
+                                        dx = self.dist * (i + 1)
+                                        self.data[str(i)] = (tx + dx, ty)
+
+                        elif self.form == &#34;LineXN&#34;:  # Formation in line on the negative X axis
+                                for i in range(self.tid):
+                                        dx = self.dist * (i + 1)
+                                        self.data[str(i)] = (tx - dx, ty)
+
+                        elif self.form == &#34;LineYP&#34;:  # Formation in line on the positive Y axis
+                                for i in range(self.tid):
+                                        dy = self.dist * (i + 1)
+                                        self.data[str(i)] = (tx, ty + dy)
+
+                        elif self.form == &#34;LineYN&#34;:  # Formation in line on the negative Y axis
+                                for i in range(self.tid):
+                                        dy = self.dist * (i + 1)
+                                        self.data[str(i)] = (tx, ty - dy)
+
+                        self.pub.publish(String(data=str(self.data)))</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="Jameoba.Tracker.TargetTracker.ros_callback"><code class="name flex">
+<span>def <span class="ident">ros_callback</span></span>(<span>self, data)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Method used get the position target for each tags. Used with a ROS Subscriber.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>data</code></strong> :&ensp;<code>String</code></dt>
+<dd>Message published on the /state topic containing the position of all tags.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def ros_callback(self, data):
+        &#34;&#34;&#34;Method used get the position target for each tags. Used with a ROS Subscriber.
+
+        Parameters
+        ----------
+        data : String
+                Message published on the /state topic containing the position of all tags.
+        &#34;&#34;&#34;
+
+        data_dict = eval(data.data)
+        tx = data_dict[str(self.tid)][0]
+        ty = data_dict[str(self.tid)][1]
+
+        freq = 1. / (time() - self.last)
+        self.last = time()
+
+        print(&#34;\rFrequency : {0:2.2f} Hz   &#34;.format(freq), end=&#39;&#39;)
+
+        if tx != self.tx or ty != self.ty:  # Only update the target value if the target moved
+                self.tx = tx
+                self.ty = ty
+
+                if self.form == &#34;None&#34;:  # No formation
+                        for i in range(self.tid):
+                                self.data[str(i)] = (tx, ty)
+
+                elif self.form == &#34;Around&#34;:  # Formation around the target
+                        for i in range(self.tid):
+                                dx = self.diff[i, 0]
+                                dy = self.diff[i, 1]
+                                self.data[str(i)] = (tx + dx, ty + dy)
+
+                elif self.form == &#34;LineXP&#34;:  # Formation in line on the positive X axis
+                        for i in range(self.tid):
+                                dx = self.dist * (i + 1)
+                                self.data[str(i)] = (tx + dx, ty)
+
+                elif self.form == &#34;LineXN&#34;:  # Formation in line on the negative X axis
+                        for i in range(self.tid):
+                                dx = self.dist * (i + 1)
+                                self.data[str(i)] = (tx - dx, ty)
+
+                elif self.form == &#34;LineYP&#34;:  # Formation in line on the positive Y axis
+                        for i in range(self.tid):
+                                dy = self.dist * (i + 1)
+                                self.data[str(i)] = (tx, ty + dy)
+
+                elif self.form == &#34;LineYN&#34;:  # Formation in line on the negative Y axis
+                        for i in range(self.tid):
+                                dy = self.dist * (i + 1)
+                                self.data[str(i)] = (tx, ty - dy)
+
+                self.pub.publish(String(data=str(self.data)))</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="Jameoba" href="index.html">Jameoba</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="Jameoba.Tracker.AprilTagTracker" href="#Jameoba.Tracker.AprilTagTracker">AprilTagTracker</a></code></h4>
+<ul class="">
+<li><code><a title="Jameoba.Tracker.AprilTagTracker.start_tracking" href="#Jameoba.Tracker.AprilTagTracker.start_tracking">start_tracking</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="Jameoba.Tracker.TargetTracker" href="#Jameoba.Tracker.TargetTracker">TargetTracker</a></code></h4>
+<ul class="">
+<li><code><a title="Jameoba.Tracker.TargetTracker.ros_callback" href="#Jameoba.Tracker.TargetTracker.ros_callback">ros_callback</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.2</a>.</p>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad()</script>
+</body>
+</html>

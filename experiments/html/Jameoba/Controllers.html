@@ -1,0 +1,1090 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1" />
+<meta name="generator" content="pdoc 0.7.2" />
+<title>Jameoba.Controllers API documentation</title>
+<meta name="description" content="This module contains many controllers for Sphero(s) Mini/Bolt to be used
+with ROS." />
+<link href='https://cdnjs.cloudflare.com/ajax/libs/normalize/8.0.0/normalize.min.css' rel='stylesheet'>
+<link href='https://cdnjs.cloudflare.com/ajax/libs/10up-sanitize.css/8.0.0/sanitize.min.css' rel='stylesheet'>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/styles/github.min.css" rel="stylesheet">
+<style>.flex{display:flex !important}body{line-height:1.5em}#content{padding:20px}#sidebar{padding:30px;overflow:hidden}.http-server-breadcrumbs{font-size:130%;margin:0 0 15px 0}#footer{font-size:.75em;padding:5px 30px;border-top:1px solid #ddd;text-align:right}#footer p{margin:0 0 0 1em;display:inline-block}#footer p:last-child{margin-right:30px}h1,h2,h3,h4,h5{font-weight:300}h1{font-size:2.5em;line-height:1.1em}h2{font-size:1.75em;margin:1em 0 .50em 0}h3{font-size:1.4em;margin:25px 0 10px 0}h4{margin:0;font-size:105%}a{color:#058;text-decoration:none;transition:color .3s ease-in-out}a:hover{color:#e82}.title code{font-weight:bold}h2[id^="header-"]{margin-top:2em}.ident{color:#900}pre code{background:#f8f8f8;font-size:.8em;line-height:1.4em}code{background:#f2f2f1;padding:1px 4px;overflow-wrap:break-word}h1 code{background:transparent}pre{background:#f8f8f8;border:0;border-top:1px solid #ccc;border-bottom:1px solid #ccc;margin:1em 0;padding:1ex}#http-server-module-list{display:flex;flex-flow:column}#http-server-module-list div{display:flex}#http-server-module-list dt{min-width:10%}#http-server-module-list p{margin-top:0}.toc ul,#index{list-style-type:none;margin:0;padding:0}#index code{background:transparent}#index h3{border-bottom:1px solid #ddd}#index ul{padding:0}#index h4{font-weight:bold}#index h4 + ul{margin-bottom:.6em}@media (min-width:200ex){#index .two-column{column-count:2}}@media (min-width:300ex){#index .two-column{column-count:3}}dl{margin-bottom:2em}dl dl:last-child{margin-bottom:4em}dd{margin:0 0 1em 3em}#header-classes + dl > dd{margin-bottom:3em}dd dd{margin-left:2em}dd p{margin:10px 0}.name{background:#eee;font-weight:bold;font-size:.85em;padding:5px 10px;display:inline-block;min-width:40%}.name:hover{background:#e0e0e0}.name > span:first-child{white-space:nowrap}.name.class > span:nth-child(2){margin-left:.4em}.inherited{color:#999;border-left:5px solid #eee;padding-left:1em}.inheritance em{font-style:normal;font-weight:bold}.desc h2{font-weight:400;font-size:1.25em}.desc h3{font-size:1em}.desc dt code{background:inherit}.source summary,.git-link-div{color:#666;text-align:right;font-weight:400;font-size:.8em;text-transform:uppercase}.source summary > *{white-space:nowrap;cursor:pointer}.git-link{color:inherit;margin-left:1em}.source pre{max-height:500px;overflow:auto;margin:0}.source pre code{font-size:12px;overflow:visible}.hlist{list-style:none}.hlist li{display:inline}.hlist li:after{content:',\2002'}.hlist li:last-child:after{content:none}.hlist .hlist{display:inline;padding-left:1em}img{max-width:100%}.admonition{padding:.1em .5em;margin-bottom:1em}.admonition-title{font-weight:bold}.admonition.note,.admonition.info,.admonition.important{background:#aef}.admonition.todo,.admonition.versionadded,.admonition.tip,.admonition.hint{background:#dfd}.admonition.warning,.admonition.versionchanged,.admonition.deprecated{background:#fd4}.admonition.error,.admonition.danger,.admonition.caution{background:lightpink}</style>
+<style media="screen and (min-width: 700px)">@media screen and (min-width:700px){#sidebar{width:30%}#content{width:70%;max-width:100ch;padding:3em 4em;border-left:1px solid #ddd}pre code{font-size:1em}.item .name{font-size:1em}main{display:flex;flex-direction:row-reverse;justify-content:flex-end}.toc ul ul,#index ul{padding-left:1.5em}.toc > ul > li{margin-top:.5em}}</style>
+<style media="print">@media print{#sidebar h1{page-break-before:always}.source{display:none}}@media print{*{background:transparent !important;color:#000 !important;box-shadow:none !important;text-shadow:none !important}a[href]:after{content:" (" attr(href) ")";font-size:90%}a[href][title]:after{content:none}abbr[title]:after{content:" (" attr(title) ")"}.ir a:after,a[href^="javascript:"]:after,a[href^="#"]:after{content:""}pre,blockquote{border:1px solid #999;page-break-inside:avoid}thead{display:table-header-group}tr,img{page-break-inside:avoid}img{max-width:100% !important}@page{margin:0.5cm}p,h2,h3{orphans:3;widows:3}h1,h2,h3,h4,h5,h6{page-break-after:avoid}}</style>
+</head>
+<body>
+<main>
+<article id="content">
+<header>
+<h1 class="title">Module <code>Jameoba.Controllers</code></h1>
+</header>
+<section id="section-intro">
+<p>This module contains many controllers for Sphero(s) Mini/Bolt to be used
+with ROS.</p>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">&#34;&#34;&#34;
+This module contains many controllers for Sphero(s) Mini/Bolt to be used
+with ROS.
+&#34;&#34;&#34;
+
+###################################################
+from numpy import zeros, ndarray
+from math import atan2, sqrt, pi
+from time import time
+import rospy
+from std_msgs.msg import String
+from pid_controller.pid import PID
+from .Spheros import SpheroMini, SpheroBolt, \
+        MultiSpheroMini, MultiSpheroBolt
+###################################################
+
+
+###################################################
+# ------------------- Classes ------------------- #
+###################################################
+
+
+###################################################
+class SpheroController:
+        &#34;&#34;&#34;PID controller of a single Sphero.
+
+        Parameters
+        ----------
+        single_sphero : SpheroMini or SpheroBolt or int
+                The Sphero instance to be controlled. If an int,
+                this is the controller for a simulation.
+        kp : float, optional
+                Proportional gain of the PID.
+        ki : float, optional
+                Integral gain of the PID.
+        kd : float, optional
+                Derivative gain of the PID.
+        is_alone : bool, optional
+                Set to False if the controller is used in a swarm (multiple controller).
+
+        Attributes
+        ----------
+        sphero : SpheroMini or SpheroBolt or None
+                The Sphero instance that is controlled.
+        at_id : int
+                The Apriltag ID of the Sphero.
+        x : int
+                Current position in x.
+        y : int
+                Current position in y.
+        tar_x : int
+                Target position in x.
+        tar_y : int
+                Target position in y.
+        _ulim : int
+                Ultimate speed limit for the Sphero.
+        _freq : float
+                Maximum frequency to send command to the Sphero via Bluetooth.
+        speed_ctl : PID
+                The speed PID controller.
+        last : float
+                The time at which data was last sent to the Sphero via Bluetooth.
+        &#34;&#34;&#34;
+
+        def __init__(self, single_sphero, kp=1., ki=0., kd=0., is_alone=True):
+                &#34;&#34;&#34;Constructor of the SpheroController class.
+
+                Parameters
+                ----------
+                single_sphero : SpheroMini or SpheroBolt or int
+                        The Sphero instance to be controlled. If an int,
+                        this is the controller for a simulation.
+                kp : float, optional
+                        Proportional gain of the PID.
+                ki : float, optional
+                        Integral gain of the PID.
+                kd : float, optional
+                        Derivative gain of the PID.
+                is_alone : bool, optional
+                        Set to False if the controller is used in a swarm (multiple controller).
+
+                Yields
+                ------
+                SpheroController
+                        A PID controller for a single Sphero Mini/Bolt.
+                &#34;&#34;&#34;
+
+                self.x = self.y = self.tar_x = self.tar_y = 0
+                self._ulim = 255
+                self._freq = 2.
+
+                # Check if this is a simulated Sphero.
+                if type(single_sphero) is int:
+                        self.sphero = None
+                        self.at_id = single_sphero
+                else:
+                        self.sphero = single_sphero
+                        self.at_id = single_sphero.id
+
+                # Initialize the PID speed controller.
+                self.speed_ctl = PID(p=kp, i=ki, d=kd)
+                self.speed_ctl.target = 0
+
+                # Set the last data sending time as now.
+                self.last = time()
+
+                # If this is not a part of a swarm, start ROS
+                if is_alone:
+                        rospy.init_node(&#34;Sphero_&#34; + str(self.at_id), anonymous=False)
+                        rospy.Subscriber(&#34;target&#34;, String, self.ros_set_target, queue_size=2)
+                        rospy.Subscriber(&#34;state&#34;, String, self.ros_callback, queue_size=2)
+                        rospy.spin()
+
+        def get_error_length(self):
+                &#34;&#34;&#34;Method to get the length between the current position and the target position.
+
+                Returns
+                -------
+                float
+                        The length between the current position and the target position.
+                &#34;&#34;&#34;
+
+                dx = self.tar_x - self.x
+                dy = self.tar_y - self.y
+                return sqrt(dx**2 + dy**2)
+
+        def get_error_angle(self):
+                &#34;&#34;&#34;Method to get the orientation of the target relative to the current position.
+
+                Returns
+                -------
+                float
+                        The orientation of the target relative to the current position.
+                &#34;&#34;&#34;
+
+                dx = self.tar_x - self.x
+                dy = self.tar_y - self.y
+                ang = 180*atan2(dy, dx)/pi
+                return ang % 360
+
+        def ros_set_target(self, data):
+                &#34;&#34;&#34;Method used to update the closed loop target positions. Used with a ROS Subscriber.
+
+                Parameters
+                ----------
+                data : String
+                        Message published on the /target topic containing the position of the target tag.
+                &#34;&#34;&#34;
+
+                data_dict = eval(data.data)
+
+                self.tar_x = data_dict[str(self.at_id)][0]
+                self.tar_y = data_dict[str(self.at_id)][1]
+
+        def ros_callback(self, data):
+                &#34;&#34;&#34;Method used to run an iteration of the control loop. Used with a ROS Subscriber.
+
+                Parameters
+                ----------
+                data : String
+                        Message published on the /state topic containing the position of all tags.
+                &#34;&#34;&#34;
+
+                data_dict = eval(data.data)
+
+                # Set the current positions
+                self.x = data_dict[str(self.at_id)][0]
+                self.y = data_dict[str(self.at_id)][1]
+
+                # Get the heading and the speed
+                head = int(self.get_error_angle())
+                speed = max(min(int(self.speed_ctl(feedback=self.get_error_length())), self.ulim), 0)
+
+                # Send it to the sphero
+                freq = 1.0/(time() - self.last)
+                if freq &lt;= self.freq:
+                        self.last = time()
+
+                        if self.sphero is None:
+                                print(&#34;\r[{0}] ----&gt; {1:3d}° at {2} % speed.&#34;.format(self.at_id, head, int(100*speed/255)))
+                        else:
+                                self.sphero.send(speed=speed, heading=head)
+
+        @property
+        def ulim(self):
+                return self._ulim
+
+        @ulim.setter
+        def ulim(self, lim):
+                self._ulim = max(0, min(lim, 255))
+
+        @property
+        def freq(self):
+                return self._freq
+
+        @freq.setter
+        def freq(self, f):
+                self._freq = max(0., min(f, 20.))
+###################################################
+
+
+###################################################
+class MultiSpheroController:
+        &#34;&#34;&#34;PID controller of a multiple Spheros.
+
+        Parameters
+        ----------
+        multi_sphero : MultiSpheroMini or MultiSpheroBolt or tuple of int
+                The Spheros swarm instance to be controlled. If a tuple,
+                this is the controllers for a simulation.
+        kp : float, optional
+                Proportional gain of the PID.
+        ki : float, optional
+                Integral gain of the PID.
+        kd : float, optional
+                Derivative gain of the PID.
+
+        Attributes
+        ----------
+        spheros : ndarray of SpheroMini or ndarray of SpheroBolt or tuple of int
+                An numpy array of the SpheroMini/SpheroBolt or of the Apriltag IDs if this is a simulation.
+        num : int
+                Number of Sphero in the swarm.
+        ids : tuple of int
+                A tuple containing the Apriltag ID of the Spheros.
+        swarm : MultiSpheroMini or MultiSpheroBolt or None
+                The Sphero swarm instance or None if this is a simulation.
+        controllers : ndarray of SpheroController
+                An numpy array of the SpheroController.
+        last : float
+                The time at which data was last received from the /state topic.
+        last_tar : float
+                The time at which data was last received from the /target topic.
+        freq_tar : float
+                Frequency at which the /target topic receives messages.
+        &#34;&#34;&#34;
+
+        def __init__(self, multi_sphero, kp=1., ki=0., kd=0.):
+                &#34;&#34;&#34;Constructor of the SpheroController class.
+
+                Parameters
+                ----------
+                multi_sphero : MultiSpheroMini or MultiSpheroBolt or tuple of int
+                        The Spheros swarm instance to be controlled. If a tuple,
+                        this is the controllers for a simulation.
+                kp : float, optional
+                        Proportional gain of the PID.
+                ki : float, optional
+                        Integral gain of the PID.
+                kd : float, optional
+                        Derivative gain of the PID.
+
+                Yields
+                ------
+                MultiSpheroController
+                        A PID controller for multiple Sphero Mini/Bolt.
+                &#34;&#34;&#34;
+
+                if type(multi_sphero) is tuple:
+                        self.spheros = self.ids = multi_sphero
+                        self.num = len(multi_sphero)
+                        self.swarm = None
+                else:
+                        self.swarm = multi_sphero
+                        self.spheros = self.swarm.spheros
+                        self.num = self.swarm.num
+                        self.ids = self.swarm.ids
+
+                self.controllers = zeros(self.num, dtype=SpheroController)
+                for i in range(self.num):
+                        self.controllers[i] = SpheroController(self.spheros[i], kp, ki, kd, is_alone=False)
+
+                self.last = self.last_tar = time()
+                self.freq_tar = 0
+                print(&#34;Frequencies :\n| Apriltags |  Target  | Timeout Error |&#34;)
+
+                rospy.init_node(&#34;Spheros&#34; + str(self.ids[0]), anonymous=False)
+                rospy.Subscriber(&#34;target&#34;, String, self.ros_set_target, queue_size=2)
+                rospy.Subscriber(&#34;state&#34;, String, self.ros_callback, queue_size=2)
+                rospy.spin()
+
+        def __del__(self):
+                &#34;&#34;&#34; Destructor of the SpheroController class. &#34;&#34;&#34;
+
+                print(&#34;\b\b  \n&#34;)
+
+        def ros_set_target(self, data):
+                &#34;&#34;&#34;Method used to update the closed loop target positions. Used with a ROS Subscriber.
+
+                Parameters
+                ----------
+                data : String
+                        Message published on the /target topic containing the position of the target tag.
+                &#34;&#34;&#34;
+
+                self.freq_tar = 1./(time() - self.last_tar)
+                self.last_tar = time()
+                for ctl in self.controllers:
+                        ctl.ros_set_target(data)
+
+        def ros_callback(self, data):
+                &#34;&#34;&#34;Method used to run an iteration of the control loop. Used with a ROS Subscriber.
+
+                Parameters
+                ----------
+                data : String
+                        Message published on the /state topic containing the position of all tags.
+                &#34;&#34;&#34;
+
+                freq = 1./(time() - self.last)
+                self.last = time()
+                print(&#34;\r| {0:2.2f} Hz  | {1:2.2f} Hz | {2} Errors    |      &#34;.format(freq, self.freq_tar, self.get_sum_error()), end=&#39;&#39;)
+
+                for ctl in self.controllers:
+                        ctl.ros_callback(data)
+
+        def get_sum_error(self):
+                &#34;&#34;&#34; Method the total number of&#34;&#34;&#34;
+
+                if type(self.spheros[0]) is SpheroMini:
+                        return &#34;N/A&#34;
+                else:
+                        val = 0
+                        for s in self.spheros:
+                                val += s.toerr
+
+                        return val
+###################################################</code></pre>
+</details>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+</section>
+<section>
+<h2 class="section-title" id="header-classes">Classes</h2>
+<dl>
+<dt id="Jameoba.Controllers.MultiSpheroController"><code class="flex name class">
+<span>class <span class="ident">MultiSpheroController</span></span>
+<span>(</span><span>multi_sphero, kp=1.0, ki=0.0, kd=0.0)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>PID controller of a multiple Spheros.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>multi_sphero</code></strong> :&ensp;<code>MultiSpheroMini</code> or <code>MultiSpheroBolt</code> or <code>tuple</code> of <code>int</code></dt>
+<dd>The Spheros swarm instance to be controlled. If a tuple,
+this is the controllers for a simulation.</dd>
+<dt><strong><code>kp</code></strong> :&ensp;<code>float</code>, optional</dt>
+<dd>Proportional gain of the PID.</dd>
+<dt><strong><code>ki</code></strong> :&ensp;<code>float</code>, optional</dt>
+<dd>Integral gain of the PID.</dd>
+<dt><strong><code>kd</code></strong> :&ensp;<code>float</code>, optional</dt>
+<dd>Derivative gain of the PID.</dd>
+</dl>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>spheros</code></strong> :&ensp;<code>ndarray</code> of <code>SpheroMini</code> or <code>ndarray</code> of <code>SpheroBolt</code> or <code>tuple</code> of <code>int</code></dt>
+<dd>An numpy array of the SpheroMini/SpheroBolt or of the Apriltag IDs if this is a simulation.</dd>
+<dt><strong><code>num</code></strong> :&ensp;<code>int</code></dt>
+<dd>Number of Sphero in the swarm.</dd>
+<dt><strong><code>ids</code></strong> :&ensp;<code>tuple</code> of <code>int</code></dt>
+<dd>A tuple containing the Apriltag ID of the Spheros.</dd>
+<dt><strong><code>swarm</code></strong> :&ensp;<code>MultiSpheroMini</code> or <code>MultiSpheroBolt</code> or <code>None</code></dt>
+<dd>The Sphero swarm instance or None if this is a simulation.</dd>
+<dt><strong><code>controllers</code></strong> :&ensp;<code>ndarray</code> of <a title="Jameoba.Controllers.SpheroController" href="#Jameoba.Controllers.SpheroController"><code>SpheroController</code></a></dt>
+<dd>An numpy array of the SpheroController.</dd>
+<dt><strong><code>last</code></strong> :&ensp;<code>float</code></dt>
+<dd>The time at which data was last received from the /state topic.</dd>
+<dt><strong><code>last_tar</code></strong> :&ensp;<code>float</code></dt>
+<dd>The time at which data was last received from the /target topic.</dd>
+<dt><strong><code>freq_tar</code></strong> :&ensp;<code>float</code></dt>
+<dd>Frequency at which the /target topic receives messages.</dd>
+</dl>
+<p>Constructor of the SpheroController class.</p>
+<h2 id="parameters_1">Parameters</h2>
+<dl>
+<dt><strong><code>multi_sphero</code></strong> :&ensp;<code>MultiSpheroMini</code> or <code>MultiSpheroBolt</code> or <code>tuple</code> of <code>int</code></dt>
+<dd>The Spheros swarm instance to be controlled. If a tuple,
+this is the controllers for a simulation.</dd>
+<dt><strong><code>kp</code></strong> :&ensp;<code>float</code>, optional</dt>
+<dd>Proportional gain of the PID.</dd>
+<dt><strong><code>ki</code></strong> :&ensp;<code>float</code>, optional</dt>
+<dd>Integral gain of the PID.</dd>
+<dt><strong><code>kd</code></strong> :&ensp;<code>float</code>, optional</dt>
+<dd>Derivative gain of the PID.</dd>
+</dl>
+<h2 id="yields">Yields</h2>
+<dl>
+<dt><a title="Jameoba.Controllers.MultiSpheroController" href="#Jameoba.Controllers.MultiSpheroController"><code>MultiSpheroController</code></a></dt>
+<dd>A PID controller for multiple Sphero Mini/Bolt.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class MultiSpheroController:
+        &#34;&#34;&#34;PID controller of a multiple Spheros.
+
+        Parameters
+        ----------
+        multi_sphero : MultiSpheroMini or MultiSpheroBolt or tuple of int
+                The Spheros swarm instance to be controlled. If a tuple,
+                this is the controllers for a simulation.
+        kp : float, optional
+                Proportional gain of the PID.
+        ki : float, optional
+                Integral gain of the PID.
+        kd : float, optional
+                Derivative gain of the PID.
+
+        Attributes
+        ----------
+        spheros : ndarray of SpheroMini or ndarray of SpheroBolt or tuple of int
+                An numpy array of the SpheroMini/SpheroBolt or of the Apriltag IDs if this is a simulation.
+        num : int
+                Number of Sphero in the swarm.
+        ids : tuple of int
+                A tuple containing the Apriltag ID of the Spheros.
+        swarm : MultiSpheroMini or MultiSpheroBolt or None
+                The Sphero swarm instance or None if this is a simulation.
+        controllers : ndarray of SpheroController
+                An numpy array of the SpheroController.
+        last : float
+                The time at which data was last received from the /state topic.
+        last_tar : float
+                The time at which data was last received from the /target topic.
+        freq_tar : float
+                Frequency at which the /target topic receives messages.
+        &#34;&#34;&#34;
+
+        def __init__(self, multi_sphero, kp=1., ki=0., kd=0.):
+                &#34;&#34;&#34;Constructor of the SpheroController class.
+
+                Parameters
+                ----------
+                multi_sphero : MultiSpheroMini or MultiSpheroBolt or tuple of int
+                        The Spheros swarm instance to be controlled. If a tuple,
+                        this is the controllers for a simulation.
+                kp : float, optional
+                        Proportional gain of the PID.
+                ki : float, optional
+                        Integral gain of the PID.
+                kd : float, optional
+                        Derivative gain of the PID.
+
+                Yields
+                ------
+                MultiSpheroController
+                        A PID controller for multiple Sphero Mini/Bolt.
+                &#34;&#34;&#34;
+
+                if type(multi_sphero) is tuple:
+                        self.spheros = self.ids = multi_sphero
+                        self.num = len(multi_sphero)
+                        self.swarm = None
+                else:
+                        self.swarm = multi_sphero
+                        self.spheros = self.swarm.spheros
+                        self.num = self.swarm.num
+                        self.ids = self.swarm.ids
+
+                self.controllers = zeros(self.num, dtype=SpheroController)
+                for i in range(self.num):
+                        self.controllers[i] = SpheroController(self.spheros[i], kp, ki, kd, is_alone=False)
+
+                self.last = self.last_tar = time()
+                self.freq_tar = 0
+                print(&#34;Frequencies :\n| Apriltags |  Target  | Timeout Error |&#34;)
+
+                rospy.init_node(&#34;Spheros&#34; + str(self.ids[0]), anonymous=False)
+                rospy.Subscriber(&#34;target&#34;, String, self.ros_set_target, queue_size=2)
+                rospy.Subscriber(&#34;state&#34;, String, self.ros_callback, queue_size=2)
+                rospy.spin()
+
+        def __del__(self):
+                &#34;&#34;&#34; Destructor of the SpheroController class. &#34;&#34;&#34;
+
+                print(&#34;\b\b  \n&#34;)
+
+        def ros_set_target(self, data):
+                &#34;&#34;&#34;Method used to update the closed loop target positions. Used with a ROS Subscriber.
+
+                Parameters
+                ----------
+                data : String
+                        Message published on the /target topic containing the position of the target tag.
+                &#34;&#34;&#34;
+
+                self.freq_tar = 1./(time() - self.last_tar)
+                self.last_tar = time()
+                for ctl in self.controllers:
+                        ctl.ros_set_target(data)
+
+        def ros_callback(self, data):
+                &#34;&#34;&#34;Method used to run an iteration of the control loop. Used with a ROS Subscriber.
+
+                Parameters
+                ----------
+                data : String
+                        Message published on the /state topic containing the position of all tags.
+                &#34;&#34;&#34;
+
+                freq = 1./(time() - self.last)
+                self.last = time()
+                print(&#34;\r| {0:2.2f} Hz  | {1:2.2f} Hz | {2} Errors    |      &#34;.format(freq, self.freq_tar, self.get_sum_error()), end=&#39;&#39;)
+
+                for ctl in self.controllers:
+                        ctl.ros_callback(data)
+
+        def get_sum_error(self):
+                &#34;&#34;&#34; Method the total number of&#34;&#34;&#34;
+
+                if type(self.spheros[0]) is SpheroMini:
+                        return &#34;N/A&#34;
+                else:
+                        val = 0
+                        for s in self.spheros:
+                                val += s.toerr
+
+                        return val</code></pre>
+</details>
+<h3>Methods</h3>
+<dl>
+<dt id="Jameoba.Controllers.MultiSpheroController.get_sum_error"><code class="name flex">
+<span>def <span class="ident">get_sum_error</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Method the total number of</p></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_sum_error(self):
+        &#34;&#34;&#34; Method the total number of&#34;&#34;&#34;
+
+        if type(self.spheros[0]) is SpheroMini:
+                return &#34;N/A&#34;
+        else:
+                val = 0
+                for s in self.spheros:
+                        val += s.toerr
+
+                return val</code></pre>
+</details>
+</dd>
+<dt id="Jameoba.Controllers.MultiSpheroController.ros_callback"><code class="name flex">
+<span>def <span class="ident">ros_callback</span></span>(<span>self, data)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Method used to run an iteration of the control loop. Used with a ROS Subscriber.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>data</code></strong> :&ensp;<code>String</code></dt>
+<dd>Message published on the /state topic containing the position of all tags.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def ros_callback(self, data):
+        &#34;&#34;&#34;Method used to run an iteration of the control loop. Used with a ROS Subscriber.
+
+        Parameters
+        ----------
+        data : String
+                Message published on the /state topic containing the position of all tags.
+        &#34;&#34;&#34;
+
+        freq = 1./(time() - self.last)
+        self.last = time()
+        print(&#34;\r| {0:2.2f} Hz  | {1:2.2f} Hz | {2} Errors    |      &#34;.format(freq, self.freq_tar, self.get_sum_error()), end=&#39;&#39;)
+
+        for ctl in self.controllers:
+                ctl.ros_callback(data)</code></pre>
+</details>
+</dd>
+<dt id="Jameoba.Controllers.MultiSpheroController.ros_set_target"><code class="name flex">
+<span>def <span class="ident">ros_set_target</span></span>(<span>self, data)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Method used to update the closed loop target positions. Used with a ROS Subscriber.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>data</code></strong> :&ensp;<code>String</code></dt>
+<dd>Message published on the /target topic containing the position of the target tag.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def ros_set_target(self, data):
+        &#34;&#34;&#34;Method used to update the closed loop target positions. Used with a ROS Subscriber.
+
+        Parameters
+        ----------
+        data : String
+                Message published on the /target topic containing the position of the target tag.
+        &#34;&#34;&#34;
+
+        self.freq_tar = 1./(time() - self.last_tar)
+        self.last_tar = time()
+        for ctl in self.controllers:
+                ctl.ros_set_target(data)</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+<dt id="Jameoba.Controllers.SpheroController"><code class="flex name class">
+<span>class <span class="ident">SpheroController</span></span>
+<span>(</span><span>single_sphero, kp=1.0, ki=0.0, kd=0.0, is_alone=True)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>PID controller of a single Sphero.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>single_sphero</code></strong> :&ensp;<code>SpheroMini</code> or <code>SpheroBolt</code> or <code>int</code></dt>
+<dd>The Sphero instance to be controlled. If an int,
+this is the controller for a simulation.</dd>
+<dt><strong><code>kp</code></strong> :&ensp;<code>float</code>, optional</dt>
+<dd>Proportional gain of the PID.</dd>
+<dt><strong><code>ki</code></strong> :&ensp;<code>float</code>, optional</dt>
+<dd>Integral gain of the PID.</dd>
+<dt><strong><code>kd</code></strong> :&ensp;<code>float</code>, optional</dt>
+<dd>Derivative gain of the PID.</dd>
+<dt><strong><code>is_alone</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>Set to False if the controller is used in a swarm (multiple controller).</dd>
+</dl>
+<h2 id="attributes">Attributes</h2>
+<dl>
+<dt><strong><code>sphero</code></strong> :&ensp;<code>SpheroMini</code> or <code>SpheroBolt</code> or <code>None</code></dt>
+<dd>The Sphero instance that is controlled.</dd>
+<dt><strong><code>at_id</code></strong> :&ensp;<code>int</code></dt>
+<dd>The Apriltag ID of the Sphero.</dd>
+<dt><strong><code>x</code></strong> :&ensp;<code>int</code></dt>
+<dd>Current position in x.</dd>
+<dt><strong><code>y</code></strong> :&ensp;<code>int</code></dt>
+<dd>Current position in y.</dd>
+<dt><strong><code>tar_x</code></strong> :&ensp;<code>int</code></dt>
+<dd>Target position in x.</dd>
+<dt><strong><code>tar_y</code></strong> :&ensp;<code>int</code></dt>
+<dd>Target position in y.</dd>
+<dt><strong><code>_ulim</code></strong> :&ensp;<code>int</code></dt>
+<dd>Ultimate speed limit for the Sphero.</dd>
+<dt><strong><code>_freq</code></strong> :&ensp;<code>float</code></dt>
+<dd>Maximum frequency to send command to the Sphero via Bluetooth.</dd>
+<dt><strong><code>speed_ctl</code></strong> :&ensp;<code>PID</code></dt>
+<dd>The speed PID controller.</dd>
+<dt><strong><code>last</code></strong> :&ensp;<code>float</code></dt>
+<dd>The time at which data was last sent to the Sphero via Bluetooth.</dd>
+</dl>
+<p>Constructor of the SpheroController class.</p>
+<h2 id="parameters_1">Parameters</h2>
+<dl>
+<dt><strong><code>single_sphero</code></strong> :&ensp;<code>SpheroMini</code> or <code>SpheroBolt</code> or <code>int</code></dt>
+<dd>The Sphero instance to be controlled. If an int,
+this is the controller for a simulation.</dd>
+<dt><strong><code>kp</code></strong> :&ensp;<code>float</code>, optional</dt>
+<dd>Proportional gain of the PID.</dd>
+<dt><strong><code>ki</code></strong> :&ensp;<code>float</code>, optional</dt>
+<dd>Integral gain of the PID.</dd>
+<dt><strong><code>kd</code></strong> :&ensp;<code>float</code>, optional</dt>
+<dd>Derivative gain of the PID.</dd>
+<dt><strong><code>is_alone</code></strong> :&ensp;<code>bool</code>, optional</dt>
+<dd>Set to False if the controller is used in a swarm (multiple controller).</dd>
+</dl>
+<h2 id="yields">Yields</h2>
+<dl>
+<dt><a title="Jameoba.Controllers.SpheroController" href="#Jameoba.Controllers.SpheroController"><code>SpheroController</code></a></dt>
+<dd>A PID controller for a single Sphero Mini/Bolt.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">class SpheroController:
+        &#34;&#34;&#34;PID controller of a single Sphero.
+
+        Parameters
+        ----------
+        single_sphero : SpheroMini or SpheroBolt or int
+                The Sphero instance to be controlled. If an int,
+                this is the controller for a simulation.
+        kp : float, optional
+                Proportional gain of the PID.
+        ki : float, optional
+                Integral gain of the PID.
+        kd : float, optional
+                Derivative gain of the PID.
+        is_alone : bool, optional
+                Set to False if the controller is used in a swarm (multiple controller).
+
+        Attributes
+        ----------
+        sphero : SpheroMini or SpheroBolt or None
+                The Sphero instance that is controlled.
+        at_id : int
+                The Apriltag ID of the Sphero.
+        x : int
+                Current position in x.
+        y : int
+                Current position in y.
+        tar_x : int
+                Target position in x.
+        tar_y : int
+                Target position in y.
+        _ulim : int
+                Ultimate speed limit for the Sphero.
+        _freq : float
+                Maximum frequency to send command to the Sphero via Bluetooth.
+        speed_ctl : PID
+                The speed PID controller.
+        last : float
+                The time at which data was last sent to the Sphero via Bluetooth.
+        &#34;&#34;&#34;
+
+        def __init__(self, single_sphero, kp=1., ki=0., kd=0., is_alone=True):
+                &#34;&#34;&#34;Constructor of the SpheroController class.
+
+                Parameters
+                ----------
+                single_sphero : SpheroMini or SpheroBolt or int
+                        The Sphero instance to be controlled. If an int,
+                        this is the controller for a simulation.
+                kp : float, optional
+                        Proportional gain of the PID.
+                ki : float, optional
+                        Integral gain of the PID.
+                kd : float, optional
+                        Derivative gain of the PID.
+                is_alone : bool, optional
+                        Set to False if the controller is used in a swarm (multiple controller).
+
+                Yields
+                ------
+                SpheroController
+                        A PID controller for a single Sphero Mini/Bolt.
+                &#34;&#34;&#34;
+
+                self.x = self.y = self.tar_x = self.tar_y = 0
+                self._ulim = 255
+                self._freq = 2.
+
+                # Check if this is a simulated Sphero.
+                if type(single_sphero) is int:
+                        self.sphero = None
+                        self.at_id = single_sphero
+                else:
+                        self.sphero = single_sphero
+                        self.at_id = single_sphero.id
+
+                # Initialize the PID speed controller.
+                self.speed_ctl = PID(p=kp, i=ki, d=kd)
+                self.speed_ctl.target = 0
+
+                # Set the last data sending time as now.
+                self.last = time()
+
+                # If this is not a part of a swarm, start ROS
+                if is_alone:
+                        rospy.init_node(&#34;Sphero_&#34; + str(self.at_id), anonymous=False)
+                        rospy.Subscriber(&#34;target&#34;, String, self.ros_set_target, queue_size=2)
+                        rospy.Subscriber(&#34;state&#34;, String, self.ros_callback, queue_size=2)
+                        rospy.spin()
+
+        def get_error_length(self):
+                &#34;&#34;&#34;Method to get the length between the current position and the target position.
+
+                Returns
+                -------
+                float
+                        The length between the current position and the target position.
+                &#34;&#34;&#34;
+
+                dx = self.tar_x - self.x
+                dy = self.tar_y - self.y
+                return sqrt(dx**2 + dy**2)
+
+        def get_error_angle(self):
+                &#34;&#34;&#34;Method to get the orientation of the target relative to the current position.
+
+                Returns
+                -------
+                float
+                        The orientation of the target relative to the current position.
+                &#34;&#34;&#34;
+
+                dx = self.tar_x - self.x
+                dy = self.tar_y - self.y
+                ang = 180*atan2(dy, dx)/pi
+                return ang % 360
+
+        def ros_set_target(self, data):
+                &#34;&#34;&#34;Method used to update the closed loop target positions. Used with a ROS Subscriber.
+
+                Parameters
+                ----------
+                data : String
+                        Message published on the /target topic containing the position of the target tag.
+                &#34;&#34;&#34;
+
+                data_dict = eval(data.data)
+
+                self.tar_x = data_dict[str(self.at_id)][0]
+                self.tar_y = data_dict[str(self.at_id)][1]
+
+        def ros_callback(self, data):
+                &#34;&#34;&#34;Method used to run an iteration of the control loop. Used with a ROS Subscriber.
+
+                Parameters
+                ----------
+                data : String
+                        Message published on the /state topic containing the position of all tags.
+                &#34;&#34;&#34;
+
+                data_dict = eval(data.data)
+
+                # Set the current positions
+                self.x = data_dict[str(self.at_id)][0]
+                self.y = data_dict[str(self.at_id)][1]
+
+                # Get the heading and the speed
+                head = int(self.get_error_angle())
+                speed = max(min(int(self.speed_ctl(feedback=self.get_error_length())), self.ulim), 0)
+
+                # Send it to the sphero
+                freq = 1.0/(time() - self.last)
+                if freq &lt;= self.freq:
+                        self.last = time()
+
+                        if self.sphero is None:
+                                print(&#34;\r[{0}] ----&gt; {1:3d}° at {2} % speed.&#34;.format(self.at_id, head, int(100*speed/255)))
+                        else:
+                                self.sphero.send(speed=speed, heading=head)
+
+        @property
+        def ulim(self):
+                return self._ulim
+
+        @ulim.setter
+        def ulim(self, lim):
+                self._ulim = max(0, min(lim, 255))
+
+        @property
+        def freq(self):
+                return self._freq
+
+        @freq.setter
+        def freq(self, f):
+                self._freq = max(0., min(f, 20.))</code></pre>
+</details>
+<h3>Instance variables</h3>
+<dl>
+<dt id="Jameoba.Controllers.SpheroController.freq"><code class="name">var <span class="ident">freq</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def freq(self):
+        return self._freq</code></pre>
+</details>
+</dd>
+<dt id="Jameoba.Controllers.SpheroController.ulim"><code class="name">var <span class="ident">ulim</span></code></dt>
+<dd>
+<section class="desc"></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">@property
+def ulim(self):
+        return self._ulim</code></pre>
+</details>
+</dd>
+</dl>
+<h3>Methods</h3>
+<dl>
+<dt id="Jameoba.Controllers.SpheroController.get_error_angle"><code class="name flex">
+<span>def <span class="ident">get_error_angle</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Method to get the orientation of the target relative to the current position.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>float</code></dt>
+<dd>The orientation of the target relative to the current position.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_error_angle(self):
+        &#34;&#34;&#34;Method to get the orientation of the target relative to the current position.
+
+        Returns
+        -------
+        float
+                The orientation of the target relative to the current position.
+        &#34;&#34;&#34;
+
+        dx = self.tar_x - self.x
+        dy = self.tar_y - self.y
+        ang = 180*atan2(dy, dx)/pi
+        return ang % 360</code></pre>
+</details>
+</dd>
+<dt id="Jameoba.Controllers.SpheroController.get_error_length"><code class="name flex">
+<span>def <span class="ident">get_error_length</span></span>(<span>self)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Method to get the length between the current position and the target position.</p>
+<h2 id="returns">Returns</h2>
+<dl>
+<dt><code>float</code></dt>
+<dd>The length between the current position and the target position.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def get_error_length(self):
+        &#34;&#34;&#34;Method to get the length between the current position and the target position.
+
+        Returns
+        -------
+        float
+                The length between the current position and the target position.
+        &#34;&#34;&#34;
+
+        dx = self.tar_x - self.x
+        dy = self.tar_y - self.y
+        return sqrt(dx**2 + dy**2)</code></pre>
+</details>
+</dd>
+<dt id="Jameoba.Controllers.SpheroController.ros_callback"><code class="name flex">
+<span>def <span class="ident">ros_callback</span></span>(<span>self, data)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Method used to run an iteration of the control loop. Used with a ROS Subscriber.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>data</code></strong> :&ensp;<code>String</code></dt>
+<dd>Message published on the /state topic containing the position of all tags.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def ros_callback(self, data):
+        &#34;&#34;&#34;Method used to run an iteration of the control loop. Used with a ROS Subscriber.
+
+        Parameters
+        ----------
+        data : String
+                Message published on the /state topic containing the position of all tags.
+        &#34;&#34;&#34;
+
+        data_dict = eval(data.data)
+
+        # Set the current positions
+        self.x = data_dict[str(self.at_id)][0]
+        self.y = data_dict[str(self.at_id)][1]
+
+        # Get the heading and the speed
+        head = int(self.get_error_angle())
+        speed = max(min(int(self.speed_ctl(feedback=self.get_error_length())), self.ulim), 0)
+
+        # Send it to the sphero
+        freq = 1.0/(time() - self.last)
+        if freq &lt;= self.freq:
+                self.last = time()
+
+                if self.sphero is None:
+                        print(&#34;\r[{0}] ----&gt; {1:3d}° at {2} % speed.&#34;.format(self.at_id, head, int(100*speed/255)))
+                else:
+                        self.sphero.send(speed=speed, heading=head)</code></pre>
+</details>
+</dd>
+<dt id="Jameoba.Controllers.SpheroController.ros_set_target"><code class="name flex">
+<span>def <span class="ident">ros_set_target</span></span>(<span>self, data)</span>
+</code></dt>
+<dd>
+<section class="desc"><p>Method used to update the closed loop target positions. Used with a ROS Subscriber.</p>
+<h2 id="parameters">Parameters</h2>
+<dl>
+<dt><strong><code>data</code></strong> :&ensp;<code>String</code></dt>
+<dd>Message published on the /target topic containing the position of the target tag.</dd>
+</dl></section>
+<details class="source">
+<summary>
+<span>Expand source code</span>
+</summary>
+<pre><code class="python">def ros_set_target(self, data):
+        &#34;&#34;&#34;Method used to update the closed loop target positions. Used with a ROS Subscriber.
+
+        Parameters
+        ----------
+        data : String
+                Message published on the /target topic containing the position of the target tag.
+        &#34;&#34;&#34;
+
+        data_dict = eval(data.data)
+
+        self.tar_x = data_dict[str(self.at_id)][0]
+        self.tar_y = data_dict[str(self.at_id)][1]</code></pre>
+</details>
+</dd>
+</dl>
+</dd>
+</dl>
+</section>
+</article>
+<nav id="sidebar">
+<h1>Index</h1>
+<div class="toc">
+<ul></ul>
+</div>
+<ul id="index">
+<li><h3>Super-module</h3>
+<ul>
+<li><code><a title="Jameoba" href="index.html">Jameoba</a></code></li>
+</ul>
+</li>
+<li><h3><a href="#header-classes">Classes</a></h3>
+<ul>
+<li>
+<h4><code><a title="Jameoba.Controllers.MultiSpheroController" href="#Jameoba.Controllers.MultiSpheroController">MultiSpheroController</a></code></h4>
+<ul class="">
+<li><code><a title="Jameoba.Controllers.MultiSpheroController.get_sum_error" href="#Jameoba.Controllers.MultiSpheroController.get_sum_error">get_sum_error</a></code></li>
+<li><code><a title="Jameoba.Controllers.MultiSpheroController.ros_callback" href="#Jameoba.Controllers.MultiSpheroController.ros_callback">ros_callback</a></code></li>
+<li><code><a title="Jameoba.Controllers.MultiSpheroController.ros_set_target" href="#Jameoba.Controllers.MultiSpheroController.ros_set_target">ros_set_target</a></code></li>
+</ul>
+</li>
+<li>
+<h4><code><a title="Jameoba.Controllers.SpheroController" href="#Jameoba.Controllers.SpheroController">SpheroController</a></code></h4>
+<ul class="two-column">
+<li><code><a title="Jameoba.Controllers.SpheroController.freq" href="#Jameoba.Controllers.SpheroController.freq">freq</a></code></li>
+<li><code><a title="Jameoba.Controllers.SpheroController.get_error_angle" href="#Jameoba.Controllers.SpheroController.get_error_angle">get_error_angle</a></code></li>
+<li><code><a title="Jameoba.Controllers.SpheroController.get_error_length" href="#Jameoba.Controllers.SpheroController.get_error_length">get_error_length</a></code></li>
+<li><code><a title="Jameoba.Controllers.SpheroController.ros_callback" href="#Jameoba.Controllers.SpheroController.ros_callback">ros_callback</a></code></li>
+<li><code><a title="Jameoba.Controllers.SpheroController.ros_set_target" href="#Jameoba.Controllers.SpheroController.ros_set_target">ros_set_target</a></code></li>
+<li><code><a title="Jameoba.Controllers.SpheroController.ulim" href="#Jameoba.Controllers.SpheroController.ulim">ulim</a></code></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</nav>
+</main>
+<footer id="footer">
+<p>Generated by <a href="https://pdoc3.github.io/pdoc"><cite>pdoc</cite> 0.7.2</a>.</p>
+</footer>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.12.0/highlight.min.js"></script>
+<script>hljs.initHighlightingOnLoad()</script>
+</body>
+</html>

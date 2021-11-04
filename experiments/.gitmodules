@@ -1,0 +1,6 @@
+[submodule "Sphero_mini"]
+	path = Sphero_mini
+	url = https://github.com/BrunoB81HK/Sphero_mini.git
+[submodule "apriltags3py"]
+	path = apriltags3py
+	url = https://github.com/BrunoB81HK/apriltags3py.git
