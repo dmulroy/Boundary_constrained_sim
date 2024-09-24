@@ -1,4 +1,4 @@
-# -*- coding: utf-8 -*-
+ # -*- coding: utf-8 -*-
 """
 Created on Thu Jul 22 12:12:32 2021
 
@@ -17,6 +17,7 @@ import csv
 import glob
 
  
+
 data_path="F:/data/"
 
 # Create system
@@ -45,13 +46,13 @@ body_floor=Floor.body_floor
 
 # Create the robots
 bots = sim_obj.robots(name,my_system,body_floor,path)
- 
+   
 # Create the interiors
 interior = sim_obj.Interiors(name,my_system,body_floor,path)
 
 # Create object to be chases
 Ball=sim_obj.Ball(name,my_system,body_floor,path)
-
+forceb=Ball.forceb
 # Report contact class
 my_rep = sim_obj.MyReportContactCallback()
 
@@ -66,12 +67,12 @@ sim = sim_obj.simulate(name,my_system,bots,interior,Ball,controls,my_rep,path,Ps
 # Run the simulation 
 sim.simulate()
 print("simulation run:",np.round((sim.sim_end-sim.sim_start)/60,2)," minutes")
-# export data
+#export data
 data_export=sim_obj.export_data(my_system,bots,controls,interior,Ball,sim,Psi,my_rep,path,name)
 #%%  
 sim_export_start=timeit.default_timer()  
 data_export.export_data()
-
+    
 sim_export_end=timeit.default_timer()
 print("export_time:",np.round((sim_export_end-sim_export_start)/60,2)," minutes")
 print("name =",str(name))
