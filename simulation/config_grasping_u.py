@@ -1,8 +1,14 @@
 # -*- coding: utf-8 -*-
 """
-Created on Wed Jul 21 14:14:49 2021
+Created on Sun Jul  9 17:14:24 2023
 
-@author: dmulr
+@author: Big Gucci
+"""
+
+# -*- coding: utf-8 -*-
+"""
+Created on Wed Jul 21 14:14:49 2021
+  @author: dmulr
 """
 
 import os
@@ -17,11 +23,13 @@ from shutil import copyfile
 #### SIMULATION MODES ####
 dimension = '2D' #2D: 2D sim   3D: 3D sim
 dt = 0.002 # time step 
-time_end = 20
+time_end = 35
 #time_end = 25
+
 #time_end = 40
+#time_end = 100
 save_rate = 50 #save every n number of steps
-visual = 'pov'
+visual = 'irr'
 
 #xcenter = 2.25
 xcenter = 0
@@ -35,8 +43,8 @@ shape morphing linear: linear shape morphing
 shape_morphing: transfinte morphing 
 '''
  
-control_mode = "grasping_explore"
-control_mode = "grasping"
+#control_mode = "grasping_explore2"
+#control_mode = "grasping"
 control_mode = "grasping_u"
 #control_mode = "grasping_epsilon"
 #control_mode = "Verify"
@@ -70,7 +78,7 @@ membrane_type = 1
 skin_width = 0.035# diameter of membrane particles
 ns = 7# number of skin particles 
 membrane_width = ns*skin_width # cloth width [m]
-spring_stiffness = 50 # spring stiffness
+spring_stiffness = 75 # spring stiffness
 spring_damping = 0 # spring damping 
 theta = 2*np.pi/nb 
 cord_length = membrane_width + bot_width*np.cos(theta/2) # Cord length between bot centers
@@ -102,9 +110,9 @@ particle_height = bot_height # meters
 particle_geom = 'cylinder'
 interior_mode = "bidispersion" # interior particle mode
 #interior_mode = "Verify"
-scale_radius = 1.01
-offset_radius = .78
-
+scale_radius = 1.08
+offset_radius = .70
+#offset_radius = .68
 Rbar = scale_radius*R
 #### FLOOR PARAMETERS ####
 floor_length=10 # Length of the body floor
@@ -115,17 +123,19 @@ floor_height=1     # height of the body floor
 lateralFriction = 0.2
 spinningFriction = 0.1
 rollingFriction = 0.1
-dampingterm = 0.00001
+dampingterm = 0.0001
 #dampingterm = 0
-Ct=0
-C=0
-Cr=0
-Cs=0
-restituition=0.05
-# Ct=0
-# C=0
-# Cr=0
-# Cs=0
+C=0.0000001 
+Ct = 0.0000001 # tangent compliane
+Cr = 0.00000001# compliance
+Cr = 0.0000001 # rolling compliance
+Cs = 0.0000001# sliding compliance
+
+
+#lateralFriction = 0.2
+#spinningFriction = 0.
+#rollingFriction = 0.
+#dampingterm = 0.000
 #Ct=0
 #C=0
 #Cr=0
@@ -249,32 +259,103 @@ if control_mode=="grasping_explore":
     alpha2 = 1.75
     beta = 0
     
-#### CONTROL MODE -- GRASPING_U #### 
-if control_mode=="grasping_u":
-    
-    ball_geometry = "circle"
-    ball_geometry = "square"
-    ball_geometry = "c_shape"
-    br=0.36
-    br2=0.36
+#### CONTROL MODE -- GRASPING EXPLORE 2 ####
+if control_mode=="grasping_explore2":
+    br=0.4
+    br2=0.4
+    ball_geometry="circle"
     if ball_geometry=="circle":
         ball_radius=br
-        print("perimeter object=",str(2*br*np.pi))
-
         
+    # square     
     if ball_geometry=="square":	
         
         br=(2*br)*np.pi/4
-        ball_radius=br/2	 
-        #print("perimeter object=",str(2*br*np.pi))
-    if ball_geometry=="c_shape":	
+        ball_radius=br/2	  
+    
+    p=0.07
+    width_grasp = 0.9
+    lengtho_grasp = .36*2
+    pack=1
+    a=4.5
+    atilda=a/pack
+    print("atilda=",atilda)
+    length_grasp = atilda/(2*width_grasp) - lengtho_grasp/2
+    print("length_grasp=",length_grasp)
+    floor_friction = .03
+    particle_mix = False
+    ball_fixed=False
+    ballx = 0
+    ballz = 0 
+    ball_mass = 50
+    fb_rate=1*dt
+    update_rate = 1
+    rho_ = 10
+    rtilda = 1.5*br2
+    xcenter =-2.2850512057367918
+    zcenter = 0 
+    
+    
+    #xcenter_grasp = -3*br2
+    
+    xcenter_grasp =-1.08
+    ycenter_grasp = zcenter
+    
+    xcenter_grasp2 = ballx
+    ycenter_grasp2 = ballz
+    
+    
+    xc1 = ballx
+    yc1 = ballz
+    
+    xc2 = ballx+rtilda
+    yc2 = ballz
+
+    
+    theta=0  
+    ball_mass = 5
+    increment = np.pi/4
+    theta=np.pi
+    const=.01
+    
+    a2 = const
+    b2 = const
+    a1 = const
+    b1 = const
+    
+    particle_mix = True
+        
+    Rr1=0
+    Rr2=abs(-(ball_radius+R+.2))
+    
+    ball_fixed= True
+
+    tcut0 = 15
+    tcut1 = 22
+    tcut2 = 27
+    tcut3 = 51
+    alpha1 = 2.0
+    alpha2 = 0.75
+    beta = 0
+    error = .058
+
+
+#### CONTROL MODE -- GRASPING_U #### 
+if control_mode=="grasping_u":
+    rotate_square=False
+    ball_geometry = "circle"
+    ball_geometry = "square"
+    
+    br=0.4
+    br2=0.4
+    if ball_geometry=="circle":
+        ball_radius=br
+        
+    # square     
+    if ball_geometry=="square":	
         
         br=(2*br)*np.pi/4
-        
-        ball_radius=br/2
-        w=4*ball_radius
-        l=2*ball_radius
-        t=.1
+        ball_radius=br/2	  
     
     p=0.07
     width_grasp = 0.9
@@ -298,17 +379,21 @@ if control_mode=="grasping_u":
     ball_fixed=False
     ballx = 0
     ballz = 0 
-    ball_mass = 20
+    ball_mass = 50
     fb_rate=1*dt
     update_rate = 1
     rho_ = 10
     rtilda = 1.5*br2
-    #xcenter, -2.207794544559873
-    #xcenter, -2.2850512057367918
-    xcenter = -(ball_radius+R+.3)
+    #rtilda=0.54
+    #xcenter = -(br2+R+.3)
+    #xcenter =-2.207794544559873
+    #xcenter = -(ball_radius+R+.3)
+    xcenter =-2.2850512057367918
     zcenter = 0 
     
-    xcenter_grasp = -3*br2
+    #xcenter_grasp = -3*br2
+    
+    xcenter_grasp =-1.08
     ycenter_grasp = zcenter
     
     xcenter_grasp2 = ballx
@@ -321,19 +406,25 @@ if control_mode=="grasping_u":
     xc2 = ballx+rtilda
     yc2 = ballz
     
-    tcut1 = 45
-    tcut2 = 30
-    tcut3 = 150
+    #xc2 = 0
+    #yc2 = 0
+    
+    
+    tcut1 = 15
+    tcut2 = 20
+    
+    tcut3 = 30
     alpha1 = 2.5
-    alpha2 = 1
+    alpha2 = 1.0
     beta = 0
-    error = .01
+    error = .014
+    
 #### CONTROL MODE -- GRASPING ####
 if control_mode=="grasping":
     
     ball_geometry = "circle"
      
-    ##ball_geometry = "square" 
+    ball_geometry = "square" 
     
     #ball_geometry = "triangle"
     
@@ -341,7 +432,7 @@ if control_mode=="grasping":
     #ball_geometry = "import"
     #ball_geometry = "circle"
     # circle
-    br=.36
+    br=.5
     br=0.36
     if ball_geometry=="circle":
         ball_radius=br
@@ -554,7 +645,7 @@ if control_mode=="grasping_u":
     
     envParams['xcenter_grasp2'] = xcenter_grasp2
     envParams['ycenter_grasp2'] = ycenter_grasp2
-    
+    envParams['rotate_square'] = rotate_square
     envParams['p'] = p
     envParams['tcut1'] = tcut1
     envParams['tcut2'] = tcut2
@@ -576,10 +667,56 @@ if control_mode=="grasping_u":
     envParams['rho_'] = rho_
     envParams['error'] = error
     envParams['rtilda'] = rtilda
-    if ball_geometry=="c_shape":
-        envParams['w']=w
-        envParams['l']=l
-        envParams['t']=t
+    
+if control_mode=="grasping_explore2":   
+    envParams['ball_fixed'] = ball_fixed
+    envParams['width_grasp'] = width_grasp
+    envParams['length_grasp'] = length_grasp
+    envParams['lengtho_grasp'] = lengtho_grasp
+    envParams['xcenter_grasp'] = xcenter_grasp
+    envParams['ycenter_grasp'] = ycenter_grasp
+    
+    envParams['xcenter_grasp2'] = xcenter_grasp2
+    envParams['ycenter_grasp2'] = ycenter_grasp2
+#    envParams['rotate_square'] = rotate_square
+    envParams['p'] = p
+    envParams['tcut1'] = tcut1
+    envParams['tcut2'] = tcut2
+    envParams['tcut3'] = tcut3   
+    envParams['update_rate'] = update_rate
+    envParams['ballx'] = ballx
+    envParams['ballz'] = ballz 
+    
+    envParams['ball_geometry'] = ball_geometry
+    envParams['ball_radius'] = ball_radius
+    envParams['ball_mass'] = ball_mass   
+    envParams['floor_friction'] = floor_friction
+    envParams['ball_fixed'] = ball_fixed
+    envParams['xc1'] = xc1
+    envParams['yc1'] = yc1
+
+    envParams['xc2'] = xc2
+    envParams['yc2'] = yc2 
+    envParams['rho_'] = rho_
+    envParams['error'] = error
+    envParams['rtilda'] = rtilda
+    
+    envParams['a1'] = a1
+    envParams['b1'] = b1    
+
+    envParams['a2'] = a2
+    envParams['b2'] = b2
+    
+    envParams['Rr1'] = Rr1
+    envParams['Rr2'] = Rr2
+    
+    envParams['increment'] = increment
+    envParams['theta'] = theta
+    envParams['tcut0'] = tcut0
+    envParams['tcut1'] = tcut1
+    envParams['tcut2'] = tcut2   
+
+    
 if control_mode=="grasping_explore":
     envParams['a1'] = a1
     envParams['b1'] = b1    
