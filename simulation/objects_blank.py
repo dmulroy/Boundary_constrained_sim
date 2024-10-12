@@ -20,7 +20,7 @@ from csv import writer
 import timeit
 import cv2
 from os.path import exists
-from IPython.display import HTML
+#from IPython.display import HTML
 import matplotlib.pyplot as plt
 from matplotlib import animation
 import matplotlib.font_manager as fm
@@ -33,10 +33,11 @@ from shutil import copyfile
 from scipy.spatial import ConvexHull
 from scipy.interpolate import RegularGridInterpolator
 from sympy import Plane, Point3D
-#from sympy import *
+from sympy import *
 from scipy.spatial import Delaunay
-#import random
+import random
 from scipy import signal
+import math
 num = random.random()
 print(num)
 try:
@@ -52,21 +53,17 @@ import itertools
 ###############################################################################
 class robots:
     def __init__(self,name,my_system,body_floor,path):
+        self.name=name
+        self.my_system = my_system
+        self.body_floor = body_floor
+        ###### Imported Variables #########
+        self.path=path
+        self.mainDirectory = self.path
         
-        self.name=name # name of the simulation run 
-        self.my_system = my_system # total system
-        self.body_floor = body_floor # body floor object
-        
-        #### Imported Variables ####
-        #self.path=path # file 
-        self.mainDirectory = path # location of the simulation folder
-        
-        copyfile(__file__,self.mainDirectory+self.name+"/"+'objects.py') # create a copy of this file 
-        parameters=np.load(self.mainDirectory+self.name+'/Parameters.npy',allow_pickle=True) # load the parameters from the simulation file
-        
+        copyfile(__file__,self.mainDirectory+self.name+"/"+'objects.py')
+        parameters=np.load(self.mainDirectory+self.name+'/Parameters.npy',allow_pickle=True)
         self.parameters=parameters.tolist()
-        
-        self.convert_dist=self.parameters['convert_dist'] 
+        self.convert_dist=self.parameters['convert_dist']
         self.convert_mass=self.parameters['convert_mass']
         
         self.xcenter = self.parameters['xcenter']
@@ -88,7 +85,7 @@ class robots:
         self.spring_damping = self.parameters['spring_damping'] 
         
         
-        #### Material properties
+        
         self.lateralFriction = self.parameters['lateralFriction']
         self.spinningFriction = self.parameters['spinningFriction']
         self.rollingFriction = self.parameters['rollingFriction']
@@ -97,20 +94,16 @@ class robots:
         self.Compliance = self.parameters['C'] 
         self.membrane_density = self.parameters['membrane_density']
         self.restituition = self.parameters['restituition']
-        
-        #### Calculated variables ######
+        ####### Calculated variables ######
         self.bot_density=self.bot_mass/self.bot_volume # calculate density of robot 
-        
-        #### create material properties
-        self.bot_material = self.Material(self.lateralFriction)       
-        self.membrane_material = self.Material(self.lateralFriction)
-        
-        
-        self.countm = 0 #counter which is used to fill arrays for the data of the membrane units
+        self.bot_material = self.Material(self.lateralFriction)
+        #self.membrane_density = 2000
+        self.countm = 0 
         self.rl = 0
-        self.fixed = False #if the object is fixed in space or not
-        
-        #### Colors
+
+        self.fixed = False
+        self.membrane_material = self.Material(self.lateralFriction)
+        # Colors
         self.col_y = chrono.ChColorAsset(); self.col_y.SetColor(chrono.ChColor(1, 1, 0))       # Yellow
         self.col_b = chrono.ChColorAsset(); self.col_b.SetColor(chrono.ChColor(0, 0, 1))       # Blue
         self.col_g = chrono.ChColorAsset(); self.col_g.SetColor(chrono.ChColor(0, 1, 0))       # Green
@@ -118,23 +111,19 @@ class robots:
         self.col_w = chrono.ChColorAsset(); self.col_p.SetColor(chrono.ChColor(.8, .8, .8)) # Purple
         
         
-        #### Empty list of  variables
         self.skinM = []
         self.bots = []
         self.force = []
         self.Springs = []
         
-        # empty list of bot postions
         self.bot_xposition = {}
         self.bot_yposition = {}
         self.bot_zposition = {}
         
-        # empty list of bot velocityies
         self.bot_xvelocity = {}
         self.bot_yvelocity = {}
         self.bot_zvelocity = {}
         
-        # empty list of total bot forces, contact, applied forces, membrnae forces
         self.bot_xForcetotal = {}
         self.bot_yForcetotal = {}
         self.bot_zForcetotal = {}
@@ -144,23 +133,22 @@ class robots:
         self.bot_yForcecontact = {}
         self.bot_zForcecontact = {}
         
-        # empty list of the membrane positions
-        self.skin_xposition = {} # x position
-        self.skin_yposition = {} # y position
-        self.skin_zposition = {} # z position
         
-        # empty list of contact forces for the membrane
-        self.skin_x_contact_forces = {} # x force
-        self.skin_y_contact_forces = {} # y force
-        self.skin_z_contact_forces = {} # z force
-                  
-        # empty list of total forces, contact forces, spring forces etc              
-        self.skin_x_total_forces = {} # x force
-        self.skin_y_total_forces = {} # y force
-        self.skin_z_total_forces = {} # z force
+        self.skin_xposition = {}
+        self.skin_yposition = {}
+        self.skin_zposition = {}
+        
+        
+        self.skin_x_contact_forces = {}  #x position
+        self.skin_y_contact_forces = {}   # y position
+        self.skin_z_contact_forces = {}   # z position
+                                
+        self.skin_x_total_forces = {}   #x position
+        self.skin_y_total_forces = {}   # y position
+        self.skin_z_total_forces = {}   # z position
                                       
 
-        ##### fill the lists with empty arrays 
+        
         for i in range(self.nb):
             
             # positions
@@ -188,29 +176,30 @@ class robots:
         
         
         
-            #### Create robots and membrane
+        
             # postion 
             theta=i*2*np.pi/self.nb # set angle
             x = self.Rbar*np.cos(theta)+self.xcenter  # set x positon 
             y = self.bot_height/2                     # set y position 
             z = self.Rbar*np.sin(theta)+self.zcenter  # set z position 
             # create body
-            ##### geometry of the robots to be cylinders
+            #### geometry of the robots to be cylinders
             if self.bot_geom=="cylinder":
-                # create the object
+                
                 bot = chrono.ChBodyEasyCylinder(self.bot_width/2, self.bot_height,self.bot_density,True,True)
-                bot.SetPos(chrono.ChVectorD(x,y,z)) # set position
+                # set position
+                bot.SetPos(chrono.ChVectorD(x,y,z)) 
                 bot.SetName("bot"+str(i)) # set name (important for contact tracking)
                 bot.SetId(i)              # set id   (impoortant for contact tracking )  
+                # material 
                 bot.SetMaterialSurface(self.bot_material)  # set material 
-
+                # rotate them so we can form the membrane
                 rotation1 = chrono.ChQuaternionD() # rotate the robots about y axis 
                 rotation1.Q_from_AngAxis(-theta, chrono.ChVectorD(0, 1, 0)) 
-                bot.SetRot(rotation1) 
+                bot.SetRot(rotation1)
                 
                 
                 ##### Add force components to each bot 
-                
                 # x forces 
                 botforcex = chrono.ChForce()  # create it 
                 bot.AddForce(botforcex) # apply it to bot object
@@ -283,180 +272,171 @@ class robots:
             
             
             
-            #### Create membrane elements
-            b_ang=2*np.pi/self.nb                   # angle between centers of bots
-            o_ang=np.arctan((self.bot_width*.66)/self.Rbar)   # angle offset for radius of bot
-            p_ang=np.arctan((self.skin_width*0.8)/self.Rbar)           # angle offset for radius of skin particle
             
-            
-            # Between this bot and last bot
-            if i>=1 and i<self.nb:
-                for j in range(1,self.ns+1,1):
-                    # Initial postion of each particle
-                    theta=i*b_ang + j*(b_ang - o_ang -  p_ang)/(self.ns) + p_ang 
-                    x=self.Rbar*np.cos(theta)+self.xcenter # x position 
-                    y=self.bot_height/2              # y position 
-                    z=self.Rbar*np.sin(theta)+self.zcenter # z position  
-                    
-                    # create them and set position
-                    #skinm = chrono.ChBodyEasySphere(self.skind/2,self.skinrho,True,True)
-                    skinm = chrono.ChBodyEasyCylinder(self.skin_width/2, .95*self.bot_height,self.membrane_density,True,True) # create particle
-                    skinm.SetPos(chrono.ChVectorD(x,y,z)) # set position 
-                    skinm.SetMaterialSurface(self.membrane_material) # add material 
-                    skinm.SetNoGyroTorque(True) # no gyro toruqe 
-                    skinm.SetName('skin'+str(i)) # create name 
-                    skinm.SetId(i) # set id 
-                    # link to floor
-                    #pt=chrono.ChLinkMatePlane()
-                    #pt.Initialize(self.body_floor,skinm,False,chrono.ChVectorD(0,0,0),chrono.ChVectorD(0,0,0),chrono.ChVectorD(0,-1, 0),chrono.ChVectorD(0,1, 0))
-                    # add link to the system 
-                    #self.my_system.AddLink(pt)
-                    
-                    # rotate them bout y axis
-                    rotation1 = chrono.ChQuaternionD()
-                    rotation1.Q_from_AngAxis(-theta, chrono.ChVectorD(0, 1, 0));  
-                    skinm.SetRot(rotation1)
-                    
-                    # Fill the empty positions
-                    
-                    self.skin_xposition["skin_xposition{0}".format(self.countm)]=[]  #x position
-                    self.skin_yposition["skin_yposition{0}".format(self.countm)]=[]  # y position
-                    self.skin_zposition["skin_zposition{0}".format(self.countm)]=[]  # z position
-                    
-                    self.skin_x_contact_forces["skin_x_contact_forces{0}".format(self.countm)]=[]  #x position
-                    self.skin_y_contact_forces["skin_y_contact_forces{0}".format(self.countm)]=[]  # y position
-                    self.skin_z_contact_forces["skin_z_contact_forces{0}".format(self.countm)]=[]  # z position
-                                            
-                    self.skin_x_total_forces["skin_x_total_forces{0}".format(self.countm)]=[]  #x position
-                    self.skin_y_total_forces["skin_y_total_forces{0}".format(self.countm)]=[]  # y position
-                    self.skin_z_total_forces["skin_z_total_forces{0}".format(self.countm)]=[]  # z position
-                                                  
-                    self.countm=self.countm+1 # add countm 
-                    # Attach springs if more then one was created    
-                    if j>1:
-                        ground=chrono.ChLinkSpring() # create spring 1
-                        p1=0; p2=self.skin_width/2 # points where each spring is attatched 
-                        p3=0; p4=-self.skin_width/2  
-                        h=self.bot_height/5 # height of the membrane elements
+            if self.membrane_type==1:
+
+                b_ang=2*np.pi/self.nb                   # angle between centers of bots
+                o_ang=np.arctan((self.bot_width*.66)/self.Rbar)   # angle offset for radius of bot
+                p_ang=np.arctan((self.skin_width*0.8)/self.Rbar)           # angle offset for radius of skin particle
+                
+                
+                # Between this bot and last bot
+                if i>=1 and i<self.nb:
+                    for j in range(1,self.ns+1,1):
+                        # Initial postion of each particle
+                        theta=i*b_ang + j*(b_ang - o_ang -  p_ang)/(self.ns) + p_ang 
+                        x=self.Rbar*np.cos(theta)+self.xcenter # x position 
+                        y=self.bot_height/2              # y position 
+                        z=self.Rbar*np.sin(theta)+self.zcenter # z position  
                         
-                        # spring 1
-                        ground.Initialize(self.skinM[-1], skinm,True,chrono.ChVectorD(p1,h,p2), chrono.ChVectorD(p3,h,p4),True) # link spring to particles
-                        ground.Set_SpringK(self.spring_stiffness) # set spring constant
-                        ground.Set_SpringR(self.spring_damping) # set damping constant
-                        ground.Set_SpringRestLength(self.rl) # set resting length 
-                        ground.AddAsset(self.col_p) # add color 
-                        ground.AddAsset(chrono.ChPointPointSpring(.01,80,15)) # create visual 
-                        self.my_system.AddLink(ground) # add spring to system 
-                        self.Springs.append(ground)
+                        # create them and set position
+                        #skinm = chrono.ChBodyEasySphere(self.skind/2,self.skinrho,True,True)
+                        skinm = chrono.ChBodyEasyCylinder(self.skin_width/2, .95*self.bot_height,self.membrane_density,True,True) # create particle
+                        skinm.SetPos(chrono.ChVectorD(x,y,z)) # set position 
+                        skinm.SetMaterialSurface(self.membrane_material) # add material 
+                        skinm.SetNoGyroTorque(True) # no gyro toruqe 
+                        skinm.SetName('skin'+str(i)) # create name 
+                        skinm.SetId(i) # set id 
+                                    # link to floor
+                        #pt=chrono.ChLinkMatePlane()
+                        #pt.Initialize(self.body_floor,skinm,False,chrono.ChVectorD(0,0,0),chrono.ChVectorD(0,0,0),chrono.ChVectorD(0,-1, 0),chrono.ChVectorD(0,1, 0))
+                        # add link to the system 
+                        #self.my_system.AddLink(pt)
+                        # rotate them bout y axis
+                        rotation1 = chrono.ChQuaternionD()
+                        rotation1.Q_from_AngAxis(-theta, chrono.ChVectorD(0, 1, 0));  
+                        skinm.SetRot(rotation1)
+                        self.skin_xposition["skin_xposition{0}".format(self.countm)]=[]  #x position
+                        self.skin_yposition["skin_yposition{0}".format(self.countm)]=[]  # y position
+                        self.skin_zposition["skin_zposition{0}".format(self.countm)]=[]  # z position
                         
-                        # spring 2
-                        ground1=chrono.ChLinkSpring() # create spring 2
-                        ground1.Initialize(self.skinM[-1], skinm,True,chrono.ChVectorD(p1,-h,p2), chrono.ChVectorD(p3,-h,p4),True) # link spring to particles 
-                        ground1.Set_SpringK(self.spring_stiffness) # set spring constant
-                        ground1.Set_SpringR(self.spring_damping) # set damping 
-                        ground1.AddAsset(self.col_p) # create color 
-                        ground1.AddAsset(chrono.ChPointPointSpring(.01,80,15)) # create visual 
-                        self.my_system.AddLink(ground1) # add to the system                                 
-                        self.Springs.append(ground1)
+                        self.skin_x_contact_forces["skin_x_contact_forces{0}".format(self.countm)]=[]  #x position
+                        self.skin_y_contact_forces["skin_y_contact_forces{0}".format(self.countm)]=[]  # y position
+                        self.skin_z_contact_forces["skin_z_contact_forces{0}".format(self.countm)]=[]  # z position
+                                                
+                        self.skin_x_total_forces["skin_x_total_forces{0}".format(self.countm)]=[]  #x position
+                        self.skin_y_total_forces["skin_y_total_forces{0}".format(self.countm)]=[]  # y position
+                        self.skin_z_total_forces["skin_z_total_forces{0}".format(self.countm)]=[]  # z position
+                                                      
+                        print("countm"+str(self.countm))
+                        self.countm=self.countm+1
+                        # Attach springs if more then one was created    
+                        if j>1:
+                            ground=chrono.ChLinkSpring() # create spring 1
+                            p1=0; p2=self.skin_width/2 # points where each spring is attatched 
+                            p3=0; p4=-self.skin_width/2
+                            h=self.bot_height/5
+                            
+                            ground.Initialize(self.skinM[-1], skinm,True,chrono.ChVectorD(p1,h,p2), chrono.ChVectorD(p3,h,p4),True) # link spring to particles
+                            ground.Set_SpringK(self.spring_stiffness) # set spring constant
+                            ground.Set_SpringR(self.spring_damping) # set damping constant
+                            ground.Set_SpringRestLength(self.rl) # set resting length 
+                            ground.AddAsset(self.col_p) # add color 
+                            ground.AddAsset(chrono.ChPointPointSpring(.01,80,15)) # create visual 
+                            self.my_system.AddLink(ground) # add spring to system 
+                            self.Springs.append(ground)
+                            ground1=chrono.ChLinkSpring() # create spring 2
+                            ground1.Initialize(self.skinM[-1], skinm,True,chrono.ChVectorD(p1,-h,p2), chrono.ChVectorD(p3,-h,p4),True) # link spring to particles 
+                            ground1.Set_SpringK(self.spring_stiffness) # set spring constant
+                            ground1.Set_SpringR(self.spring_damping) # set damping 
+                            ground1.AddAsset(self.col_p) # create color 
+                            ground1.AddAsset(chrono.ChPointPointSpring(.01,80,15)) # create visual 
+                            self.my_system.AddLink(ground1) # add to the system                                 
+                            self.Springs.append(ground1)
+                        #Link to cylinder 
+                        if j==1:
+                            skinm.AddAsset(self.col_p) # add color
+                            glue=chrono.ChLinkMateFix() # cretae fix constraint
+                            glue.Initialize(skinm,self.bots[i]) # fix object to bot
+                            self.my_system.AddLink(glue) # add to system 
+                            # Link last particle with this bot
+                            if i>=2:
+                                glue=chrono.ChLinkMateFix() # create the constraint 
+                                glue.Initialize(self.skinM[-1],self.bots[-1]) # add constraint 
+                                self.my_system.AddLink(glue) # add to the system 
+                        if j==self.ns:
+                            skinm.AddAsset(self.col_p)
+                        self.my_system.Add(skinm)
+                        self.skinM.append(skinm)
+                
+                # Between this bot and first bot
+                if i==self.nb-1:
+                    for j in range(1,self.ns+1,1):
+                        # Initial postion of each particle
+                        theta=(i+1)*b_ang + j*(b_ang - o_ang - p_ang)/(self.ns) + p_ang
+                        x=self.Rbar*np.cos(theta)+self.xcenter
+                        y=self.bot_height/2
+                        z=self.Rbar*np.sin(theta)+self.zcenter
                         
-                    #Link to cylinder 
-                    if j==1:
-                        skinm.AddAsset(self.col_p) # add color
-                        glue=chrono.ChLinkMateFix() # cretae fix constraint
-                        glue.Initialize(skinm,self.bots[i]) # fix object to bot
-                        self.my_system.AddLink(glue) # add to system 
-                        # Link last particle with this bot
-                        if i>=2:
-                            glue=chrono.ChLinkMateFix() # create the constraint 
-                            glue.Initialize(self.skinM[-1],self.bots[-1]) # add constraint 
-                            self.my_system.AddLink(glue) # add to the system 
-                    if j==self.ns:
-                        skinm.AddAsset(self.col_p)
-                    self.my_system.Add(skinm)
-                    self.skinM.append(skinm)
-            
-            # Between this bot and first bot
-            if i==self.nb-1:
-                for j in range(1,self.ns+1,1):
-                    # Initial postion of each particle
-                    theta=(i+1)*b_ang + j*(b_ang - o_ang - p_ang)/(self.ns) + p_ang
-                    x=self.Rbar*np.cos(theta)+self.xcenter
-                    y=self.bot_height/2
-                    z=self.Rbar*np.sin(theta)+self.zcenter
+                        self.skin_xposition["skin_xposition{0}".format(self.countm)]=[]  #x position
+                        self.skin_yposition["skin_yposition{0}".format(self.countm)]=[]  # y position
+                        self.skin_zposition["skin_zposition{0}".format(self.countm)]=[]  # z position
+                        
+                        self.skin_x_contact_forces["skin_x_contact_forces{0}".format(self.countm)]=[]  #x position
+                        self.skin_y_contact_forces["skin_y_contact_forces{0}".format(self.countm)]=[]  # y position
+                        self.skin_z_contact_forces["skin_z_contact_forces{0}".format(self.countm)]=[]  # z position
+                                                
+                        self.skin_x_total_forces["skin_x_total_forces{0}".format(self.countm)]=[]  #x position
+                        self.skin_y_total_forces["skin_y_total_forces{0}".format(self.countm)]=[]  # y position
+                        self.skin_z_total_forces["skin_z_total_forces{0}".format(self.countm)]=[]  # z position  
+                        self.countm=self.countm+1
+                        # Create particles
+                        #skinm = chrono.ChBodyEasySphere(self.skind/2,self.skinrho,True,True)
+                        skinm = chrono.ChBodyEasyCylinder(self.skin_width/2, .95*self.bot_height,self.membrane_density,True,True)
+                        skinm.SetPos(chrono.ChVectorD(x,y,z))
+                        skinm.SetMaterialSurface(self.membrane_material)
+                        skinm.SetNoGyroTorque(True)
+                        skinm.SetName("skin"+str(i))
+                        skinm.SetId(i)
+                        # rotate them
+                        rotation1 = chrono.ChQuaternionD()
+                        rotation1.Q_from_AngAxis(-theta, chrono.ChVectorD(0, 1, 0));  
+                        skinm.SetRot(rotation1)
+                        #pt=chrono.ChLinkMatePlane()
+                        #pt.Initialize(self.body_floor,skinm,False,chrono.ChVectorD(0,0,0),chrono.ChVectorD(0,0,0),chrono.ChVectorD(0,-1, 0),chrono.ChVectorD(0,1, 0))
+                        #self.my_system.AddLink(pt)
+                        # Attach springs    
+                        if j>1:
+                            ground=chrono.ChLinkSpring()
+                            p1=0; p2=self.skin_width/2
+                            p3=0; p4=-self.skin_width/2
+                            h=self.bot_height/5
                     
-                    self.skin_xposition["skin_xposition{0}".format(self.countm)]=[]  #x position
-                    self.skin_yposition["skin_yposition{0}".format(self.countm)]=[]  # y position
-                    self.skin_zposition["skin_zposition{0}".format(self.countm)]=[]  # z position
-                    
-                    self.skin_x_contact_forces["skin_x_contact_forces{0}".format(self.countm)]=[]  #x position
-                    self.skin_y_contact_forces["skin_y_contact_forces{0}".format(self.countm)]=[]  # y position
-                    self.skin_z_contact_forces["skin_z_contact_forces{0}".format(self.countm)]=[]  # z position
-                                            
-                    self.skin_x_total_forces["skin_x_total_forces{0}".format(self.countm)]=[]  #x position
-                    self.skin_y_total_forces["skin_y_total_forces{0}".format(self.countm)]=[]  # y position
-                    self.skin_z_total_forces["skin_z_total_forces{0}".format(self.countm)]=[]  # z position  
-                    self.countm=self.countm+1
-                    
-                    # Create particles
-                    #skinm = chrono.ChBodyEasySphere(self.skind/2,self.skinrho,True,True)
-                    skinm = chrono.ChBodyEasyCylinder(self.skin_width/2, .95*self.bot_height,self.membrane_density,True,True)
-                    skinm.SetPos(chrono.ChVectorD(x,y,z))
-                    skinm.SetMaterialSurface(self.membrane_material)
-                    skinm.SetNoGyroTorque(True)
-                    skinm.SetName("skin"+str(i))
-                    skinm.SetId(i)
-                    # rotate them
-                    rotation1 = chrono.ChQuaternionD()
-                    rotation1.Q_from_AngAxis(-theta, chrono.ChVectorD(0, 1, 0));  
-                    skinm.SetRot(rotation1)
-                    #pt=chrono.ChLinkMatePlane()
-                    #pt.Initialize(self.body_floor,skinm,False,chrono.ChVectorD(0,0,0),chrono.ChVectorD(0,0,0),chrono.ChVectorD(0,-1, 0),chrono.ChVectorD(0,1, 0))
-                    #self.my_system.AddLink(pt)
-                    # Attach springs    
-                    if j>1:
-                        ground=chrono.ChLinkSpring()
-                        p1=0; p2=self.skin_width/2
-                        p3=0; p4=-self.skin_width/2
-                        h=self.bot_height/5
-                        
-                        # spring 1
-                        ground.Initialize(self.skinM[-1], skinm,True,chrono.ChVectorD(p1,h,p2), chrono.ChVectorD(p3,h,p4),True)
-                        ground.Set_SpringK(self.spring_stiffness)
-                        ground.Set_SpringR(self.spring_damping)
-                        ground.Set_SpringRestLength(self.rl)
-                        ground.AddAsset(self.col_y)
-                        ground.AddAsset(chrono.ChPointPointSpring(.01,80,15))
-                        self.my_system.AddLink(ground)
-                        self.Springs.append(ground)
-                        
-                        # spring 2
-                        ground1=chrono.ChLinkSpring()
-                        ground1.Initialize(self.skinM[-1], skinm,True,chrono.ChVectorD(p1,-h,p2), chrono.ChVectorD(p3,-h,p4),True)
-                        ground1.Set_SpringK(self.spring_stiffness)
-                        ground1.Set_SpringR(self.spring_damping)
-                        ground.Set_SpringRestLength(self.rl) # set resting length 
-                        ground1.AddAsset(self.col_y)
-                        ground1.AddAsset(chrono.ChPointPointSpring(.01,80,15))
-                        self.my_system.AddLink(ground1)  
-                        self.Springs.append(ground1)
-                    #Link to cylinder
-                    if j==1:
-                        skinm.AddAsset(self.col_p)
-                        glue=chrono.ChLinkMateFix()
-                        glue.Initialize(skinm,self.bots[0])
-                        self.my_system.AddLink(glue)
-                        glue=chrono.ChLinkMateFix()
-                        glue.Initialize(self.skinM[-1],self.bots[0])
-                        self.my_system.AddLink(glue)
-                     
-                    if j==self.ns:
-                        skinm.AddAsset(self.col_p)
-                        glue=chrono.ChLinkMateFix()
-                        glue.Initialize(skinm,self.bots[1])
-                        self.my_system.AddLink(glue)
-                        
-                    self.my_system.Add(skinm)
-                    self.skinM.append(skinm)               
+                            ground.Initialize(self.skinM[-1], skinm,True,chrono.ChVectorD(p1,h,p2), chrono.ChVectorD(p3,h,p4),True)
+                            ground.Set_SpringK(self.spring_stiffness)
+                            ground.Set_SpringR(self.spring_damping)
+                            ground.Set_SpringRestLength(self.rl)
+                            ground.AddAsset(self.col_y)
+                            ground.AddAsset(chrono.ChPointPointSpring(.01,80,15))
+                            self.my_system.AddLink(ground)
+                            self.Springs.append(ground)
+                            ground1=chrono.ChLinkSpring()
+                            ground1.Initialize(self.skinM[-1], skinm,True,chrono.ChVectorD(p1,-h,p2), chrono.ChVectorD(p3,-h,p4),True)
+                            ground1.Set_SpringK(self.spring_stiffness)
+                            ground1.Set_SpringR(self.spring_damping)
+                            ground.Set_SpringRestLength(self.rl) # set resting length 
+                            ground1.AddAsset(self.col_y)
+                            ground1.AddAsset(chrono.ChPointPointSpring(.01,80,15))
+                            self.my_system.AddLink(ground1)  
+                            self.Springs.append(ground1)
+                        #Link to cylinder
+                        if j==1:
+                            skinm.AddAsset(self.col_p)
+                            glue=chrono.ChLinkMateFix()
+                            glue.Initialize(skinm,self.bots[0])
+                            self.my_system.AddLink(glue)
+                            glue=chrono.ChLinkMateFix()
+                            glue.Initialize(self.skinM[-1],self.bots[0])
+                            self.my_system.AddLink(glue)
+                         
+                        if j==self.ns:
+                            skinm.AddAsset(self.col_p)
+                            glue=chrono.ChLinkMateFix()
+                            glue.Initialize(skinm,self.bots[1])
+                            self.my_system.AddLink(glue)
+                            
+                        self.my_system.Add(skinm)
+                        self.skinM.append(skinm)               
                 
                
                 
@@ -471,7 +451,7 @@ class robots:
         material.SetComplianceT(self.Compliance_tangent) # set tangential property
         material.SetRollingFriction(self.rollingFriction)
         material.SetSpinningFriction(self.spinningFriction)
-        material.SetRestitution(self.restituition)
+        #material.SetRestitution(self.restituition)
         # material.SetComplianceRolling(Cr)
         # material.SetComplianceSpinning(Cs)
         return (material)
@@ -556,7 +536,6 @@ class robots:
     
     
     def return_skin_forces(self):
-        ''' Return the skin forces '''
         return(self.skin_x_contact_forces,
                self.skin_y_contact_forces,
                self.skin_z_contact_forces,
@@ -572,14 +551,13 @@ class robots:
     
 class Interiors:
     def __init__(self,name,my_system,body_floor,path):
-        self.name=name # name of the simulation 
-        self.my_system = my_system # the system object
-        self.body_floor = body_floor # the floor object
-        self.mainDirectory = path # path to the simulation run file 
-        parameters=np.load(self.mainDirectory+self.name+'/Parameters.npy',allow_pickle=True) # import parameter
+        self.name=name
+        self.my_system = my_system
+        self.body_floor = body_floor    
+        self.mainDirectory = path
+        parameters=np.load(self.mainDirectory+self.name+'/Parameters.npy',allow_pickle=True)
         self.parameters=parameters.tolist()
         
-        #### import parameters
         self.convert_dist=self.parameters['convert_dist']
         self.convert_mass=self.parameters['convert_mass']
 
@@ -593,6 +571,7 @@ class Interiors:
         self.particle_width2 = self.convert_dist*self.parameters['particle_width2']
         self.particle_height = self.convert_dist*self.parameters['particle_height']
         self.particle_geom = self.parameters['particle_geom']
+        #self.R = self.convert_dist*self.parameters['R']
         self.scale_radius = self.parameters['scale_radius']
         self.offset_radius = self.parameters['offset_radius']
         self.R =  self.convert_dist*self.parameters['R']
@@ -601,8 +580,6 @@ class Interiors:
         self.interior_mode = self.parameters['interior_mode']
         self.offset_radius=self.parameters['offset_radius']
         self.particle_mix=self.parameters['particle_mix']
-        
-        #### material properties
         self.lateralFriction = self.parameters['lateralFriction']
         self.spinningFriction = self.parameters['spinningFriction']
         self.rollingFriction = self.parameters['rollingFriction']
@@ -610,65 +587,61 @@ class Interiors:
         self.Compliance_tangent = self.parameters['Ct'] 
         self.Compliance = self.parameters['C'] 
         self.restituition = self.parameters['restituition']
-        
-        #### calculated properties
         self.particle_volume=np.pi*self.particle_height*(self.particle_width/2)**2   # calculate volume
         self.particle_density=self.particle_mass/self.particle_volume # calculate density of robot 
+        #self.particle_material = self.Material()
         self.control_mode = self.parameters['control_mode']
         self.fixed = False
-        
-        #### find the number of particles and the respective ring radii
+        #(self.n,self.Ri) = self.MaxValues()
         (self.n,self.Ri) = self.MaxValues2()
-
-        self.total_particles = np.sum(self.n) # find total particles
-        
-        #### create particle material
+        #if self.control_mode=="grasping_u":
+         #   self.Ri = [1.03708564, 0.94818564, 0.85928564, 0.77038564, 0.68148564, 0.59258564, 0.50368564, 0.41478564, 0.32588564, 0.23698564, 0.14808564, 0.05918564]						
+        #    self.n = [64,78,53,63,42,48,31,34,20,19,9,4]
+#
+        self.total_particles = np.sum(self.n)
         self.particle_material = self.Material(self.lateralFriction)
         
-        
         self.diff = self.Rbar - self.Ri[0] - self.bot_width/2 - self.particle_width2/2 
-        
-        #### save parameters
         self.parameters['n'] = self.n
         self.parameters['total_particles'] = self.total_particles
         self.parameters['Ri'] = self.Ri
         self.parameters["diff"] = self.diff
+        
         self.number_parameters = self.parameters['number_parameters']
         #print(len(self.parameters),self.number_parameters+4)
         if len(self.parameters)==self.number_parameters+4:
             #print('save')
             np.save(self.mainDirectory+self.name+'/Parameters.npy',self.parameters)
+            
         else:
              print('not save')
         
         
+        
+
         with open(self.mainDirectory+name+"/Parameters.csv", 'w') as f:
             for key in self.parameters.keys():
                 f.write("%s, %s\n" % (key, self.parameters[key]))
         
 
-
-        #### Create empty lists 
+        self.particle_xposition = {}
+        self.particle_yposition = {}
+        self.particle_zposition = {}
         
-        # Empty list of position of the particles
-        self.particle_xposition = {} # x position
-        self.particle_yposition = {} # y position
-        self.particle_zposition = {} # z position
         
-        # empty list of velocity of the particles
-        self.particle_xvelocity = {} # x velocity
-        self.particle_yvelocity = {} # y velocity
-        self.particle_zvelocity = {} # z velocity
+        self.particle_xvelocity = {}
+        self.particle_yvelocity = {}
+        self.particle_zvelocity = {}
         
-        # empty list of particle total forces
-        self.particle_xForcetotal = {} # x forces
-        self.particle_yForcetotal = {} # y forces
-        self.particle_zForcetotal = {} # z forces
         
-        # empty list of contact forces
-        self.particle_xForcecontact = {} # x forces
-        self.particle_yForcecontact = {} # y forces
-        self.particle_zForcecontact = {} # z forces       
+        self.particle_xForcetotal = {}
+        self.particle_yForcetotal = {}
+        self.particle_zForcetotal = {}
+        
+        
+        self.particle_xForcecontact = {}
+        self.particle_yForcecontact = {}
+        self.particle_zForcecontact = {}        
         
         
         self.particles = []
@@ -684,16 +657,27 @@ class Interiors:
         self.col_r = chrono.ChColorAsset(); self.col_r.SetColor(chrono.ChColor(1, 0, 0))       # Green
         self.col_p = chrono.ChColorAsset(); self.col_p.SetColor(chrono.ChColor(0.44, .11, 52)) # Purple        
         
+        # empty array
+        self.particle_xposition = {}
+        self.particle_yposition  = {}
+        self.particle_zposition  = {}
+        
+        self.particle_xvelocity = {}
+        self.particle_yvelocity  = {}
+        self.particle_zvelocity  = {}
+        
 
 
-        #### mono-dispersion 
+        #### mono-dispersion #####
         if self.interior_mode=="monodispersion":  
             count=0
             for i in range(self.n.size):
+                
                 if i%2==0:
                     con='b'
                     const=0
                 else:
+
                     con='a'
                     const=0
                     
@@ -752,12 +736,14 @@ class Interiors:
             np.savez(self.mainDirectory+self.name+'/Radii'+self.name+'.npz',Rm=self.Rm)   
 
 
-        #### bidispersion (This one is used 99 percent of the time)
+        #### bidispersion 
         if self.interior_mode=="bidispersion": 
             count=0
-            
-            for i in range(len(self.n)): # create ring
+            for i in range(len(self.n)):
+                #print("i=",str(i))
+                
                 if i%2==0:
+                    #self.radius2 = (self.particle_width/2)*(2**.5)
                     self.radius2 = (self.particle_width2/2)                    
                     con = 'b'
                     const = 0
@@ -766,13 +752,14 @@ class Interiors:
                     con = 'a'
                     const = 0
                     
-                # radii of the ith particle ring
-                R2=self.Ri[i]+self.diff
-                
-                #### fill the ring
-                for j in range(self.n[i]): 
                     
-                    # empty arrays of variables
+                #R2=self.radius2*self.n[i]/(np.pi) + const
+                
+
+                R2=self.Ri[i]+self.diff
+                thetahat=random.uniform(-np.pi/12, np.pi/12)
+                # empty arrays of variables
+                for j in range(self.n[i]):
                     self.particle_xposition["particle_xposition{0}".format(count)]=[] # x position  
                     self.particle_yposition["particle_yposition{0}".format(count)]=[] # y position 
                     self.particle_zposition["particle_zposition{0}".format(count)]=[] # z position 
@@ -791,29 +778,27 @@ class Interiors:
                     self.particle_zForcecontact["particle_zForcecontact{0}".format(count)]=[]
                     
                     
-                    # positions of particles
-                    x = R2*np.cos(j*2*np.pi/self.n[i]) # x position
-                    y = .5*self.particle_height  # y position
-                    z = R2*np.sin(j*2*np.pi/self.n[i]) # z position
+                    
 
-                    # if there is a offset of the particle radii
-                    thetahat=random.uniform(-np.pi/12, np.pi/12)
+                    #R2=self.radius2*self.n[i]/(np.pi) + const# raidus of ring 
+                    # x,y,z positions
+                    x = R2*np.cos(j*2*np.pi/self.n[i])#+self.xcenter
+                    y = .5*self.particle_height 
+                    z = R2*np.sin(j*2*np.pi/self.n[i])#+self.zcenter
+                    #print("j=",str(j),str(np.round(self.radius2,3)),"x,y",str(np.round(x,2)),str(np.round(z,2)))
                     if self.particle_mix==True:
                         
                         xp=np.cos(thetahat)*z - np.sin(thetahat)*x
                         zp=np.sin(thetahat)*z + np.cos(thetahat)*x
                         xp=xp+self.xcenter
                         zp=zp+self.zcenter
-                    # if there is not a offset of the particle radii
                     if self.particle_mix==False:
                         xp=x+self.xcenter
                         zp=z+self.zcenter
                     
                     
-                    
-                    self.Rm.append(self.radius2) # fill the radii of the particle radius
-                    self.Area = self.Area + (np.pi)*(self.radius2)**2 # total area of the particles 
-                    # ring number 
+                    self.Rm.append(self.radius2)
+                    self.Area = self.Area + (np.pi)*(self.radius2)**2
                     if i%2==0:
                         con = 'b'
                         const = 0
@@ -826,6 +811,8 @@ class Interiors:
                     # create body
                     gran = chrono.ChBody()
                     gran = chrono.ChBodyEasyCylinder(self.radius2 , self.particle_height ,self.particle_density,True,True)
+                    
+      
                     gran.SetPos(chrono.ChVectorD(xp,y,zp))
                     gran.SetMaterialSurface(self.particle_material)
                     gran.SetName('gran'+str(con)+str(count))
@@ -880,19 +867,24 @@ class Interiors:
         material.SetDampingF(self.dampingterm) # set damping properties
         material.SetCompliance(self.Compliance) # set compliance property
         material.SetComplianceT(self.Compliance_tangent) # set tangential property
-        material.SetRestitution(self.restituition)
+        #material.SetCompliance(0) # set compliance property
+        #material.SetComplianceT(0) # set tangential property
+        #material.SetRestitution(self.restituition)
         material.SetRollingFriction(self.rollingFriction)
         material.SetSpinningFriction(self.spinningFriction)
+        # material.SetComplianceRolling(Cr)
+        # material.SetComplianceSpinning(Cs)
         return (material)
         
         
         
         
     def MaxValues(self):
-        ''' Function to create the particle rings and and number of particles per ring '''
         if self.interior_mode=='empty':
             N=[]
             R=0
+
+
         radius=self.bot_width/2
         radius2=self.particle_width/2 
         
@@ -957,31 +949,29 @@ class Interiors:
     
     
     def MaxValues2(self):
-        ''' Function to create the particle rings and and number of particles per ring '''
-        if self.interior_mode=='empty':
-            N=[]
-            Ri=[]
-        
+        # if self.interior_mode=='empty':
+        #     N=[]
+        #     R=0
+
         radius=self.bot_width/2
         radius2=(self.particle_width/2) 
         radius3=(self.particle_width2/2) 
-            
         if self.interior_mode=="bidispersion":            
             Rin=self.R-radius
             S=2*radius2+2*radius3
             P=int(Rin/S)
             Ri=np.zeros(2*P)
+
             N=[]
-            
-            # create ring radii
             for i in range(P):
-                Ri[2*i]=Rin-radius3-i*S # i ring                
-                Ri[2*i+1]=Rin-(2*radius3+radius2)-i*S # i+1 ring
+                #Ri[2*i]=Rin-np.sqrt(2)*radius2-i*S
+                Ri[2*i]=Rin-radius3-i*S                
+                Ri[2*i+1]=Rin-(2*radius3+radius2)-i*S
     
-            # number of particles per ring
+
             for i in range(P):
-                N.append(int((np.pi*2*Ri[2*i])/(2*radius3))) # i ring
-                N.append(int((np.pi*2*Ri[2*i+1])/(2*radius2))) # i+1 ring
+                N.append(int((np.pi*2*Ri[2*i])/(2*radius3)))
+                N.append(int((np.pi*2*Ri[2*i+1])/(2*radius2)))
             
         return(N,Ri)
      
@@ -1093,7 +1083,7 @@ class floor:
 
         
         
-        #### bottom floor
+        
         self.body_floor = chrono.ChBody()
         self.body_floor.SetName('floor')
         self.body_floor.SetBodyFixed(True)
@@ -1112,7 +1102,7 @@ class floor:
         self.my_system.Add(self.body_floor)
         
  
-        #### top floor used to keep particles inside
+
         self.body_floor2 = chrono.ChBody()
         self.body_floor2.SetName('floor2')
         self.body_floor2.SetBodyFixed(True)
@@ -1124,8 +1114,6 @@ class floor:
         self.body_floor2.SetCollide(True)
         self.my_system.Add(self.body_floor2)
         
-        #### Target chasing control mode
-        # creates tunnel
         if self.control_mode=="target_chasing":
             
             if self.tunnel_geom=='tanh':
@@ -1172,6 +1160,7 @@ class floor:
         
                 mesh_for_collision = chrono.ChTriangleMeshConnected()
                 mesh_for_collision.LoadWavefrontMesh(path+'wall_7.obj')
+                # Optionally: you can scale/shrink/rotate the mesh using this:
                 mesh_for_collision.Transform(chrono.ChVectorD(0,0,0), chrono.ChMatrix33D(1))
                 wall.GetCollisionModel().ClearModel()
                 wall.GetCollisionModel().AddTriangleMesh(
@@ -1198,29 +1187,31 @@ class floor:
         material.SetDampingF(self.dampingterm) # set damping properties
         material.SetCompliance(self.Compliance) # set compliance property
         material.SetComplianceT(self.Compliance_tangent) # set tangential property
-        material.SetRestitution(self.restituition)
+        #material.SetCompliance(0) # set compliance property
+        #material.SetComplianceT(0) # set tangential property
+        #material.SetRestitution(self.restituition)
         material.SetRollingFriction(self.rollingFriction)
         material.SetSpinningFriction(self.spinningFriction)
+        # material.SetComplianceRolling(Cr)
+        # material.SetComplianceSpinning(Cs)
         return (material)    
     
     
     def return_enviroment(self):
-        ''' Return the object my_system '''
         return(self.my_system)
     
 class Ball:
     def __init__(self,name,my_system,body_floor,path):
-        self.name=name # name of simulation 
-        self.my_system = my_system # my system object
-        self.body_floor = body_floor # my body floor object
-        self.mainDirectory = path # path to the simulation file 
+        self.name=name
+        self.my_system = my_system
+        self.body_floor = body_floor
+        ###### Imported Variables #########
+        self.path=path
+        self.mainDirectory = self.path
         
         copyfile(__file__,self.mainDirectory+self.name+"/"+'objects.py')
         parameters=np.load(self.mainDirectory+self.name+'/Parameters.npy',allow_pickle=True)
         self.parameters=parameters.tolist()
-        
-        
-        #### Imported Variables 
         self.convert_dist=self.parameters['convert_dist']
         self.convert_mass=self.parameters['convert_mass']
         self.height=self.convert_dist*self.parameters['bot_height']
@@ -1228,7 +1219,6 @@ class Ball:
         self.x =self.parameters['ballx']
         self.z =self.parameters['ballz']
         
-        #### material properties
         self.lateralFriction = self.parameters['lateralFriction']
         self.spinningFriction = self.parameters['spinningFriction']
         self.rollingFriction = self.parameters['rollingFriction']
@@ -1239,77 +1229,63 @@ class Ball:
         self.material=self.Material(self.lateralFriction)
         self.geom = self.parameters['ball_geometry']
         self.fixed=self.parameters['ball_fixed']
-        
-        # additional properties if the ball object is c shape
+        #self.rotate_square=self.parameters['rotate_square']
         if self.geom=="c_shape":
             self.w=self.parameters['w']
             self.l=self.parameters['l']
             self.t=self.parameters['t']
-            
-        # additional properties if the ball object is rectangle
         if self.geom =="rectangle":
             self.ball_length = self.parameters['ball_length']  
-        
         self.radius = self.parameters['ball_radius']
         self.mb= self.parameters['ball_mass']
-        
-        # calulate properties
+        #volume3=np.pi*self.height*(self.radius)**2   # calculate volume
+        #if self.geom=="c_shape":
+            #self.mb=self.mb/3
+            #volume3=np.pi*self.height*()
+            
         volume3=np.pi*self.height*(self.radius)**2   # calculate volume
         self.rho=self.mb/volume3 # density
-        
-        
-        #### empty arrarys
-        self.balls=[] # array containing the ball object
+        self.balls=[]
         self.obj=[]
+        #self.forceb=[]
+        self.bx={}
+        self.bz={}
+        self.bvx={}
+        self.bvz={}
         
-        self.forceb=[] # empty array containing the forces
+        self.bFx={}
+        self.bFy={}
+        self.bFz={}
         
-        # ball position
-        self.bx={} #x position
-        self.bz={} #z position
+        self.bFtx={}
+        self.bFty={}
+        self.bFtz={}
         
-        # ball velocity
-        self.bvx={} # x velocity
-        self.bvz={} # z velocity
-        
-        # applied force
-        self.bFx={} # x force
-        self.bFy={} # y force
-        self.bFz={} # z force
-        
-        # total force
-        self.bFtx={} # x force
-        self.bFty={} # y force
-        self.bFtz={} # z force
-        
-        # quaterion (rotation orientation)
         self.bq0 = {}
         self.bq1 = {}
         self.bq2 = {}
         self.bq3 = {}        
         
-        # empty lists for pull test
-        self.Fb={} # force
-        self.PX={} # x position
-        self.PY={} # z position
-        self.TIME={} # time
+        self.Fb={}
+        self.PX={}
+        self.PY={}
+        self.TIME={}
         
         
-        #### fill empty lists
+        
         self.bx["ballx"]=[]
-        self.bz["ballz"]=[] 
-        
+        self.bz["ballz"]=[]        
         self.bvx["ballvx"]=[]        
         self.bvz["ballvz"]=[]
         
-        self.bFx["ballfx"]=[]
-        self.bFy["ballfy"]=[]
-        self.bFz["ballfz"]=[]
+        self.bFx["ballvx"]=[]
+        self.bFy["ballvy"]=[]
+        self.bFz["ballvz"]=[]
         
         
-        self.bFtx["ballftx"]=[]
-        self.bFty["ballfty"]=[]        
-        self.bFtz["ballftz"]=[]
+        self.bFtx["ballvx"]=[]
+        self.bFty["ballvy"]=[]        
+        self.bFtz["ballvz"]=[]
         
         self.bq0["bq0"] = []
         self.bq1["bq1"] = []
@@ -1325,80 +1301,37 @@ class Ball:
         z2x.Q_from_AngAxis(chrono.CH_C_PI / 2, chrono.ChVectorD(0, 1, 0))
         z2y = chrono.ChQuaternionD()
         z2y.Q_from_AngAxis(chrono.CH_C_PI / 2, chrono.ChVectorD(0, 0, 1))
-        
-        #### colors
         self.col_y = chrono.ChColorAsset(); self.col_y.SetColor(chrono.ChColor(1, 1, 0))       # Yellow
         self.col_b = chrono.ChColorAsset(); self.col_b.SetColor(chrono.ChColor(0, 0, 1))       # Blue
         self.col_g = chrono.ChColorAsset(); self.col_g.SetColor(chrono.ChColor(0, 1, 0))       # Green
         self.col_p = chrono.ChColorAsset(); self.col_p.SetColor(chrono.ChColor(0.44, .11, 52)) # Purple
         self.col_w = chrono.ChColorAsset(); self.col_p.SetColor(chrono.ChColor(.8, .8, .8)) # Purple
-        
         self.check1=0
         #### circle
         if self.geom=='circle':
             #Create ball
+            self.forceb=[]
             ball = chrono.ChBody() # create ball object
             ball = chrono.ChBodyEasyCylinder(self.radius, self.height,self.rho,True,True) # specify properties and make it a cylinder
-            ball.SetPos(chrono.ChVectorD(self.x,self.y,self.z)) # set position
+            # set position
+            ball.SetPos(chrono.ChVectorD(self.x,self.y,self.z))
             ball.SetName("ball") # give it a name
-            ball.SetId(10000) # ball id
+            ball.SetId(10000) 
             ball.SetCollide(True) # set the collision mode
             ball.SetBodyFixed(self.fixed) # set if its fixed
-            ball.SetMaterialSurface(self.material) # add material
-            
-            # this is a visual mechanism for irrlecht
-            body_floor_texture = chrono.ChTexture() 
+            body_floor_texture = chrono.ChTexture()
             body_floor_texture.SetTextureFilename(chrono.GetChronoDataPath() + 'bluwhite.png')
             ball.GetAssets().push_back(body_floor_texture)
-
-            
+            #ball.SetMaterialSurface(self.material)
             # pt=chrono.ChLinkMatePlane()
             # pt.Initialize(self.body_floor,ball,False,chrono.ChVectorD(0,0,0),chrono.ChVectorD(0,0,0),chrono.ChVectorD(0,-1, 0),chrono.ChVectorD(0,1, 0))
-            # self.my_system.AddLink(pt) 
+            #self.my_system.AddLink(pt) 
             #pt=chrono.ChLinkMatePlane() 
             #pt.Initialize(self.body_floor,ball,False,chrono.ChVectorD(0,0,0),chrono.ChVectorD(0,0,0),chrono.ChVectorD(0,-1, 0),chrono.ChVectorD(0,1, 0))
             #append the constraint and the ball to array of objects and system
-            
-            # make its movement only in the x direction 
             prismatic_ground_ball = chrono.ChLinkLockPrismatic()
             prismatic_ground_ball.SetName("prismatic_ground_ball")
             prismatic_ground_ball.Initialize(self.body_floor, ball, chrono.ChCoordsysD(chrono.ChVectorD(self.x, self.y, self.z), chrono.Q_ROTATE_X_TO_Z))
-            
-            self.my_system.Add(prismatic_ground_ball) 
-            self.obj.append(ball)
-            self.balls.append(ball) 
-            self.my_system.Add(ball) 
-            
-            # set external force
-            myforcez = chrono.ChForce() # create it 
-            ball.AddForce(myforcez) # apply it to bot object
-            myforcez.SetMode(chrono.ChForce.FORCE) # set the mode
-            myforcez.SetDir(chrono.VECT_Z) # set direction 
-            myforcez.SetVpoint(chrono.ChVectorD(0,0.05,0))
-            self.forceb.append(myforcez) # add to force list
-            
-        #### square  
-        elif self.geom=="square":
-            const=self.radius*2
-            ball = chrono.ChBody() # create ball object
-            ball = chrono.ChBodyEasyBox(const,self.height,const,self.rho,True,True) # create object # specify properties and make it a cylinder
-            ball.SetPos(chrono.ChVectorD(self.x,self.y,self.z)) # set position
-            
-            # rotate the object if desired
-            #rotation1 = chrono.ChQuaternionD() # rotate the robots about y axis 
-            #rotation1.Q_from_AngAxis(-np.pi/4, chrono.ChVectorD(0, 1, 0)) 
-            #ball.SetRot(rotation1)
-                
-            ball.SetName("ball") # give it a name
-            ball.SetId(10000) # set id number
-            ball.SetCollide(True) # set the collision mode
-            ball.SetBodyFixed(self.fixed) # set if its fixed
-
-            # lock movement to x direction
-            prismatic_ground_ball = chrono.ChLinkLockPrismatic()
-            prismatic_ground_ball.SetName("prismatic_ground_ball")
-            prismatic_ground_ball.Initialize(self.body_floor, ball, chrono.ChCoordsysD(chrono.ChVectorD(self.x, self.y, self.z), chrono.Q_ROTATE_X_TO_Z))
-            
             self.my_system.Add(prismatic_ground_ball) 
             self.obj.append(ball)
             self.balls.append(ball) 
@@ -1410,7 +1343,68 @@ class Ball:
             myforcez.SetDir(chrono.VECT_Z) # set direction 
             myforcez.SetVpoint(chrono.ChVectorD(0,0.05,0))
             self.forceb.append(myforcez) # add to force list
-            
+        #### square  
+        elif self.geom=="square":
+            #const=self.radius*2*np.pi/4
+            const=self.radius*2
+            self.forceb=[]
+            ball = chrono.ChBody() # create ball object
+            ball = chrono.ChBodyEasyBox(const,self.height,const,self.rho,True,True) # create object # specify properties and make it a cylinder
+            ball.SetPos(chrono.ChVectorD(self.x,self.y,self.z))
+            rotation1 = chrono.ChQuaternionD() # rotate the robots about y axis
+            if self.rotate_square==True:
+                rotation1.Q_from_AngAxis(-np.pi/4, chrono.ChVectorD(0, 1, 0)) 
+                ball.SetRot(rotation1)
+                
+            ball.SetName("ball") # give it a name
+            ball.SetId(10000) 
+            ball.SetCollide(True) # set the collision mode
+            ball.SetBodyFixed(self.fixed) # set if its fixed
+            body_floor_texture = chrono.ChTexture()
+            prismatic_ground_ball = chrono.ChLinkLockPrismatic()
+            prismatic_ground_ball.SetName("prismatic_ground_ball")
+            prismatic_ground_ball.Initialize(self.body_floor, ball, chrono.ChCoordsysD(chrono.ChVectorD(self.x, self.y, self.z), chrono.Q_ROTATE_X_TO_Z))
+            self.my_system.Add(prismatic_ground_ball) 
+            self.obj.append(ball)
+            self.balls.append(ball) 
+            self.my_system.Add(ball) 
+            # set position
+            myforcez = chrono.ChForce() # create it 
+            ball.AddForce(myforcez) # apply it to bot object
+            myforcez.SetMode(chrono.ChForce.FORCE) # set the mode
+            myforcez.SetDir(chrono.VECT_Z) # set direction 
+            myforcez.SetVpoint(chrono.ChVectorD(0,0.05,0))
+            self.forceb.append(myforcez) # add to force list
+        elif self.geom=="rectangle":
+            #const=self.radius*2*np.pi/4
+            const=self.radius*2
+            length=self.ball_length
+            ball = chrono.ChBody() # create ball object
+            ball = chrono.ChBodyEasyBox(length,self.height,const,self.rho,True,True) # create object # specify properties and make it a cylinder
+            ball.SetPos(chrono.ChVectorD(self.x,self.y,self.z))
+            rotation1 = chrono.ChQuaternionD() # rotate the robots about y axis 
+            rotation1.Q_from_AngAxis(-np.pi/4, chrono.ChVectorD(0, 1, 0)) 
+            ball.SetRot(rotation1)
+                
+            ball.SetName("ball") # give it a name
+            ball.SetId(10000) 
+            ball.SetCollide(True) # set the collision mode
+            ball.SetBodyFixed(self.fixed) # set if its fixed
+            body_floor_texture = chrono.ChTexture()
+            prismatic_ground_ball = chrono.ChLinkLockPrismatic()
+            prismatic_ground_ball.SetName("prismatic_ground_ball")
+            prismatic_ground_ball.Initialize(self.body_floor, ball, chrono.ChCoordsysD(chrono.ChVectorD(self.x, self.y, self.z), chrono.Q_ROTATE_X_TO_Z))
+            self.my_system.Add(prismatic_ground_ball) 
+            self.obj.append(ball)
+            self.balls.append(ball) 
+            self.my_system.Add(ball) 
+            # set position
+            myforcez = chrono.ChForce() # create it 
+            ball.AddForce(myforcez) # apply it to bot object
+            myforcez.SetMode(chrono.ChForce.FORCE) # set the mode
+            myforcez.SetDir(chrono.VECT_Z) # set direction 
+            myforcez.SetVpoint(chrono.ChVectorD(0,0.05,0))
+            self.forceb.append(myforcez) # add to force list
         #### triangle    
         if self.geom=="triangle":     
             
@@ -1427,30 +1421,23 @@ class Ball:
             y3=-r*np.sin(11*np.pi/6)
             pt_vect = chrono.vector_ChVectorD()
             #const=.4627
-            
-            # creates top
+            # creates bottom
             pt_vect.push_back(chrono.ChVectorD(y1,self.height/2,x1))
             pt_vect.push_back(chrono.ChVectorD(y2,self.height/2,x2))
             pt_vect.push_back(chrono.ChVectorD(y3,self.height/2,x3))
             
-            # create bottom
             pt_vect.push_back(chrono.ChVectorD(y1,-self.height/2,x1))
             pt_vect.push_back(chrono.ChVectorD(y2,-self.height/2,x2))
             pt_vect.push_back(chrono.ChVectorD(y3,-self.height/2,x3))            
 
             ball=chrono.ChBodyEasyConvexHull(pt_vect,self.rho,True,True)   
-            
-            ball.SetPos(chrono.ChVectorD(self.x,self.y,self.z)) # set positon 
+            ball.SetPos(chrono.ChVectorD(self.x,self.y,self.z))
             ball.SetName("ball") # give it a name
             ball.SetCollide(True) # set the collision mode
             ball.SetBodyFixed(True) # set if its fixed
-            
-            # create texture for irrlecht
             body_floor_texture = chrono.ChTexture()
             body_floor_texture.SetTextureFilename(chrono.GetChronoDataPath() + 'bluwhite.png')
             ball.GetAssets().push_back(body_floor_texture)
-            
-            # set x direction to only move in that axis
             prismatic_ground_ball = chrono.ChLinkLockPrismatic()
             prismatic_ground_ball.SetName("prismatic_ground_ball")
             prismatic_ground_ball.Initialize(self.body_floor, ball, chrono.ChCoordsysD(chrono.ChVectorD(self.x, self.y, self.z), chrono.Q_ROTATE_X_TO_Z))
@@ -1482,10 +1469,10 @@ class Ball:
             box1.SetBodyFixed(self.fixed) # set if its fixed
             box1.AddAsset(self.col_y)
             box1.SetMaterialSurface(self.material) # apply material
-            prismatic_ground_ball = chrono.ChLinkLockPrismatic()
-            prismatic_ground_ball.SetName("prismatic_ground_ball")
-            prismatic_ground_ball.Initialize(self.body_floor, box1, chrono.ChCoordsysD(chrono.ChVectorD(self.x, self.y, self.z), chrono.Q_ROTATE_X_TO_Z))
-            self.my_system.Add(prismatic_ground_ball) 
+            #prismatic_ground_ball = chrono.ChLinkLockPrismatic()
+            #prismatic_ground_ball.SetName("prismatic_ground_ball")
+            #prismatic_ground_ball.Initialize(self.body_floor, box1, chrono.ChCoordsysD(chrono.ChVectorD(self.x, self.y, self.z), chrono.Q_ROTATE_X_TO_Z))
+            #self.my_system.Add(prismatic_ground_ball) 
             self.obj.append(box1)
             self.balls.append(box1) 
             self.my_system.Add(box1) 
@@ -1507,10 +1494,10 @@ class Ball:
             box2.SetBodyFixed(self.fixed) # set if its fixed
             box2.AddAsset(self.col_g)
             box2.SetMaterialSurface(self.material) # apply material
-            prismatic_ground_ball = chrono.ChLinkLockPrismatic()
-            prismatic_ground_ball.SetName("prismatic_ground_ball")
-            prismatic_ground_ball.Initialize(self.body_floor, box2, chrono.ChCoordsysD(chrono.ChVectorD(self.x, self.y, self.z), chrono.Q_ROTATE_X_TO_Z))
-            self.my_system.Add(prismatic_ground_ball) 
+            #prismatic_ground_ball = chrono.ChLinkLockPrismatic()
+            #prismatic_ground_ball.SetName("prismatic_ground_ball")
+            #prismatic_ground_ball.Initialize(self.body_floor, box2, chrono.ChCoordsysD(chrono.ChVectorD(self.x, self.y, self.z), chrono.Q_ROTATE_X_TO_Z))
+            #self.my_system.Add(prismatic_ground_ball) 
             self.obj.append(box2)
             self.balls.append(box2) 
             self.my_system.Add(box2)
@@ -1533,10 +1520,10 @@ class Ball:
             box3.SetBodyFixed(self.fixed) # set if its fixed
             box3.AddAsset(self.col_g)
             box3.SetMaterialSurface(self.material) # apply material
-            prismatic_ground_ball = chrono.ChLinkLockPrismatic()
-            prismatic_ground_ball.SetName("prismatic_ground_ball")
-            prismatic_ground_ball.Initialize(self.body_floor, box3, chrono.ChCoordsysD(chrono.ChVectorD(self.x, self.y, self.z), chrono.Q_ROTATE_X_TO_Z))
-            self.my_system.Add(prismatic_ground_ball) 
+            #prismatic_ground_ball = chrono.ChLinkLockPrismatic()
+            #prismatic_ground_ball.SetName("prismatic_ground_ball")
+            #prismatic_ground_ball.Initialize(self.body_floor, box3, chrono.ChCoordsysD(chrono.ChVectorD(self.x, self.y, self.z), chrono.Q_ROTATE_X_TO_Z))
+            #self.my_system.Add(prismatic_ground_ball) 
             self.obj.append(box3)
             self.balls.append(box3) 
             self.my_system.Add(box3)
@@ -1547,7 +1534,6 @@ class Ball:
             #glue=chrono.ChLinkMateFix() # cretae fix constraint
             ##glue.Initialize(ball,box1) # fix object to bot
             #self.my_system.AddLink(glue) # add to system             
-        
         #### import    
         if self.geom=="import":          
   
@@ -1718,7 +1704,6 @@ class Ball:
         #else:
         self.bx["ballx"].append(self.balls[0].GetPos().x) # x postion 
         self.bz["ballz"].append(self.balls[0].GetPos().z) # z postion     
-        
     def save_data_velocity(self):
         ''' save the velocity of the ball '''
         self.bvx["ballvx"].append(self.balls[0].GetPos_dt().x) # x velocity
@@ -1750,7 +1735,6 @@ class Ball:
     
     
     def return_angle_data(self):
-        ''' return orientation quaterions of the ball'''
         return(self.bq0,self.bq1,self.bq2,self.bq3)
     
     def return_position_data(self):
@@ -1767,25 +1751,24 @@ class Ball:
         return(self.my_system,self.balls)      
     
     def return_ball_contact_forces(self):
-        ''' return contact forces '''
         return(self.bFx,self.bFy,self.bFz)
     
     def return_ball_total_forces(self):
-        ''' return total forces '''
         return(self.bFtx,self.bFty,self.bFtz)
     
 class simulate:
     def __init__(self,name,my_system,bots,particles,Ball,controller,my_rep,path,Psi):
-        self.name=name # name of simulation
-        self.my_system = my_system # system object
-        self.Psi = Psi # R-function object
-        self.Bots = bots # bots object
-        self.particles = particles # particles object
-        self.controller = controller # controller class
-        self.my_rep = my_rep # contact class
-        self.ball=Ball # ball class
+       
+        self.name=name
+        self.my_system = my_system
+        self.Psi = Psi
+        self.Bots = bots
+        self.particles = particles
+        self.controller = controller
+        self.my_rep = my_rep
+        self.ball=Ball
         
-        #### Imported Variables 
+        ###### Imported Variables #########
         self.mainDirectory = path
         parameters=np.load(self.mainDirectory+self.name+'/Parameters.npy',allow_pickle=True)
         self.parameters=parameters.tolist()
@@ -1794,146 +1777,135 @@ class simulate:
         self.control_mode=self.parameters['control_mode']
         self.xcenter = self.parameters['xcenter']
         self.zcenter = self.parameters['zcenter']
-        self.visual = self.parameters['visual'] # visualization time
-        self.dt = self.parameters['dt'] # time step
-        self.time_end = self.parameters['time_end'] # end of simuation time
-        self.save_rate = self.parameters['save_rate'] # rate the system saves data
-        
-        # If grasping import additional variables
-        if self.control_mode=="grasping" or self.control_mode=="grasping_u":
+        self.visual = self.parameters['visual']
+        self.dt = self.parameters['dt']
+        if self.control_mode!='target_chasing':
+           self.tcut3 = self.parameters['tcut3']
+           
+        self.time_end = self.parameters['time_end']
+        self.save_rate = self.parameters['save_rate']
+        if self.control_mode!='target_chasing':
             self.geom=self.parameters['ball_geometry']
-            self.ball_radius = self.parameters['ball_radius']
-            self.ballx_ = self.parameters['ballx'] 
-            self.ballz_ = self.parameters['ballz']
-            self.tcut1 = self.parameters['tcut1']
-            self.tcut2 = self.parameters['tcut2']
-            self.tcut3 = self.parameters['tcut3']
-            self.trig1 = 0
-            self.rho=0
-            self.k=0
-            self.m=8
             if self.geom=="c_shape":
                 self.w=self.parameters['w']
                 self.l=self.parameters['l']
-                self.t=self.parameters['t'] 
-
-
-
+                self.t=self.parameters['t']
+                
+            self.ball_radius = self.parameters['ball_radius']
+            self.ballx_ = self.parameters['ballx']
+            self.ballz_ = self.parameters['ballz']
+            #self.rotate_square=self.parameters['rotate_square']
         ###### Predefined variables ######
         self.myapplication=[]
-        self.epoch = 0 # epoc used intermnally
-        
-        # irrlecht specific variables
-        self.camx = 0 # x positon of camera 
-        self.camy = 5 # y positon of camera 
-        self.camz = 0 # z positon of camera 
+        self.epoch = 0
+        self.camx = 0
+        self.camy = 5
+        self.camz = 0
         self.camy_height = 2
         self.save_video = False
         self.Trip=False
-        
-        
-        self.sim_start=timeit.default_timer() # start simulation time 
-
-
-        #### Empty Arrays 
-        self.THETA=[] # For searching, this is the beta angle of the syste, 
-        self.Rr_=[] # for grasp searching, this is the radius from the center of the object to the point of the field 
-        
+        self.sim_start=timeit.default_timer()
+        self.THETA=[]
+        self.Rr_=[]
+        ###### Empty Arrays ######
         self.time = [] # time empty array
         self.time_contact = [] # contact time  empty array
-        self.number_contacts = [] # number of contacts
+        self.number_contacts = []
+        self.Contact_points_x = []
+        self.Contact_points_y = []
+        self.Contact_points_z = []
         
+        self.Contact_force_x = []
+        self.Contact_force_y = []
+        self.Contact_force_z = []
         
-        self.EPSILON4 = [] # epsilon metric 
-        self.Qcm = [] # Qcm metric 
-        self.calcultation_time  = [] # time to calcuate the metric
-        self.calc_type=[] # type of calculation done for metric
+        self.Contact_force_x2 = []
+        self.Contact_force_y2 = []
+        self.Contact_force_z2 = []
         
-        # center of contact points
-        self.centroidx = [] # x position
-        self.centroidz = [] # z position
-         
-
-        # contact positions
-        self.Contact_points_x = [] # contact points x
-        self.Contact_points_y = [] # contact points y
-        self.Contact_points_z = [] # contact points z
+        self.bodiesA = []
+        self.bodiesB = []
+        self.bodiesA_ID = []
+        self.bodiesB_ID = []
         
-        # contact forces
-        self.Contact_force_x = [] # x forces
-        self.Contact_force_y = [] # y forces
-        self.Contact_force_z = [] # z forces
-        
-        # contact forces 2
-        self.Contact_force_x2 = [] # x forces
-        self.Contact_force_y2 = [] # y forces
-        self.Contact_force_z2 = [] # z forces
-        
-        self.bodiesA = [] # name of the contact bodies A
-        self.bodiesB = [] # name of the contact bodies B
-        self.bodiesA_ID = [] # ID of the contact bodies A
-        self.bodiesB_ID = [] # ID of the contact bodies B
-        
-        # x direction empty array vector
         self.dir_xx = []
         self.dir_xy = []
         self.dir_xz = []
         
-        # y direction empty array vector
         self.dir_yx = []
         self.dir_yy = []
         self.dir_yz = []
         
-        # z direction empty array vector
         self.dir_zx = []
         self.dir_zy = []
         self.dir_zz = []   
         
-        #### Contact arrays used to calculate epsilon metric 
-        self.time_contact_bot = [] # contact time  empty array for robots
-        self.number_contacts_bot = [] # number of contacts for bots
+        self.rho=0
+        self.trig1=0
+        self.k=0
+        self.m=8
+        self.EPSILON4 = []
+        self.calcultation_time  = []
+        self.centroidx = []
+        self.centroidz = []
+        self.Qcm = []
+        self.calc_type=[]
+        # if self.geom=="square":
+        #     self.k=(self.ball_radius*2)/(2*np.sqrt(3))
+         
+        # if self.geom=="circle":
+        #     self.k = self.ball_radius/np.sqrt(2)   
+                    
+        # if self.geom=="import":
+        #     self.k=2.18
+        #     #k=1.16
+                    
+        # if self.geom=="triangle":   
+        #     const=self.ball_radius*2*np.pi/3
+        #     r=const*np.sqrt(3)/3
+        #     x1=r
+        #     y1=0
+        #     x2=r*np.cos(2*np.pi/3)
+        #     y2=r*np.sin(2*np.pi/3)
+        #     d=np.sqrt((x1-x2)**2 +(y1-y2)**2)
+        #     self.k = d*.2041   
         
-        # contact position 
+        self.time_contact_bot = [] # contact time  empty array
+        self.number_contacts_bot = []
+        
         self.Contact_points_x_bot = []
         self.Contact_points_y_bot = []
         self.Contact_points_z_bot = []
                 
-        # contact forces global 
         self.Contact_force_x_bot = []
         self.Contact_force_y_bot = []
         self.Contact_force_z_bot = []
                 
-        # cotnact forces local frame 
         self.Contact_force_x2_bot = []
         self.Contact_force_y2_bot = []
         self.Contact_force_z2_bot = []
         
-        # object name 
         self.bodiesA_bot = []
         self.bodiesB_bot = []
-        
-        # object id
+                
         self.bodiesA_ID_bot = []
         self.bodiesB_ID_bot = []
 
-        # x direction of contact frame global
         self.dir_xx_bot = []
         self.dir_xy_bot = []
         self.dir_xz_bot = []
-          
-        # y direction of contact frame global
+                
         self.dir_yx_bot = []
         self.dir_yy_bot = []
         self.dir_yz_bot = []
-               
-        # z direction of contact frame global
+                
         self.dir_zx_bot = []
         self.dir_zy_bot = []
         self.dir_zz_bot = []
         
         self.i=0
         
-        #### empty lists of contact info for ball
+    
         self.Force_x_contact_ball_ = {} # contact forces for ball x
         self.Force_z_contact_ball_ = {} # contact forces for ball z   
         
@@ -1949,6 +1921,12 @@ class simulate:
             
         self.x0b_=0
         self.y0b_=0
+        if self.control_mode!='target_chasing':
+            self.tcut1 = self.parameters['tcut1']
+            self.tcut2 = self.parameters['tcut2']
+            self.tcut3 = self.parameters['tcut3']
+        
+        #self.p = self.parameters['p']
         
     # simulate the robot
     def simulate(self):
@@ -1961,6 +1939,7 @@ class simulate:
             self.myapplication.AddTypicalCamera(chronoirr.vector3df(self.camx,self.camy,self.camz),chronoirr.vector3df(self.camx,0,self.camz))
             self.myapplication.SetSymbolscale(.002)
             self.myapplication.SetShowInfos(True)
+            #self.myapplication.SetContactsDrawMode(2)
             self.myapplication.SetPaused(self.Trip)
             self.myapplication.AddTypicalLights()
             self.myapplication.DrawAll               
@@ -1970,26 +1949,33 @@ class simulate:
             self.count=0
             self.myapplication.SetTimestep(self.dt)
             self.myapplication.SetTryRealtime(False)
-            
-            #Run the sim
+            ##### Run the sim
             while(self.myapplication.GetDevice().run()):
+                #self.my_rep.ResetList()
+                #self.save_contacts()
+                #self.my_rep.ResetList()
                 self.myapplication.BeginScene()
                 self.myapplication.DrawAll()
                 self.myapplication.DoStep()
-                self.controller.run_controller() # run controller
-                self.controller.get_position() # get position for controller
-                self.my_rep.ResetList() # clear contact points list
-                self.save_contacts()  # save contact points list
-                time=np.round(self.my_system.GetChTime(),3)
+                #if self.control_mode=="grasping_epsilon" or self.control_mode=="grasping_u": 
+                #    self.controller.smooth_epsilon(self.EPSILON4,np.round(self.my_system.GetChTime(),3))
+                self.controller.run_controller()
+                self.controller.get_position()
+                #self.smooth_epsilon(epsilon)
+                self.my_rep.ResetList()
+                self.save_contacts() 
+                #self.my_rep.ResetList()
                 
-                if self.control_mode=="grasping_explore":
-                    if self.controller.t>=self.tcut3:
-                         print("time change")
-                         self.controller.t=0
-                    else:
-                         self.controller.t=self.controller.t+self.dt
-                         print("not time")
+                # if self.controller.t>=self.tcut3:
+                #     print("time change")
+                #     self.controller.t=0
+                # else:
+                #     self.controller.t=self.controller.t+self.dt
+                #     #print("not time")
 
+
+                time=np.round(self.my_system.GetChTime(),3)
+ 
                 if self.control_mode=="shape_morphing":
                     ft=np.round(self.controller.Psi.tanh(np.round(self.my_system.GetChTime(),3)),3)
                 
@@ -2001,11 +1987,18 @@ class simulate:
                 else:
                     print('time='+str(time))
                 
+                if self.control_mode=="grasping_explore2":
+                    if self.controller.t>=self.tcut2:
+                        #print("time change")
+                        self.controller.t=0
+                    else:
+                        self.controller.t=self.controller.t+self.dt
+                        #print("not time")
                 self.myapplication.EndScene()
-                self.save_parameters() # save parameters
+                self.save_parameters()
                 
-                self.epoch = self.epoch + 1 # next epoch
-                self.my_rep.ResetList() # reset contact list
+                self.epoch = self.epoch + 1
+                self.my_rep.ResetList()
                 
                 # aaa=len(self.Bots.bots)
                 # cam_x=0.33*(self.Bots.bots[0].GetPos().x + self.Bots.bots[int(aaa/3)].GetPos().x + self.Bots.bots[int(2*aaa/3)].GetPos().x)
@@ -2013,37 +2006,38 @@ class simulate:
                 # cam_z=0.33*(self.Bots.bots[0].GetPos().z + self.Bots.bots[int(aaa/3)].GetPos().z + self.Bots.bots[int(2*aaa/3)].GetPos().z)
                 # self.myapplication.GetSceneManager().getActiveCamera().setPosition(chronoirr.vector3df(cam_x,cam_y+self.camy_height,cam_z))
                 # self.myapplication.GetSceneManager().getActiveCamera().setTarget(chronoirr.vector3df(cam_x,cam_y,cam_z))
-                # self.myapplication.SetVideoframeSave(self.save_video)
-                # self.myapplication.SetVideoframeSaveInterval(round(1/(self.dt*60)))
-                
+                #self.myapplication.SetVideoframeSave(True)
+                #self.myapplication.SetVideoframeSaveInterval(round(1/(self.dt*60)))
+                self.myapplication.SetVideoframeSave(True)
+                self.myapplication.SetVideoframeSaveInterval(round(1/(self.dt*60)))
                 # Close the simulation if time ends
                 if self.my_system.GetChTime()> self.time_end :
                     self.myapplication.GetDevice().closeDevice()
                     
-            self.sim_end=timeit.default_timer() # save simulation time end
-            self.parameters['sime_time']=(self.sim_end-self.sim_start)/60 # find total sim time
+            self.sim_end=timeit.default_timer()
+            self.parameters['sime_time']=(self.sim_end-self.sim_start)/60
             self.number_parameters = self.parameters['number_parameters']
-            self.parameters['rho']=self.rho # save rho variable used for grasping 
+            self.parameters['rho']=self.rho
             
         #### pov   
         if self.visual=="pov": 
             while (self.my_system.GetChTime() < self.time_end): 
-                self.my_system.DoStepDynamics(self.dt) # input time step
-                self.controller.run_controller() # run controller
-                self.controller.get_position() # acquire position 
-                self.my_rep.ResetList() # reset contact list
-                self.save_contacts() # save contact list
+                self.my_system.DoStepDynamics(self.dt)
+                self.controller.run_controller()
+                self.controller.get_position()
+                self.my_rep.ResetList()
+                self.save_contacts() 
+                #if self.control_mode=="grasping_epsilon" or self.control_mode=="grasping_u": 
+                #    self.controller.smooth_epsilon(self.EPSILON4,np.round(self.my_system.GetChTime(),3))
+                #self.my_rep.ResetList()
                 
-                if self.control_mode=="grasping_explore":
-                    if self.controller.t>=self.tcut3:
-                        print("time change")
-                        self.controller.t=0
-                    else:
-                        self.controller.t=self.controller.t+self.dt
-                        print("not time")
-    
-        
-    
+               # if self.controller.t>=self.tcut3:
+                #    print("time change")
+                #    self.controller.t=0
+                #else:
+                #    self.controller.t=self.controller.t+self.dt
+                    #print("not time")
+
     
                 time=np.round(self.my_system.GetChTime(),3)
                 
@@ -2053,6 +2047,7 @@ class simulate:
                     print('time='+str(time), 'f(t)='+str(ft),end='\n')
         
                 elif self.control_mode=="grasping_u":
+                    #if time<=self.tcut1:
                     if self.controller.trig1_==0:
                           print('time='+str(time), 'phase = '+str(self.controller.trig1_+1),end='\n')  
                     elif self.controller.trig1_!=0:
@@ -2061,11 +2056,10 @@ class simulate:
                         print('time='+str(time))
                 else:
                     print('time='+str(time))
-                    
-                self.save_parameters() # save parameters
+                self.save_parameters()
                 
-                self.epoch = self.epoch + 1 # next epoch
-                self.my_rep.ResetList() # reset contact list
+                self.epoch = self.epoch + 1
+                self.my_rep.ResetList()
                 
             self.sim_end=timeit.default_timer()
             self.parameters['sime_time']=(self.sim_end-self.sim_start)/60
@@ -2079,8 +2073,8 @@ class simulate:
                 f.write("%s, %s\n" % (key, self.parameters[key]))
 
     def find_contact_forces(self):
-        '''This function for extacting contact forces without regards for grasping'''
-        # empty arrays for current variables
+        #'''This function for extacting contact forces without regards for grasping'''
+
         self.Force_x_contact_ball_=[]
         self.Force_z_contact_ball_=[]
             
@@ -2093,25 +2087,30 @@ class simulate:
         self.dir_zx_contact_ball_=[]
         self.dir_zz_contact_ball_=[]      
         
+        #if self.geom=="c_shape":
+            
         self.x0b,self.y0b=self.ball.balls[0].GetPos().x,self.ball.balls[0].GetPos().z
 
-        difx=self.x0b_-self.ballx_ 
+        difx=self.x0b_-self.ballx_
         dify=self.y0b_-self.ballz_
-
+        #print("ball_dif=",(self.x0b-difx))
         if self.ball.check1==0:
             print("ball_check")
             self.ball.check1=1
             self.x0b_=self.x0b
             self.y0b_=self.y0b
-            
+            #print(self.x0b_)
+            #print(self.y0b_)
         for j in range(int(self.number_contacts[-1])):
+            #print('j=',j)
+            #print("find")
             temp1=self.bodiesA_bot[-1][j]
-            temp2=self.bodiesB_bot[-1][j]  
-            
-            #### Contact forces for ball        
+            temp2=self.bodiesB_bot[-1][j]          
+     #      ##### contact forces for ball        
             if temp1[0:4]=="ball" or temp2[0:4]=="ball" :
+                #print("found")
+                if temp1[0:4]=="ball":  
 
-                if temp1[0:4]=="ball":  # if object 1 is the ball
                     self.Force_x_contact_ball_.append(self.Contact_force_x2_bot[-1][j])
                     self.Force_z_contact_ball_.append(self.Contact_force_z2_bot[-1][j])
                         
@@ -2124,7 +2123,7 @@ class simulate:
                     self.dir_zx_contact_ball_.append(self.dir_zx_bot[-1][j])
                     self.dir_zz_contact_ball_.append(self.dir_zz_bot[-1][j])                    
                     
-                if temp2[0:4]=="ball": # if object 2 is the ball
+                if temp2[0:4]=="ball":
                     self.Force_x_contact_ball_.append(self.Contact_force_x2_bot[-1][j])
                     self.Force_z_contact_ball_.append(self.Contact_force_z2_bot[-1][j])
                         
@@ -2137,24 +2136,20 @@ class simulate:
                     self.dir_zx_contact_ball_.append(self.dir_zx_bot[-1][j])
                     self.dir_zz_contact_ball_.append(self.dir_zz_bot[-1][j])                      
                 
-                #### finding rho 
                 if self.trig1==0:
                     self.trig1=1
                     if self.geom=="c_shape":
-                        bx=self.ballx_ # center of object x
-                        bz=self.ballz_ # center of object z
+                        bx=self.ballx_
+                        bz=self.ballz_
                     else:
-                        bx=self.ball.balls[0].GetPos().x # center of object x
-                        bz=self.ball.balls[0].GetPos().z # center of object z
-                    # calculate rho
+                        bx=self.ball.balls[0].GetPos().x
+                        bz=self.ball.balls[0].GetPos().z
                     self.rho=np.sqrt((self.Contact_points_x_bot[-1][j]-bx)**2 + (self.Contact_points_z_bot[-1][j]-bz)**2)
-
-                    self.parameters['rho']=self.rho # save rho 
-           
-            
-           
-        #### Properties used for R-function used for grasping
+                    #self.rho=1
+                    self.parameters['rho']=self.rho
+                    
         if self.geom=="square":
+            #x0b,y0b=self.ball.balls[0].GetPos().x,self.ball.balls[0].GetPos().z
             const=self.ball_radius*2-.01
             rx=const
             ry=const
@@ -2162,30 +2157,53 @@ class simulate:
             h=ry/2                    
             x__=[w,-w,-w,w,w]
             y__=[h,h,-h,-h,h]
-            _x_=[]
-            _y_=[]
-            t=np.pi/4
-            (segments)=self.create_segment(x__,y__) 
+            
+            if self.rotate_square==True:
+                _x_=[]
+                _y_=[]
+                t=np.pi/4
+                for i in range(len(x__)):
+                    _x_.append(np.cos(t)*x__[i]+np.sin(t)*y__[i])
+                    _y_.append(-np.sin(t)*x__[i]+np.cos(t)*y__[i])
+                (segments)=self.create_segment(_x_,_y_) 
+            else:
+                
+                (segments)=self.create_segment(x__,y__) 
+            #(segments)=self.create_segment(_x_,_y_) 
             const_=self.ball_radius*2
+            
             xb,yb=0-const_/2,0 - const_/2
             x0_=xb
             y0_=yb
 
 
         if self.geom=="triangle":
+           #x0b,y0b=self.ballx_position[i],self.ballz_position[i] 
+
            const=self.ball_radius*2*np.pi/3
            r=const*np.sqrt(3)/3 -.01
            x1=-r
            y1=0
            x2=-r*np.cos(2*np.pi/3)
            y2=r*np.sin(2*np.pi/3)
+           
            x3=-r*np.cos(4*np.pi/3)
            y3=r*np.sin(4*np.pi/3)
+           
            x__ = [x1,x2,x3,x1]
            y__ = [y1,y2,y3,y1]
            (segments)=self.create_segment(x__,y__)
 
+        #if self.geom=="circle":
+           # self.ballx=self.ball.balls[0].GetPos().x
+            #self.ballz=self.ball.balls[0].GetPos().z    
+        
         if self.geom=="c_shape":
+            
+            #w=2*self.ball_radius/2
+           #l=2*self.ball_radius/2
+            #t=.2*w
+            
             w=self.w/2
             l=self.l/2
             t=self.t
@@ -2206,58 +2224,65 @@ class simulate:
             box1_length=box1_width/2
             thetabar=np.arcsin(((box1_width/2)-diff)/(Rbar))
             theta=np.linspace(3*np.pi/2 + thetabar,(2*np.pi + 3*np.pi/2) - thetabar,100,endpoint=True)
+            
             xp=[]
             yp=[]
-            
             for iij in range(len(theta)):
                 xp.append(Rbar*np.cos(theta[iij]))
                 yp.append(Rbar*np.sin(theta[iij]))
-
+                
+            print(xp[0]-xp[-1])
+            #box1_width=0.7579748259640666
             box1_length=box1_width/2
             box2_width=1.5
             Rr=np.sqrt(R**2 - (box1_width/2)**2)
-        
+              
             box1_x=-(Rr + box1_length/2)
             box1_z=0 
+            
             box2_width=1.5
             box2_length=.25
+            
             box2_x=box1_x - box1_length/2 - box2_length/2
             box2_z=0 
             
             xp.append(-box1_width/2 +diff)
             yp.append(box1_x - box1_length/2 - diff)
+            
             xp.append(-box2_width/2 + diff)
             yp.append(box1_x - box1_length/2 - diff)
+            
+            
             xp.append(-box2_width/2 +diff)
             yp.append(box1_x - box1_length/2 - (box2_length-diff))
+            
+            
             xp.append(box2_width/2 - diff)
             yp.append(box1_x - box1_length/2 - (box2_length-diff))
+            
+            
             xp.append(box2_width/2 - diff)
             yp.append(box1_x - box1_length/2 - diff)
+            
             xp.append(box1_width/2 -diff)
             yp.append(box1_x - box1_length/2 - diff)
+            
             xp.append(Rbar*np.cos(theta[0]))
             yp.append(Rbar*np.sin(theta[0]))
             (self.segments)=self.create_segment(yp,xp)            
         
-        
-        #### Empty arrays
         X=[]
         Y=[]
         theta=[]
         
         temp_position_x = []
         temp_position_z = []
-        
         temp_force_x = []
         temp_force_z = []  
-        
         temp_vx = []
         temp_vy = []
-        
         temp_c1 = []
         temp_c2 = []
-        
         temp_id = []
         temp_theta = []
         temp_frames=[]
@@ -2265,47 +2290,39 @@ class simulate:
         temp_wrenches=[]
         temp_wrenches_norm=[]
         temp_n=[]
-        frames = np.zeros((len(self.position_x_contact_ball_),3)) # position orientation
-        
-        Vx=np.zeros((len(self.position_x_contact_ball_),2)) # x frame 
-        Vy=np.zeros((len(self.position_x_contact_ball_),2)) # y frame
-        
+        frames = np.zeros((len(self.position_x_contact_ball_),3))
+        Vx=np.zeros((len(self.position_x_contact_ball_),2))
+        Vy=np.zeros((len(self.position_x_contact_ball_),2))
         C1=np.zeros((2,len(self.position_x_contact_ball_))) # positive cone
-        C2=np.zeros((2,len(self.position_x_contact_ball_))) # negative cone   
-        
-        #### Calculate Qcm metric
+        C2=np.zeros((2,len(self.position_x_contact_ball_))) # negative cone 
+        #self.ballx=self.ball.balls[0].GetPos().x
+        #self.ballz=self.ball.balls[0].GetPos().z    
         cx=np.sum(self.position_x_contact_ball_)/len(self.position_x_contact_ball_)
         cy=np.sum(self.position_z_contact_ball_)/len(self.position_z_contact_ball_)
-        self.centroidx.append(cx) # append to x array
-        self.centroidz.append(cy) # append to z array
+        self.centroidx.append(cx)
+        self.centroidz.append(cy)
         self.Qcm.append(np.sqrt((cx-self.x0b)**2 +(cy-self.y0b)**2))
-        
         for ii in range(len(self.position_x_contact_ball_)):
-            x0 = self.position_x_contact_ball_[ii] # x contact position
-            y0 = self.position_z_contact_ball_[ii] # z position 
-            theta1=np.arctan2(.2,1) # friction angle  
-            
+            x0,y0=self.position_x_contact_ball_[ii],self.position_z_contact_ball_[ii]
+            #print("x0",x0)
+            #print("y0",y0)
+            #ax.text(x0-x0b,y0-y0b,str(j),size=8)
+            theta1=np.arctan2(.2,1) #+ frames[j,2]             
             if self.geom=="square":
-                # Contact frame 
-                Fx1=self.PHIDX(x0-self.x0b,y0-self.y0b,segments) # x direction 
-                Fy1=self.PHIDY(x0-self.x0b,y0-self.y0b,segments) # y direction 
-                mag=np.sqrt(Fx1**2 + Fy1**2) # magnitude
-                
-                # normalize
-                Fx1=-Fx1/mag # x direction
-                Fy1=-Fy1/mag # y direction
-                
-                F_t=np.array([Fx1,Fy1]) # stack in array
-                t=self.angle(Fx1, Fy1)-np.pi/2 # orientation of contact frame
-                
-                X.append(x0-self.x0b) # save position x of frame
-                Y.append(y0-self.y0b) # save position y of frame
-                theta.append(t) #save angle of orientation of frame
-                
-                # frame empty array which is used to calc metric
-                frames[ii,0]=x0-self.x0b # x 
-                frames[ii,1]=y0-self.y0b # y 
-                frames[ii,2]=t # orientation
+                Fx1=self.PHIDX(x0-self.x0b,y0-self.y0b,segments)
+                Fy1=self.PHIDY(x0-self.x0b,y0-self.y0b,segments)
+                mag=np.sqrt(Fx1**2 + Fy1**2)
+                Fx1=-Fx1/mag
+                Fy1=-Fy1/mag
+                F_t=np.array([Fx1,Fy1])
+                X.append(x0-self.x0b)
+                Y.append(y0-self.y0b)
+                t=self.angle(Fx1, Fy1)-np.pi/2
+                theta.append(t)
+                frames[ii,0]=x0-self.x0b
+                frames[ii,1]=y0-self.y0b
+                frames[ii,2]=t
+                #mag=np.sqrt(F_contact_ballx_entry[j]**2 + F_contact_ballz_entry[j]**2)
                 mag=1
                 
                 
@@ -2329,6 +2346,7 @@ class simulate:
             elif self.geom=="c_shape":
                 difx=self.x0b_-self.ballx_
                 dify=self.y0b_-self.ballz_
+                
                 Fx1=self.PHIDX(x0-(self.x0b-difx),y0-(self.y0b-dify),self.segments)
                 Fy1=self.PHIDY(x0-(self.x0b-difx),y0-(self.y0b-dify),self.segments)
                 mag=np.sqrt(Fx1**2 + Fy1**2)
@@ -2343,8 +2361,7 @@ class simulate:
                 frames[ii,1]=y0-(self.y0b-dify)
                 frames[ii,2]=t
                 #mag=np.sqrt(F_contact_ballx_entry[j]**2 + F_contact_ballz_entry[j]**2)
-                mag=1   
-                
+                mag=1      
             elif self.geom=="circle":
                 Fx1,Fy1=(self.x0b-x0),(self.y0b-y0)
                 mag=np.sqrt(Fx1**2 + Fy1**2)
@@ -2358,7 +2375,8 @@ class simulate:
                 frames[ii,0]=x0-self.x0b
                 frames[ii,1]=y0-self.y0b
                 frames[ii,2]=t
-
+                
+                
             elif self.geom=="import":
                 Fx1=self.PHIDX(x0-self.x0b,y0-self.y0b,self.segments)
                 Fy1=self.PHIDY(x0-self.x0b,y0-self.y0b,self.segments)
@@ -2373,42 +2391,42 @@ class simulate:
                 frames[ii,0]=x0-self.x0b
                 frames[ii,1]=y0-self.y0b
                 frames[ii,2]=t
+                #mag=np.sqrt(F_contact_ballx_entry[j]**2 + F_contact_ballz_entry[j]**2)
                 mag=1     
                 
-            mag=np.sqrt(self.Force_x_contact_ball_[ii]**2 + self.Force_z_contact_ball_[ii]**2) # magnitude of contact force
-            
+            mag=np.sqrt(self.Force_x_contact_ball_[ii]**2 + self.Force_z_contact_ball_[ii]**2)
+            #mag=1
             T=np.array([[np.cos(t),-np.sin(t)],[np.sin(t),np.cos(t)]]) # transformation matrix   
-            VYpp=T@np.array([[0],[1]]) # transform coordinates X frame
-            VXpp=T@np.array([[1],[0]]) # transform coordinates Y frame
-            VXpp=VXpp.flatten() # flatten the matrix 
+            VYpp=T@np.array([[0],[1]]) # transform coordinates X
+            VXpp=T@np.array([[1],[0]]) # transform coordinates Y
+            VXpp=VXpp.flatten() # flatten the matrix
             VYpp=VYpp.flatten() # flatten the matrix
         
-            Vx[ii,:]=VXpp # Save the array X frame
-            Vy[ii,:]=VYpp  # save the array Y frame      
+            Vx[ii,:]=VXpp # Save the array X
+            Vy[ii,:]=VYpp  # save the array Y     
             
             T1=np.array([[np.cos(theta1),-np.sin(theta1)],[np.sin(theta1),np.cos(theta1)]]) # transformation matrix   
-            T2=np.array([[np.cos(-theta1),-np.sin(-theta1)],[np.sin(-theta1),np.cos(-theta1)]]) # transformation matrix       
+            T2=np.array([[np.cos(-theta1),-np.sin(-theta1)],[np.sin(-theta1),np.cos(-theta1)]])    
             tem=Vy[ii,:].T
-            C1[:,ii]=mag*T1@tem # positive friction cone
-            C2[:,ii]=mag*T2@tem # negative friction cone
+            C1[:,ii]=mag*T1@tem
+            C2[:,ii]=mag*T2@tem
         
         
-            mag2=np.sqrt(self.dir_xx_contact_ball_[ii]**2 +  self.dir_xz_contact_ball_[ii]**2) # magnitude of x contact frame vector
-            temp_dirr=[self.dir_xx_contact_ball_[ii]/mag2,self.dir_xz_contact_ball_[ii]/mag2] # normalize the vector
+            mag2=np.sqrt(self.dir_xx_contact_ball_[ii]**2 +  self.dir_xz_contact_ball_[ii]**2)
+            temp_dirr=[self.dir_xx_contact_ball_[ii]/mag2,self.dir_xz_contact_ball_[ii]/mag2]
         
-       
-            theta1=np.arctan2(.2,1) #+ frames[j,2]
-            temp=np.round(np.nan_to_num(np.arccos(np.dot(VYpp ,temp_dirr))),2) # check if vector is in the cone
+            #print("j",str(j),np.round(t,2),"Fx:",np.round(Fx1,2),"Fy:",np.round(Fy1,2),"Fxf:",np.round(F_contact_ballx_91[j]/mag1,2),"Fyf:",np.round(F_contact_ballz_91[j]/mag1,2))
             
-            fx=self.Force_x_contact_ball_[ii] # pull x contact force
-            fy=self.Force_z_contact_ball_[ii] # pull y contact force
+            theta1=np.arctan2(.2,1) #+ frames[j,2]
+            temp=np.round(np.nan_to_num(np.arccos(np.dot(VYpp ,temp_dirr))),2)
+            fx=self.Force_x_contact_ball_[ii]
+            fy=self.Force_z_contact_ball_[ii]
             
             mag_=np.sqrt(fx**2 +fy**2)
             f_=np.array([fx/mag_,fy/mag_])
             temp2=np.round(np.nan_to_num(np.arccos(np.dot(f_ ,Vy[ii,:]))),2)
-            
-            #### fix frame if the angle is out of order
             if temp<np.pi and temp > np.pi-theta1:
+                #print("triggered")
                 fx=np.cos(-temp)*self.Force_x_contact_ball_[ii]-np.sin(-temp)*self.Force_z_contact_ball_[ii]
                 fy=np.sin(-temp)*self.Force_x_contact_ball_[ii]+np.cos(-temp)*self.Force_z_contact_ball_[ii]
                 dirxx=np.cos(-temp)*self.dir_xx_contact_ball_[ii]-np.sin(-temp)*self.dir_xz_contact_ball_[ii]
@@ -2421,31 +2439,27 @@ class simulate:
                 fy=self.Force_z_contact_ball_[ii]
                 temp=temp
                 temp2=temp2
-            #### check if force is within friction cone
+            #print(j,temp2<theta1)
             if temp<=theta1:
+                
                 if temp2<theta1:
-                    # if within cone append variables 
-                    
-                    temp_offset_theta.append(theta1) # append offset frame
-                    temp_frames.append(frames[ii,:]) # append frame
-                    temp_theta.append(frames[ii,2]) # append theta
-                    temp_id.append(ii) # append id
-                    
-                    temp_position_x.append(X[ii]) # append position X
-                    temp_position_z.append(Y[ii]) # append position Z
-                    
-                    temp_force_x.append(fx) # append force x
-                    temp_force_z.append(fy) # append force y
-                    
-                    temp_n.append(mag_*np.cos(temp2)) # normal force applied
-                     
-                    temp_vx.append(Vx[ii,:]) # contact frame x
-                    temp_vy.append(Vy[ii,:]) # contact frame y 
-                    
-                    temp_c1.append(C1[:,ii]) # positive friction cone frame
-                    temp_c2.append(C2[:,ii]) # negative friction cone frame                       
-                      
-                    # positive friction cone wrench
+                #print(frames[j,:])
+                #print(j,"angle:",np.round(temp,2),"FVYdot",np.round(np.dot(F,VYpp),2),"F",np.round(F,2),"Vy",VYpp)
+                    temp_offset_theta.append(theta1)
+                    temp_frames.append(frames[ii,:])
+                    temp_theta.append(frames[ii,2])
+                    temp_id.append(ii)
+                    temp_position_x.append(X[ii])
+                    temp_position_z.append(Y[ii])
+                    temp_force_x.append(fx)
+                    temp_force_z.append(fy)   
+                    #mag_=1
+                    temp_n.append(mag_*np.cos(temp2))
+                    temp_vx.append(Vx[ii,:])
+                    temp_vy.append(Vy[ii,:])
+                    temp_c1.append(C1[:,ii])
+                    temp_c2.append(C2[:,ii])                         
+                        
                     m_t=np.cross(np.array([X[ii],Y[ii]]),C1[:,ii])
                     temp=[C1[0,ii],C1[1,ii],m_t]
                     wrench1=temp
@@ -2455,9 +2469,12 @@ class simulate:
                     wrench_norm[0]=wrench1[0]
                     wrench_norm[1]=wrench1[1]
                     wrench_norm[2]=wrench1[2]/self.rho
+                    
+                    wrench_norm[0]=wrench_norm[0]
+                    wrench_norm[1]=wrench_norm[1]
+                    wrench_norm[2]=wrench_norm[2]
                     temp_wrenches_norm.append(wrench_norm)
 
-                    # negative friction cone wrench
                     m_t=np.cross(np.array([X[ii],Y[ii]]),C2[:,ii])
                     temp=[C2[0,ii],C2[1,ii],m_t]
                     wrench2=temp
@@ -2467,30 +2484,39 @@ class simulate:
                     wrench_norm[0]=wrench2[0]
                     wrench_norm[1]=wrench2[1]
                     wrench_norm[2]=wrench2[2]/self.rho
+
+                    wrench_norm[0]=wrench_norm[0]
+                    wrench_norm[1]=wrench_norm[1]
+                    wrench_norm[2]=wrench_norm[2]
                     temp_wrenches_norm.append(wrench_norm)   
         
-        #### Calculate epsilon metric
         if len(temp_position_x)!=0:
-            if len(temp_id)==0: # if there are no contacts
+            #for i in range(len(temp_wrenches_norm)):
+          
+        #print(str(i)+ "of"+ str(len(self.temp_wrenches))+"  "+str(len(self.temp_id[i])))
+            if len(temp_id)==0:
                 self.calc_type.append(1)
                 self.calcultation_time.append(0)
                 self.EPSILON4.append(0)
                 print("epsilon=0"," nc= ",len(temp_position_x)," try1") 
-            elif len(temp_id)==1: # if there is one contact
+            elif len(temp_id)==1:
                 self.calc_type.append(2)
                 self.calcultation_time.append(0)
                 self.EPSILON4.append(0)
                 print("epsilon=0"," nc= ",len(temp_position_x),"try2") 
              
-            elif np.all((temp_wrenches_norm==0)): # if all the contact points have zero force 
+            elif np.all((temp_wrenches_norm==0)):
                 self.calc_type.append(3)
                 self.calcultation_time.append(0)
                 self.EPSILON4.append(0)
                 print("epsilon=0"," nc= ",len(temp_position_x)," try3")     
 
-            elif len(temp_id)>1: # if there are more than one contact point 
+            elif len(temp_id)>1:
+                #print("len(temp_id)>1")
                 wrench_norm=np.asarray(temp_wrenches_norm)
                 try:
+                   # print(wrench_norm)
+                   
                     hull = ConvexHull(wrench_norm)
                     sim_start=timeit.default_timer() 
                     (epsilon,hullwrenchnorm,hullwrenchmags)=self.ferrari_canny_metric(wrench_norm)
@@ -2499,73 +2525,63 @@ class simulate:
                     print("compute_time:",np.round(sim_end-sim_start,3))
                     epsilon=np.round(epsilon,3)
                     p=[0,0,0]
-                    if self.in_hull(p,wrench_norm)==False: # if the hull is not centered
+                    if self.in_hull(p,wrench_norm)==False:
                         self.calc_type.append(4)
                         self.calcultation_time.append(np.round(sim_end-sim_start,3))
                         self.EPSILON4.append(0)
                         print("epsilon=0"," nc= ",len(temp_position_x)," try4") 
-                    else: #if the hull is centered 
+                    else:
                         self.calc_type.append(5)
                         self.calcultation_time.append(np.round(sim_end-sim_start,3))
+                        #epsilon=np.round(epsilon,3)
                         print("epsilon="+str(epsilon)," nc= ",len(self.position_x_contact_ball_)," try5") 
                         self.EPSILON4.append(epsilon)
             
-                except: # if there is a error epsilon is zero
+                except:
                     print("epsilon=0"," nc= ",len(self.position_x_contact_ball_)," try6")   
                     self.calcultation_time.append(0)
                     self.EPSILON4.append(0)
                     self.calc_type.append(6)
-                    
-        else: # if no contact eplsion is zero 
+        else:
             print("epsilon=0","try7") 
             self.EPSILON4.append(0)
             self.calc_type.append(7)
             self.calcultation_time.append(0)          
 
     def save_contacts(self):
-        ''' Save contact positions and forces '''
-        if self.epoch%self.save_rate==0: # if enough time past then save variables
+        if self.epoch%self.save_rate==0:
             self.my_system.GetContactContainer().ReportAllContacts(self.my_rep)
             crt_list = self.my_rep.GetList()
 
-            if self.my_system.GetContactContainer().GetNcontacts()!=0: # if there are contact then append
+            if self.my_system.GetContactContainer().GetNcontacts()!=0:
                 self.number_contacts.append(self.my_system.GetContactContainer().GetNcontacts())
                 self.time_contact.append(self.my_system.GetChTime()) 
-                
-                # contact positions
                 self.Contact_points_x.append(crt_list[0])
                 self.Contact_points_y.append(crt_list[1])
                 self.Contact_points_z.append(crt_list[2])
                 
-                # contact forces global frame 
                 self.Contact_force_x.append(crt_list[3])
                 self.Contact_force_y.append(crt_list[4])
                 self.Contact_force_z.append(crt_list[5])
-
-                # contact forces local frame                
+                
                 self.Contact_force_x2.append(crt_list[6])
                 self.Contact_force_y2.append(crt_list[7])
                 self.Contact_force_z2.append(crt_list[8]) 
                 
-                # contact bodies name
                 self.bodiesA.append(crt_list[9])
                 self.bodiesB.append(crt_list[10])
                 
-                # contact bodies id numbers
                 self.bodiesA_ID.append(crt_list[11])
                 self.bodiesB_ID.append(crt_list[12]) 
 
-                # x vector of contact frame
                 self.dir_xx.append(crt_list[14])
                 self.dir_xy.append(crt_list[15])
                 self.dir_xz.append(crt_list[16])
                 
-                # y vector of contact frame
                 self.dir_yx.append(crt_list[17])
                 self.dir_yy.append(crt_list[18])
                 self.dir_yz.append(crt_list[19]) 
                 
-                # z vector of contact frame
                 self.dir_zx.append(crt_list[20])
                 self.dir_zy.append(crt_list[21])
                 self.dir_zz.append(crt_list[22])     
@@ -2607,51 +2623,49 @@ class simulate:
     def save_parameters(self):
         ''' Function that collects data of for the system '''
         if self.epoch%self.save_rate==0:
-            self.time.append(np.round(self.my_system.GetChTime(),4)) # append time
-            self.Bots.save_data_position() # save robot positions
-            self.Bots.save_data_Forces() # save membrane forces
-            self.Bots.save_data_velocity() # save robot velocites
-            self.Bots.save_data_Forces_contact() # save robot contact forces
+            self.time.append(np.round(self.my_system.GetChTime(),4))
+            self.Bots.save_data_position()
+            self.Bots.save_data_Forces()
+            self.Bots.save_data_velocity()
+            self.Bots.save_data_Forces_contact()
         
-            self.Bots.save_data_forces() # save total forces
+            self.Bots.save_data_forces()
 
-            self.particles.save_data_position() # save particle positions
-            self.particles.save_data_velocity() # save particle velocities
-            self.particles.save_data_Forces_contact() # save total contact forces
-            self.particles.save_data_Forces()  # save total forces
+            self.particles.save_data_position()
+            self.particles.save_data_velocity()
+            self.particles.save_data_Forces_contact()
+            self.particles.save_data_Forces()  
             
-            self.controller.save_field_value() # save field value of the distance function
-            self.controller.save_controller_forces() # save the controller forces applied
+            self.controller.save_field_value()
+            self.controller.save_controller_forces()
 
-            # if the system is grasping 
             if self.control_mode=="grasping" or self.control_mode=="grasping_explore" or self.control_mode=="grasping_u" or self.control_mode=="grasping_epsilon":
-                self.find_contact_forces() # find epsilon metric
-                self.ball.save_data_position() # save ball positions
-                self.ball.save_data_velocity() # save ball velocity
-                self.ball.save_contact_force() # save ball contact forces
-                self.ball.save_total_force() # save ball total forces
-                self.ball.save_angle_data() # save ball angle
-                
-                # specifices for pull test
-                self.ball.Fb["Fb"].append(self.controller.fb) # pull force on ball
-                self.ball.TIME["TIME"].append(np.round(self.my_system.GetChTime(),4)) # time 
-                self.ball.PX["PX"].append(self.ball.balls[0].GetPos().x) # x position 
-                self.ball.PY["PY"].append(self.ball.balls[0].GetPos().z) # z position 
-                
+                self.find_contact_forces()
+                self.ball.save_data_position()
+                self.ball.save_data_velocity()  
+                self.ball.save_contact_force()
+                self.ball.save_total_force()
+                self.ball.save_angle_data()
+                self.ball.Fb["Fb"].append(self.controller.fb)
+                self.ball.TIME["TIME"].append(np.round(self.my_system.GetChTime(),4))
+                self.ball.PX["PX"].append(self.ball.balls[0].GetPos().x)
+                self.ball.PY["PY"].append(self.ball.balls[0].GetPos().z) 
                 if self.control_mode=="grasping_explore":
                     self.THETA.append(self.controller.theta__)
                     self.Rr_.append(self.controller.Rr)
-                
                 if self.control_mode=="grasping_u": 
-                    self.controller.TRIG1_.append(self.controller.trig1_) # variable for when the system transitions 
-                    self.controller.smooth_epsilon(self.EPSILON4,np.round(self.my_system.GetChTime(),3)) # save smoothed epsilon value
-    
+                    self.controller.TRIG1_.append(self.controller.trig1_)
+                    self.controller.smooth_epsilon(self.EPSILON4,np.round(self.my_system.GetChTime(),3))
     def angle(self,x, y):
-        """ Angle function """
+    
         rad = np.arctan2(y, x)
+        #degrees = np.int(rad*180/np.pi)
+        #if rad < 0:
+            #rad = 2*np.pi - rad
         return rad                
     
     def calculate_hull(self,hull,Wrench):
+        
         """ Create a 3D hull of the wrench space and calculates the epsilon metric """
         origin = Point3D(0,0,0)
         nfacets = np.shape(hull.simplices)[0] #how many facets
@@ -2722,8 +2736,7 @@ class simulate:
          return (hull.find_simplex(p)>=0)  
      
     def ferrari_canny_metric(self,wrenches):
-         """ Calculate ferrari canny metric """
-         G=wrenches.T # transpose of wrench hull
+         G=wrenches.T
          hull = cvh.ConvexHull(wrenches)
          min_dist = 100
          wrenchmags=[]
@@ -2746,6 +2759,7 @@ class simulate:
          return(min_dist,hullwrenchnorm,hullwrenchmags)
      
         
+     
     def normalize(self,F):
         (fy,fx)=np.gradient(F)
         return(F/np.sqrt(F**2 + fy**2 + fx**2))
@@ -2756,6 +2770,8 @@ class simulate:
     def parabola(self,x,y,px,py):
         return((x-px)**2 - py - y)
 
+
+
     def equivalence(self,w1,w2,m):
         return(w1*w2/((w1**m +w2**m)**(1/m)))
 
@@ -2764,6 +2780,7 @@ class simulate:
 
     def intersection(self,w1,w2):
         return(((w1+w2)/2) - ((np.sqrt((w1-w2)**2))/2))          
+        
         
     def F(self,x,y,x1,x2,y1,y2):
          L=np.sqrt((x2-x1)**2 + (y2-y1)**2)
@@ -2829,6 +2846,7 @@ class simulate:
         return(R)
 
     def PHIDX(self,x,y,segments):
+        #m=4
         term1=0
         term2=0
         term3=0
@@ -2841,6 +2859,7 @@ class simulate:
      
         
     def PHIDY(self,x,y,segments):
+        #m=4
         term1=0
         term2=0
         term3=0
@@ -2944,9 +2963,12 @@ class simulate:
         term3 = np.sqrt((((np.sqrt(ff**4 + tf**2)-tf)/2)**2) + ff**2)    
         return((term1+term2)/term3)   
     
+    
     def circle(self,x,y,R,a,b):
         return(abs((R**2 - (x-a)**2 - (y-b)**2)))
 
+    
+    
     def dphix_circle(self,x,y,a,b,R):
         """ Derivative of the distance function of cirlce wrt x """
         return(R*(x-a)*np.sign((R/2)*(- R**2 +(a-x)**2 + (b-y)**2)))
@@ -2964,7 +2986,7 @@ class simulate:
             R = R + 1/self.phi_line(x,y,segments[i,0],segments[i,1],segments[i,2],segments[i,3])**self.m
         R = 1/R**(1/self.m)
         return(R)
-    
+# In[]
     def dphix_segments(self,x,y,segments):
         """ Derivative of R equivelent of trimmed line segments wrt x"""
 
@@ -3065,6 +3087,37 @@ class simulate:
         y_.append(y6_[1])
         y_.append(y7_[0])
         y_.append(y8_[1])     
+
+        # x9_=[x1_[-1],x1a_]
+        # y9_=[w1,w1]
+
+        # x10_=[x1a_,x1a_+a]
+        # y10_=[w1,w1]
+
+        # x11_=[b,b]
+        # y11_=[w1,w2]
+
+        # x12_=[b,c]
+        # y12_=[w2,w2]
+
+        # x13_=[c,c]
+        # y13_=[w2,-w2]
+
+        # x14_=[c,b]
+        # y14_=[-w2,-w2]
+
+        # x15_=[b,b]
+        # y15_=[-w1,-w2]
+
+        # x16_=[b,x1b_]
+        # y16_=[-w1,-w1]
+
+        # x17_=[x1b_,x1_[-1]]
+        # y17_=[-w1,-w1]
+
+        # x_=[x2_[0],x2_[1],x3_[1],x4_[1],x5_[1],x6_[1],x7_[0],x8_[1],x9_[1],x10_[1],x11_[1],x12_[1],x13_[1],x14_[1],x15_[0],x16_[1]]
+        # y_=[y2_[0],y2_[1],y3_[1],y4_[1],y5_[1],y6_[1],y7_[0],y8_[1],y9_[1],y10_[1],y11_[1],y12_[1],y13_[1],y14_[1],y15_[0],y16_[1]]
+        
         (self.segments)=self.create_segment(x_,y_)
         #f1=self.circle(x,y,R,0,0)
         #f1x=self.dphix_circle(x,y,0,0,R)
@@ -3075,6 +3128,48 @@ class simulate:
         return(Fx)
     
     def F_random_objdy(self,x,y):
+        # R=1.25
+        # theta1=0.41
+        # theta2=2*np.pi-theta1
+        # theta=np.linspace(theta1,theta2,100)
+
+        # x1_=-R*np.cos(theta)
+        # y1_=R*np.sin(theta)
+
+
+        # a=.5
+        # b=1.65
+        # c=2.02
+
+        # w1=.5
+        # w2=.63
+
+
+        # x2_=[x1_[0],x1_[0]-a]
+        # y2_=[w1,w1]
+
+        # x3_=[-b,-b]
+        # y3_=[w1,w2]
+
+        # x4_=[-b,-c]
+        # y4_=[w2,w2]
+
+        # x5_=[-c,-c]
+        # y5_=[w2,-w2]
+
+        # x6_=[-c,-b]
+        # y6_=[-w2,-w2]
+
+        # x7_=[-b,-b]
+        # y7_=[-w1,-w2]
+
+        # x8_=[-b,x1_[-1]]
+        # y8_=[-w1,-w1]
+
+        # x_=[x2_[0],x2_[1],x3_[1],x4_[1],x5_[1],x6_[1],x7_[0],x8_[1]]
+        # y_=[y2_[0],y2_[1],y3_[1],y4_[1],y5_[1],y6_[1],y7_[0],y8_[1]]
+        
+        
         R=1.25
         theta1=0.41
         theta2=2*np.pi-theta1
@@ -3147,12 +3242,88 @@ class simulate:
         y_.append(y6_[1])
         y_.append(y7_[0])
         y_.append(y8_[1])     
+
+        # x9_=[x1_[-1],x1a_]
+        # y9_=[w1,w1]
+
+        # x10_=[x1a_,x1a_+a]
+        # y10_=[w1,w1]
+
+        # x11_=[b,b]
+        # y11_=[w1,w2]
+
+        # x12_=[b,c]
+        # y12_=[w2,w2]
+
+        # x13_=[c,c]
+        # y13_=[w2,-w2]
+
+        # x14_=[c,b]
+        # y14_=[-w2,-w2]
+
+        # x15_=[b,b]
+        # y15_=[-w1,-w2]
+
+        # x16_=[b,x1b_]
+        # y16_=[-w1,-w1]
+
+        # x17_=[x1b_,x1_[-1]]
+        # y17_=[-w1,-w1]
+
+        #x_=[x2_[0],x2_[1],x3_[1],x4_[1],x5_[1],x6_[1],x7_[0],x8_[1],x9_[1],x10_[1],x11_[1],x12_[1],x13_[1],x14_[1],x15_[0],x16_[1]]
+        #y_=[y2_[0],y2_[1],y3_[1],y4_[1],y5_[1],y6_[1],y7_[0],y8_[1],y9_[1],y10_[1],y11_[1],y12_[1],y13_[1],y14_[1],y15_[0],y16_[1]]
         (self.segments)=self.create_segment(x_,y_)
+        #f1=self.circle(x,y,R,0,0)
+        #f1y=self.dphiy_circle(x,y,0,0,R)
+        #f2 = self.phi_segments(x,y,self.segments)
         Fy = self.dphiy_segments(x,y,self.segments)   
+        #Fy = (f1**self.m + f2**self.m)**(-1/self.m)*f1*f2y + (f1**self.m + f2**self.m)**(-1/self.m)*f2*f1y - ((self.m*(f2**self.m)*f2y)/f2 + (self.m*(f1**self.m)*f1y)/f1)*((f1**self.m) +f2**self.m)**(-1/self.m)*f1*f2/(self.m*(f1**self.m + f2**self.m))
+            
         return(Fy)
     
     
     def F_random_obj(self,x,y):
+        # R=1.25
+        # theta1=0.41
+        # theta2=2*np.pi-theta1
+        # theta=np.linspace(theta1,theta2,100)
+
+        # x1_=-R*np.cos(theta)
+        # y1_=R*np.sin(theta)
+
+
+        # a=.5
+        # b=1.65
+        # c=2.02
+
+        # w1=.5
+        # w2=.63
+
+
+        # x2_=[x1_[0],x1_[0]-a]
+        # y2_=[w1,w1]
+
+        # x3_=[-b,-b]
+        # y3_=[w1,w2]
+
+        # x4_=[-b,-c]
+        # y4_=[w2,w2]
+
+        # x5_=[-c,-c]
+        # y5_=[w2,-w2]
+
+        # x6_=[-c,-b]
+        # y6_=[-w2,-w2]
+
+        # x7_=[-b,-b]
+        # y7_=[-w1,-w2]
+
+        # x8_=[-b,x1_[-1]]
+        # y8_=[-w1,-w1]
+
+        # x_=[x2_[0],x2_[1],x3_[1],x4_[1],x5_[1],x6_[1],x7_[0],x8_[1]]
+        # y_=[y2_[0],y2_[1],y3_[1],y4_[1],y5_[1],y6_[1],y7_[0],y8_[1]]
+
         R=1.25
         theta1=0.41
         theta2=2*np.pi-theta1
@@ -3224,10 +3395,44 @@ class simulate:
         y_.append(y5_[1])
         y_.append(y6_[1])
         y_.append(y7_[0])
-        y_.append(y8_[1])   
-        
+        y_.append(y8_[1])        
+        # x9_=[x1_[-1],x1a_]
+        # y9_=[w1,w1]
+
+        # x10_=[x1a_,x1a_+a]
+        # y10_=[w1,w1]
+
+        # x11_=[b,b]
+        # y11_=[w1,w2]
+
+        # x12_=[b,c]
+        # y12_=[w2,w2]
+
+        # x13_=[c,c]
+        # y13_=[w2,-w2]
+
+        # x14_=[c,b]
+        # y14_=[-w2,-w2]
+
+        # x15_=[b,b]
+        # y15_=[-w1,-w2]
+
+        # x16_=[b,x1b_]
+        # y16_=[-w1,-w1]
+
+        # x17_=[x1b_,x1_[-1]]
+        # y17_=[-w1,-w1]
+
+        #x_=[x2_[0],x2_[1],x3_[1],x4_[1],x5_[1],x6_[1],x7_[0],x8_[1],x9_[1],x10_[1],x11_[1],x12_[1],x13_[1],x14_[1],x15_[0],x16_[1]]
+        #y_=[y2_[0],y2_[1],y3_[1],y4_[1],y5_[1],y6_[1],y7_[0],y8_[1],y9_[1],y10_[1],y11_[1],y12_[1],y13_[1],y14_[1],y15_[0],y16_[1]]
         (self.segments)=self.create_segment(x_,y_)
+
         phi1_=self.phi_segments(x,y,self.segments)
+
+
+        #C=self.circle(x,y,R,0,0)
+        #phi2_=C
+        #phi3_=self.equivalence(phi1_,phi2_,self.m)
         return(phi1_)    
     
 
@@ -3264,30 +3469,28 @@ class controller():
         self.my_system = my_system # the system object
         self.robots = bots # robot objets
         self.Psi=Psi # potential fields 
-        self.Ball=Ball # ball object
-        if self.Ball == None: # if there is no ball there is no force
-            self.forceb=None
-            
+        self.Ball=Ball
+        #if self.Ball == None:
+        self.forceb=self.Ball.forceb
+        print(self.forceb)
         ##### Extract variables from other imported objects #####
-        self.forces=self.robots.force 
+        self.forces=self.robots.force
         self.nb=self.robots.nb 
-        
-        
-        #### random variables used
         self.px=0
         self.pz=0
         self.t=0
+        #self.Rr=2
+        #self.theta=0
+        #self.theta=np.pi
         self.trig1=1
         self.trig2=1
         self.alpha_=0
         self.a=0.0001
         self.b=0.0001
-        
-        self.epsilon_tilda=[] # smoothed out epsilon array
-        self.time_tilda=[] # corresponding time
-        self.check_field=0 # checkfield 
-        
-        #### Imported Variables #########
+        self.epsilon_tilda=[]
+        self.time_tilda=[]
+        self.check_field=0
+        ###### Imported Variables #########
         self.mainDirectory = path   # main directory 
         parameters=np.load(self.mainDirectory+self.name+'/Parameters.npy',allow_pickle=True)
         self.parameters=parameters.tolist()                 
@@ -3301,14 +3504,16 @@ class controller():
         self.T = 0
         self.tn = 0
         self.w = 5       
-        
+        #self.pwm = self.parameters["pwm"]
         if self.control_mode=="target_chasing":
             self.xc = self.parameters["xc"]
             self.zc = self.parameters["yc"]
             self.alpha = self.parameters['alpha1']
-            self.beta = self.parameters['beta']     
+            self.beta = self.parameters['beta']
+            self.T = 0
+            self.tn = 0
+            self.w = 5       
             self.pwm = self.parameters["pwm"]
-            
         if self.control_mode=="grasping" or self.control_mode=="grasping_epsilon":
             self.alpha1 = self.parameters['alpha1']
             self.alpha2 = self.parameters['alpha2']
@@ -3367,6 +3572,41 @@ class controller():
             self.Rr=0
             self.theta__ = self.parameters["theta"]
             
+            
+        elif self.control_mode=="grasping_explore2":
+            self.trig1_=0
+            self.check1=0
+            self.TRIG1_=[]
+            self.alpha1 = self.parameters['alpha1']
+            self.alpha2 = self.parameters['alpha2']
+            self.beta = self.parameters['beta']
+            self.ballx=self.parameters['ballx']
+            self.ballz=self.parameters['ballz']
+            self.p = self.parameters['p']
+            self.width_grasp = self.parameters['width_grasp']
+            self.length_grasp = self.parameters['length_grasp']
+            self.xcenter_grasp = self.parameters['xcenter_grasp']
+            self.ycenter_grasp = self.parameters['ycenter_grasp']
+            self.xcenter=self.parameters['xcenter']
+            self.zcenter=self.parameters['zcenter']
+            self.xc1 = self.parameters['xc1']
+            self.yc1 = self.parameters['yc1']
+            self.xc2 = self.parameters['xc2']
+            self.yc2 = self.parameters['yc2']
+            self.fb = 0
+            self.ball_radius = self.parameters['ball_radius']
+            self.update_rate = self.parameters['update_rate']
+            self.error = self.parameters['error']
+            self.tcut0 = self.parameters['tcut0']
+            self.tcut1 = self.parameters['tcut1']
+            self.tcut2 = self.parameters['tcut2']
+            self.tcut3 = self.parameters['tcut3']
+            self.theta__=0
+            
+            self.Rr1 = self.parameters["Rr1"]
+            self.Rr2 = self.parameters["Rr2"]
+            self.increment = self.parameters["increment"]
+            
         elif self.control_mode=="grasping_u":  
             self.trig1_=0
             self.check1=0
@@ -3392,6 +3632,9 @@ class controller():
             self.ball_radius = self.parameters['ball_radius']
             self.update_rate = self.parameters['update_rate']
             self.error = self.parameters['error']
+            
+            
+
         else:    
             self.alpha1 = self.parameters['alpha1']
             self.alpha2 = self.parameters['alpha2']
@@ -3418,7 +3661,6 @@ class controller():
         
         
     def smooth_epsilon(self,epsilon,time):
-        """ Smooths the noisy epsilon metric """
         if len(epsilon)<10:
             self.epsilon_tilda.append(0)
             self.time_tilda.append(time)
@@ -3452,41 +3694,60 @@ class controller():
         if self.control_mode =="grasping":
                 (self.bot_position_x,self.bot_position_z) = self.get_position()     # get position of bots
                 (self.bot_velocitiy_x,self.bot_velocitiy_z) = self.get_velocity()   # get velocity of bots
-                (self.FX,self.FZ) = self.grasping_controller() # run shape controller
+                #(self.FX,self.FZ) = self.grasping_controller_explore()
+                #(self.FX,self.FZ) = self.grasping_controller() # run shape controller
+                (self.FX,self.FZ) = self.grasping_controller_morph() # run shape controller
+                #(self.FX,self.FZ) = self.grasping_controller_DS() # run shape controller
                 self.apply_force(self.FX,self.FZ)         # apply force    
          
         if self.control_mode =="grasping_explore":
                 (self.bot_position_x,self.bot_position_z) = self.get_position()     # get position of bots
                 (self.bot_velocitiy_x,self.bot_velocitiy_z) = self.get_velocity()   # get velocity of bots
                 (self.FX,self.FZ) = self.grasping_controller_explore()
+                #(self.FX,self.FZ) = self.grasping_controller() # run shape controller
                 self.apply_force(self.FX,self.FZ)         # apply force 
+                
+        if self.control_mode =="grasping_explore2":
+                (self.bot_position_x,self.bot_position_z) = self.get_position()     # get position of bots
+                (self.bot_velocitiy_x,self.bot_velocitiy_z) = self.get_velocity()   # get velocity of bots
+                (self.FX,self.FZ) = self.grasping_controller_explore2()
+                #print(self.FX)
+                self.apply_force(self.FX,self.FZ)         # apply force                
+                
                 
         if self.control_mode =="grasping_u":
                 (self.bot_position_x,self.bot_position_z) = self.get_position()     # get position of bots
                 (self.bot_velocitiy_x,self.bot_velocitiy_z) = self.get_velocity()   # get velocity of bots
                 if self.epoch%int(self.update_rate)==0:
+                    #print("update")
                     (self.FX,self.FZ) = self.grasping_controller_u3()
                     self.apply_force(self.FX,self.FZ)  
                 else:
                     self.FX=self.FX
                     self.FZ=self.FZ
-                    self.apply_force(self.FX,self.FZ)         # apply force 
+                    self.apply_force(self.FX,self.FZ)         # apply force
                     
+                    
+                #self.epoch = self.epoch + 1    
         if self.control_mode =="grasping_epsilon":
+                #if self.epoch%self.save_rate==0:
                 (self.bot_position_x,self.bot_position_z) = self.get_position()     # get position of bots
                 (self.bot_velocitiy_x,self.bot_velocitiy_z) = self.get_velocity()   # get velocity of bots
-                #self.smooth_epsilon(self,epsilon)
+            #self.smooth_epsilon(self,epsilon)
                 #if self.epoch%100==0:
                     #print("update")
                 (self.FX,self.FZ) = self.grasping_controller_epsilon()
-                self.apply_force(self.FX,self.FZ)            
+                self.apply_force(self.FX,self.FZ)  
+                #else:
+                    # self.FX=self.FX
+                    # self.FZ=self.FZ
+                    # self.apply_force(self.FX,self.FZ)         # apply force           
                 
     def save_field_value(self):
-        """ Function that saves the distance function field value"""
+        
         if self.control_mode =="shape_formation":  
             for i in range(self.nb):
                self.Field_value["bot"+str(i)].append(self.Psi.F(self.bot_position_x[i],self.bot_position_z[i]))
-        
         if self.control_mode =="shape_morphing":
             t=np.round(self.my_system.GetChTime(),3)
             for i in range(self.nb):
@@ -3496,19 +3757,16 @@ class controller():
             t=np.round(self.my_system.GetChTime(),3)
             for i in range(self.nb):
                 self.Field_value["bot"+str(i)].append(self.Psi.FGRASP(self.bot_position_x[i],self.bot_position_z[i],t))    
-        
         if self.control_mode=="grasping_u":
             t=np.round(self.my_system.GetChTime(),3)
             for i in range(self.nb):
                 self.Field_value["bot"+str(i)].append(self.Psi.FGraspU(self.bot_position_x[i],self.bot_position_z[i],t,self.trig1_))    
-        
         if self.control_mode=="target_chasing":
             t=np.round(self.my_system.GetChTime(),3)
             for i in range(self.nb):
                 self.Field_value["bot"+str(i)].append(self.Psi.dpoint_(self.bot_position_x[i],self.bot_position_z[i],self.xc,self.zc))
 
     def save_controller_forces(self):
-        """ Save controller forces """
         for i in range(self.nb):
             self.F_controller_x["bot"+str(i)+"_control_force_x"].append(self.FX[i])
             self.F_controller_z["bot"+str(i)+"_control_force_z"].append(self.FZ[i])
@@ -3563,9 +3821,59 @@ class controller():
             FZ.append(fz)
         return(np.asarray(FX),np.asarray(FZ))        
 
+    # def grasping_controller(self):
+    #     """ Grasping Controller """
+    #     FX=[]
+    #     FZ=[]
+    #     time=np.round(self.my_system.GetChTime(),3)
+
+        
+    #     if time>self.Psi.tcut2:
+    #         #print("tcut2")
+    #         self.Ball.balls[0].SetBodyFixed(False)             
+          
+    #     if time>self.Psi.tcut3:
+    #         #print("tcut3")
+    #         self.fb=self.fb+.001
+    #         self.forceb[0].SetMforce(self.fb)
+    #         self.forceb[0].SetDir(chrono.VECT_X)
+    #         self.Ball.balls[0].SetBodyFixed(False)   
+            
+    #     # self.Ball.Fb["Fb"].append(self.fb)
+    #     # self.Ball.TIME["TIME"].append(time)
+    #     # self.Ball.PX["PX"].append(self.Ball.balls[0].GetPos().x)
+    #     # self.Ball.PY["PY"].append(self.Ball.balls[0].GetPos().z)     
+            
+            
+            
+    #     for i in range(self.nb):
+    #         Fx1=self.Psi.FXGRASP(self.bot_position_x[i],self.bot_position_z[i],time)
+    #         Fz1=self.Psi.FYGRASP(self.bot_position_x[i],self.bot_position_z[i],time)
+    #         mag1=np.sqrt(Fx1**2 + Fz1**2)
+    #         Fx1=Fx1/mag1
+    #         Fz1=Fz1/mag1
+
+            
+    #         if mag1==0:
+    #             FXX=0
+    #             FZZ=0
+    #         else:
+    #             FXX=Fx1
+    #             FZZ=Fz1
+ 
+    #         if self.tcut1>time:
+    #             alpha_=self.alpha1
+    #         else:
+    #             alpha_=self.alpha2
+                
+    #         fx=-alpha_*FXX-self.beta*self.bot_velocitiy_x[i]
+    #         fz=-alpha_*FZZ-self.beta*self.bot_velocitiy_z[i]
+
+    #         FX.append(fx)
+    #         FZ.append(fz)
+    #     return(np.asarray(FX),np.asarray(FZ)) 
 
     def E_(self,x,xo,y,yo,a,b):
-        """ E function used for the grasping u controller"""
         xbar=x-xo
         ybar=y-yo
         E=np.array([[2*xbar/(a**2),-2*ybar/(b**2)],
@@ -3574,13 +3882,11 @@ class controller():
     
     
     def Gamma(self,x,y,xo,yo,a,b):
-        """ Gamma function used for the grasping u controller"""
         xbar=x-xo
         ybar=y-yo
         return((xbar/a)**2 + (ybar/b)**2)
         
     def D_(self,G):
-        """ D function used for the grasping u controller"""
         rho=5
         l1 = 1 - (1/abs(G)**(1/rho))
         l2 = 1 + (1/abs(G)**(1/rho))
@@ -3589,7 +3895,6 @@ class controller():
     
     
     def M_(self,x,y,xo,yo,a,b):
-        """ M function used for the grasping u controller"""
         E=self.E_(x,xo,y,yo,a,b)
         Einv=np.linalg.inv(E)
         G=self.Gamma(x,y,xo,yo,a,b)
@@ -3599,17 +3904,18 @@ class controller():
 
 
     def Uxy(self,x,y,a):
-        """ Stream line function for flowing around a cylinder in x direction """
         phi = a**2 * ((y**2 -x**2) + (x**2 +y**2)**2) / (x**2 + y**2)**2
         return(phi)
     
     def Vxy(self,x,y,a):
-        """ Stream line function for flowing around a cylinder in y direction """
         phi = (-2*a**2 * x * y) / (x**2 + y**2)**2
         return(phi)
 
     def field3(self,x,y,xo,yo,a,b,xs,ys):
-        """ DS controller for grasping """
+        #zeta1=np.zeros((len(y),len(x)))
+        #zeta2=np.zeros((len(y),len(x)))
+        #for i in range(len(y)):
+        #for j in range(len(x)):
         M=self.M_(x,y,xo,yo,a,b)
         f=np.array([[-(x-xs)],[-(y-ys)]])
         temp=M@f
@@ -3634,12 +3940,69 @@ class controller():
                 FZZ=Fz/mag
             fx=-self.alpha*FXX-self.beta*self.bot_velocitiy_x[i]
             fz=-self.alpha*FZZ-self.beta*self.bot_velocitiy_z[i]
+            
+            #ang2 = 20*np.sin(2*np.pi*np.round(self.my_system.GetChTime(),3))
+            #theta = np.nan_to_num(np.arctan2(FXX, FZZ)) % 2*np.pi
+            #theta=theta+ang2
+            
+            
+            
+            #fz=-self.alpha*np.sin(theta)
+            #fx=-self.alpha*np.cos(theta)            
             FX.append(fx)
             FZ.append(fz)
         return(np.asarray(FX),np.asarray(FZ)) 
 
 
-    
+    def grasping_controller_DS(self):
+        FX=[]
+        FZ=[]
+        time=np.round(self.my_system.GetChTime(),3)        
+        if time>self.Psi.tcut2:
+            #print("tcut2")
+            self.Ball.balls[0].SetBodyFixed(False)             
+            #self.Ball.balls[1].SetBodyFixed(False)             
+            #self.Ball.balls[2].SetBodyFixed(False)             
+            
+        if time>self.Psi.tcut3:
+            #print("tcut3")
+            self.fb=self.fb+self.dt
+            self.forceb[0].SetMforce(self.fb)
+            self.forceb[0].SetDir(chrono.VECT_X)
+            self.Ball.balls[0].SetBodyFixed(False)   
+            
+        for i in range(self.nb):
+            a=2*self.ball_radius
+            b=2*self.ball_radius
+            Fx1,Fz1=self.field3(self.bot_position_x[i],self.bot_position_z[i],self.xc1,self.zc1,a,b,self.xc2,self.zc2)
+            mag1=np.sqrt(Fx1**2 + Fz1**2)
+            Fx1=Fx1/mag1
+            Fz1=Fz1/mag1
+
+            
+            if mag1==0:
+                FXX=0
+                FZZ=0
+            else:
+                FXX=Fx1
+                FZZ=Fz1
+ 
+            
+            if self.tcut1>time:
+                alpha_=self.alpha1
+                #alpha_=self.alpha1-random.uniform(0, 0.05)
+                #print("alpha:",alpha_)
+            else:
+                alpha_=self.alpha2
+                #alpha_=self.alpha2-random.uniform(0, 0.05)
+                #print("alpha:",alpha_)
+            fx=(alpha_)*FXX#-self.beta*self.bot_velocitiy_x[i]
+            fz=(alpha_)*FZZ#-self.beta*self.bot_velocitiy_z[i]
+
+            FX.append(fx)
+            FZ.append(fz)
+        return(np.asarray(FX),np.asarray(FZ)) 
+
 
 
 
@@ -3661,7 +4024,10 @@ class controller():
             self.forceb[0].SetDir(chrono.VECT_X)
             self.Ball.balls[0].SetBodyFixed(False)   
             
-   
+            # self.Ball.Fb["Fb"].append(self.fb)
+            # self.Ball.TIME["TIME"].append(time)
+            # self.Ball.PX["PX"].append(self.Ball.balls[0].GetPos().x)
+            # self.Ball.PY["PY"].append(self.Ball.balls[0].GetPos().z)     
   
         #if 5<time:
             #print("spring_change")
@@ -3796,12 +4162,12 @@ class controller():
 
         noise1=1
         noise2=1
-        # if time<self.tcut1:
-        #     rm1=np.random.choice(np.linspace(0,30,10))
-        #     rm2=np.random.choice(np.linspace(0,30,10))
-        #     noise1=np.sin(30*time)#+cos(rm2*time)
-        #     noise2=1
-        #     #noise1=1
+        if time<self.tcut1:
+            rm1=np.random.choice(np.linspace(0,30,10))
+            rm2=np.random.choice(np.linspace(0,30,10))
+            noise1=np.sin(30*time)#+cos(rm2*time)
+            noise2=1
+            #noise1=1
         if time>=self.tcut1:
             #print("tcut2")
             self.Ball.balls[0].SetBodyFixed(False)             
@@ -3849,6 +4215,137 @@ class controller():
             FZ.append(fz)
         return(np.asarray(FX),np.asarray(FZ)) 
 
+    def grasping_controller_u2(self):
+        """ Grasping Controller_u """
+        FX=[]
+        FZ=[]
+        time=np.round(self.my_system.GetChTime(),3)
+
+        noise1=1
+        noise2=1
+        if time<self.tcut1:
+            rm1=np.random.choice(np.linspace(0,30,10))
+            rm2=np.random.choice(np.linspace(0,30,10))
+            noise1=np.sin(30*time)#+cos(rm2*time)
+            noise2=np.cos(30*time)
+            noise1=1
+            noise2=1
+        if time>=self.tcut1:
+            #print("tcut2")
+            self.Ball.balls[0].SetBodyFixed(False)             
+            #self.Ball.balls[1].SetBodyFixed(False)             
+            #self.Ball.balls[2].SetBodyFixed(False)             
+            noise1=1
+            noise2=1
+        if time>self.tcut3:
+            #print("tcut3")
+            #self.fb=self.fb+self.dt
+            self.forceb[0].SetMforce(self.fb)
+            self.forceb[0].SetDir(chrono.VECT_X)
+            self.Ball.balls[0].SetBodyFixed(False)
+            
+        if self.tcut1>time:
+            alpha_=self.alpha1
+        else:
+            alpha_=self.alpha2
+        phi=0  
+        if self.tcut1>time or self.trig1_!=0:
+            print("phase1")
+            phi=Psi.FGraspU(self.bot_position_x[i],self.bot_position_z[i],time)
+            for i in range(self.nb):
+                Fx1=self.Psi.FxGraspU(self.bot_position_x[i],self.bot_position_z[i],time)
+                Fz1=self.Psi.FyGraspU(self.bot_position_x[i],self.bot_position_z[i],time)    
+                mag1=np.sqrt(Fx1**2 + Fz1**2)
+                Fx1=Fx1/mag1
+                Fz1=Fz1/mag1
+                phi=Psi.FGraspU(self.bot_position_x[i],self.bot_position_z[i],time)+phi
+                
+                #ang2 = 20*np.sin(2*np.pi*np.round(self.my_system.GetChTime(),3))
+                #theta = np.nan_to_num(np.arctan2(Fx1, Fz1)) % 2*np.pi
+                #theta=theta+ang2
+            
+            
+                #Fz1=np.sin(theta)
+                #Fx1=np.cos(theta) 
+                    
+                if mag1==0:
+                    FXX=0
+                    FZZ=0
+                else:
+                    FXX=Fx1
+                    FZZ=Fz1
+     
+                
+                
+    
+                fx=-abs(noise1)*(alpha_)*FXX#-self.beta*self.bot_velocitiy_x[i]
+                fz=-abs(noise2)*(alpha_)*FZZ#-self.beta*self.bot_velocitiy_z[i]
+    
+    
+                FX.append(fx)
+                FZ.append(fz)
+        if phi<4:
+            self.trig1=1
+        
+        #if self.tcut1<=time and self.tcut2>=time: 
+        if self.trig1!=0:     
+            print("phase2")
+            for i in range(self.nb):
+                a=2*self.ball_radius
+                b=2*self.ball_radius
+                #Fx1=self.Uxy(self.bot_position_x[i]-self.xc1,self.bot_position_z[i]-self.yc1,a)
+                #Fz1=self.Vxy(self.bot_position_x[i]-self.xc1,self.bot_position_z[i]-self.yc1,a)
+                Fx1,Fz1=self.field3(self.bot_position_x[i],self.bot_position_z[i],self.xc1,self.yc1,a,b,self.xc2,self.yc2)
+                mag1=np.sqrt(Fx1**2 + Fz1**2)
+                Fx1=Fx1/mag1
+                Fz1=Fz1/mag1
+    
+                if mag1==0:
+                    FXX=0
+                    FZZ=0
+                else:
+                    FXX=Fx1
+                    FZZ=Fz1
+     
+                
+
+    
+    
+                fx=(alpha_)*FXX#-self.beta*self.bot_velocitiy_x[i]
+                fz=(alpha_)*FZZ#-self.beta*self.bot_velocitiy_z[i]
+    
+    
+                FX.append(fx)
+                FZ.append(fz)
+                
+                
+        if self.tcut2<=time: 
+            print("phase3")
+            for i in range(self.nb):
+                Fx1=self.Psi.FxGraspU(self.bot_position_x[i],self.bot_position_z[i],time)
+                Fz1=self.Psi.FyGraspU(self.bot_position_x[i],self.bot_position_z[i],time) 
+                mag1=np.sqrt(Fx1**2 + Fz1**2)
+                Fx1=Fx1/mag1
+                Fz1=Fz1/mag1
+    
+                if mag1==0:
+                    FXX=0
+                    FZZ=0
+                else:
+                    FXX=Fx1
+                    FZZ=Fz1
+     
+                
+
+    
+    
+                fx=-(alpha_)*FXX#-self.beta*self.bot_velocitiy_x[i]
+                fz=-(alpha_)*FZZ#-self.beta*self.bot_velocitiy_z[i]
+    
+    
+                FX.append(fx)
+                FZ.append(fz)
+        return(np.asarray(FX),np.asarray(FZ)) 
     
     def grasping_controller_u3(self):
         """ Grasping Controller_u """
@@ -3861,6 +4358,13 @@ class controller():
             alpha_=self.alpha1
         if self.trig1_!=0:
             alpha_=self.alpha2
+            
+        #if time>18:
+            #self.trig1_==2
+            #alpha_=1.5
+        #if time>self.Psi.tcut1:
+            #alpha_=1.0
+            #self.Ball.balls[0].SetBodyFixed(False) 
         phi=0  
         #if self.trig1_==0:
             #print("phase1")
@@ -3893,7 +4397,18 @@ class controller():
             self.trig1_=1
             self.check1=1
         #if self.check1==1:
-            #print("rho="+str(self.Psi.rho_))
+            #print("rho="+str(self.Psi.rho_)
+        #print(self.forceb)
+        #if time>self.Psi.tcut2:
+            #print("tcut3")
+            #self.Ball.balls[0].SetBodyFixed(False)
+            
+        if time>self.Psi.tcut3:
+            #print("tcut3")
+            self.fb=self.fb+self.dt
+            self.forceb[0].SetMforce(self.fb)
+            self.forceb[0].SetDir(chrono.VECT_X)
+            #self.Ball.balls[0].SetBodyFixed(False)   
         return(np.asarray(FX),np.asarray(FZ)) 
     
    
@@ -4043,10 +4558,31 @@ class controller():
         return(np.asarray(FX),np.asarray(FZ)) 
 
     def grasping_controller_explore(self):
-        """ Grasping Controller explore"""
+        """ Grasping Controller """
         FX=[]
         FZ=[]
-        time = np.round(self.my_system.GetChTime(),3) 
+        time = np.round(self.my_system.GetChTime(),3)
+
+        #print("trig1:",self.trig1)
+        #print("trig2:",self.trig2)
+        # approach object
+        
+        # if self.theta__>3*np.pi:
+        #     self.Rr1=0.75
+        
+        # if self.theta__>5*np.pi:
+        #     self.Rr1=1.25
+        
+        
+        # self.Rr = self.Rr1
+        # self.trig1 = 0
+        # self.alpha_=self.alpha1
+        # self.a=.001
+        # self.b=.001
+        # if self.t>5.0: # check on it every 10 times for efficiency
+        #     self.Ball.balls[0].SetBodyFixed(False) 
+        #     self.Ball.balls[1].SetBodyFixed(False) 
+        #     self.Ball.balls[2].SetBodyFixed(False) 
         noise=random.uniform(-.01, 0.01)
         noise=0
         if self.t<self.tcut1:
@@ -4103,17 +4639,13 @@ class controller():
         self.px = self.Rr*np.cos(self.theta__) #+ self.ballx
         self.pz = self.Rr*np.sin(self.theta__) #+ self.ballz
         
+   
+        
         for i in range(self.nb):
             fxb = self.Psi.dphix_oval(self.bot_position_x[i]+noise,self.bot_position_z[i]+noise,self.px,self.pz,self.a,self.b)
             fyb = self.Psi.dphiy_oval(self.bot_position_x[i]+noise,self.bot_position_z[i]+noise,self.px,self.pz,self.a,self.b)
-            #fxb = self.Psi.Fx_point(self.bot_position_x[i],self.bot_position_z[i],self.px,self.pz)
-            #fyb = self.Psi.Fy_point(self.bot_position_x[i],self.bot_position_z[i],self.px,self.pz)
-            
-            #fxb = self.Psi.dphix_circle(self.bot_position_x[i],self.bot_position_z[i],0,0,self.ball_radius-.2)
-            #fyb = self.Psi.dphiy_circle(self.bot_position_x[i],self.bot_position_z[i],0,0,self.ball_radius-.2)
-            
-            
-            
+
+
             Fz1 = fyb
             Fx1 = fxb
             mag1=np.sqrt(Fx1**2 + Fz1**2)
@@ -4128,10 +4660,6 @@ class controller():
                 FXX=Fx1
                 FZZ=Fz1
  
-            #if self.tcut1>time:
-            #alpha_=self.alpha1
-            #else:
-                #alpha_=self.alpha2
                 
             fx=-self.alpha_*FXX#-self.beta*self.bot_velocitiy_x[i]
             fz=-self.alpha_*FZZ#-self.beta*self.bot_velocitiy_z[i]
@@ -4140,8 +4668,111 @@ class controller():
             FZ.append(fz)
         return(np.asarray(FX),np.asarray(FZ)) 
     
+    
+    
+    
+    def grasping_controller_explore2(self):
+        """ Grasping Controller """
+        FX=[]
+        FZ=[]
+        time = np.round(self.my_system.GetChTime(),3)
+        #print(self.Ball.balls[0].GetPos().x,self.Ball.balls[0].GetPos().z)
+        if self.t<=self.tcut0:
+            print("grab")
+            if self.trig1_==0:
+                alpha_=self.alpha1
+            if self.trig1_!=0:
+                alpha_=self.alpha2
+            phi=0  
+            for i in range(self.nb):
+                Fx1=self.Psi.FxGraspU(self.bot_position_x[i],self.bot_position_z[i],time,self.trig1_,self.theta__)
+                Fz1=self.Psi.FyGraspU(self.bot_position_x[i],self.bot_position_z[i],time,self.trig1_,self.theta__)    
+                mag1=np.sqrt(Fx1**2 + Fz1**2)
+                Fx1=Fx1/mag1
+                Fz1=Fz1/mag1
+                phi=self.Psi.FGraspU(self.bot_position_x[i],self.bot_position_z[i],time,self.trig1_,self.theta__)+phi
+                if mag1==0:
+                    FXX=0
+                    FZZ=0
+                else:
+                    FXX=Fx1
+                    FZZ=Fz1
+                fx=-(alpha_)*FXX#-self.beta*self.bot_velocitiy_x[i]
+                fz=-(alpha_)*FZZ#-self.beta*self.bot_velocitiy_z[i]
+                FX.append(fx)
+                FZ.append(fz)
+            phibar=np.round(phi/self.nb,3)
+            print('update:  '+'  phi= '+str(np.round(phi,2))+'  '+'phibar= '+str(phibar)+'  '+'alpha_= '+str(alpha_)+' '+'check= '+str(self.check1)+' '+'trig1= '+str(self.trig1_))
+            if phibar<=self.error and self.check1==0:
+                self.trig1_=1
+                self.check1=1
+        
+        if self.t>self.tcut0:
+            
+            # back off of object    
+            if self.t>self.tcut0 and self.t<=self.tcut1:
+                print("back up")
+                self.theta__ = self.theta__
+                #self.Rr = 2
+                self.Rr = self.Rr2
+                self.alpha_=self.alpha1
+                self.a=self.parameters['R']#+.05
+                self.b=self.parameters['R']#+.05
+                self.px = -self.Rr*np.cos(self.theta__) #+ self.xcenter
+                self.pz = -self.Rr*np.sin(self.theta__) #+ self.zcenter
+                #print(self.px,self.pz)
+                
+                #print("trig2=",self.trig2)    
+            # # move to next position 
+            elif self.t>self.tcut1 and self.t<self.tcut2:
+                 print("move")
+                 if self.trig2!=0:
+                     self.trig2 = 0
+                     self.theta__ = self.theta__ + self.increment 
+                 #self.Rr = 2
+                 self.Rr = self.Rr2
+                 self.alpha_=self.alpha1
+                 self.alpha_=3
+                 self.a=self.parameters['R']#+.05
+                 self.b=self.parameters['R']#+.05
+                 self.px = -self.Rr*np.cos(self.theta__) #+ self.ballx
+                 self.pz = -self.Rr*np.sin(self.theta__) #+ self.ballz
+                 print(self.px,self.pz)
+            elif self.t>=self.tcut2:
+                 self.t = 0
+                 self.trig1 = 1
+                 self.trig2 = 0
+                 self.trig1_=0
+                 self.check1=0
+                 print("reset")            
+            
+            for i in range(self.nb):
+                fxb = self.Psi.dphix_oval(self.bot_position_x[i],self.bot_position_z[i],self.px,self.pz,self.a,self.b)
+                fyb = self.Psi.dphiy_oval(self.bot_position_x[i],self.bot_position_z[i],self.px,self.pz,self.a,self.b)
+                Fz1 = fyb
+                Fx1 = fxb
+                mag1=np.sqrt(Fx1**2 + Fz1**2)
+                Fx1=Fx1/mag1
+                Fz1=Fz1/mag1
+                if mag1==0:
+                    FXX=0
+                    FZZ=0
+                else:
+                    FXX=Fx1
+                    FZZ=Fz1
+                   
+                fx=-self.alpha_*FXX#-self.beta*self.bot_velocitiy_x[i]
+                fz=-self.alpha_*FZZ#-self.beta*self.bot_velocitiy_z[i]
+
+                FX.append(fx)
+                FZ.append(fz)
+
+        return(np.asarray(FX),np.asarray(FZ)) 
+    
+    
+    
+    
     def change_springk(self,k):
-        """ Function to change the spring stiffness"""
         for i in range(len(self.robots.Springs)):
             self.robots.Springs[i].Set_SpringK(k)
             
@@ -4170,9 +4801,9 @@ class controller():
 
     def apply_force(self,FX,FZ):  
         """ Appy forces to robots """
-        entry=[0,2,5,8,11,14,17,20,23,26]
-        #for i in range(self.nb):
-        for i in entry:
+        #entry=[0,2,5,8,11,14,17,20,23,26]
+        for i in range(self.nb):
+        #for i in entry:
             self.fxt.append(FX[i])
             self.fyt.append(0)
             self.fzt.append(self.FZ[i])
@@ -4282,12 +4913,10 @@ class export_data():
         if not os.path.exists(self.results_dir):
             os.mkdir(self.results_dir)
         
-        #### Pull data to export
-        
         # time
         self.time = {'time':self.simulation.time} 
         
-        # pull robot data
+        # robot data
         (self.bot_xposition,self.bot_yposition,self.bot_zposition) = self.robots.return_position_data()
         (self.skin_xposition,self.skin_yposition,self.skin_zposition) = self.robots.return_position_membrane_data()
         (self.bot_xForcetotal,self.bot_yForcetotal,self.bot_zForcetotal) = self.robots.return_total_force()
@@ -4302,7 +4931,6 @@ class export_data():
         (self.particle_xForcetotal,self.particle_yForcetotal,self.particle_zForcetotal) = self.interior.return_force_data()
         (self.particle_xForcecontact,self.particle_yForcecontact,self.particle_zForcecontact) = self.interior.return_force_data()
         
-        #### If grasping then certain other features need to be exported
         if self.control_mode=="grasping" or self.control_mode=="grasping_explore" or self.control_mode=="grasping_u" or self.control_mode=="grasping_epsilon":
             (self.ball_xposition,self.ball_zposition)=self.ball.return_position_data()
             (self.ball_xvelocity,self.ball_zvelocity)=self.ball.return_velocity_data()        
@@ -4324,15 +4952,12 @@ class export_data():
             if self.control_mode=="grasping_epsilon":
                 self.xjam=self.Psi.xjam
                 self.yjam=self.Psi.yjam
-         
-        # potential field or distance function values of boundary robots
+                
         self.Field_value=self.controls.Field_value
         
-        # control forces
         self.F_controller_x=self.controls.F_controller_x
         self.F_controller_z=self.controls.F_controller_z
         
-        #### Contact information
         self.time_contact = self.simulation.time_contact
         self.number_contacts = self.simulation.number_contacts
         self.Contact_points_x = self.simulation.Contact_points_x
@@ -4381,24 +5006,17 @@ class export_data():
         self.yc=np.zeros((self.lengthm,self.count)) # y points 
         self.zc=np.zeros((self.lengthm,self.count)) # z points
         
-        
-        # contact forces
         self.Fcx=np.zeros((self.lengthm,self.count))
         self.Fcy=np.zeros((self.lengthm,self.count))
         self.Fcz=np.zeros((self.lengthm,self.count))
         
-        # contact forces 2
         self.Fcx2=np.zeros((self.lengthm,self.count))
         self.Fcy2=np.zeros((self.lengthm,self.count))
         self.Fcz2=np.zeros((self.lengthm,self.count))
         
-        
-        # contact ID
         self.AID=np.zeros((self.lengthm,self.count))
         self.BID=np.zeros((self.lengthm,self.count))       
         
-        
-        # contact frames
         self.Dirxx_=np.zeros((self.lengthm,self.count))
         self.Dirxy_=np.zeros((self.lengthm,self.count))
         self.Dirxz_=np.zeros((self.lengthm,self.count))
@@ -4449,7 +5067,14 @@ class export_data():
             temp19=self.Dir_zy[i] 
             temp20=self.Dir_zz[i]             
             
-        
+            
+            
+            
+            
+            
+            
+
+            
             # convert to array
             temp1=np.asarray(temp1)
             temp2=np.asarray(temp2)
@@ -5305,7 +5930,7 @@ class R_functions():
         
         
         ######### GRASPING_U #########
-        if self.control_mode=="grasping_u":
+        if self.control_mode=="grasping_u" or self.control_mode=="grasping_explore2":
             self.p = self.parameters['p']
             self.width_grasp = self.parameters['width_grasp']
             self.length_grasp = self.parameters['length_grasp']
@@ -5651,7 +6276,26 @@ class R_functions():
                     zeta1[i,j]=temp[0]
                     zeta2[i,j]=temp[1]
         return(zeta1,zeta2)  
- 
+    # def field3(self,x,y,xo,yo,a,b,xs,ys):
+    #     #zeta1=np.zeros((len(y),len(x)))
+    #     #zeta2=np.zeros((len(y),len(x)))
+    #     #for i in range(len(y)):
+    #     #for j in range(len(x)):
+    #     r_=np.sqrt(((x-xo)**2 + (y-yo)**2))
+    #     M=self.M_(x,y,xo,yo,a,b)
+    #     f=np.array([[-(x-xs)],[-(y-ys)]])
+    #     if r_<a:
+    #         f=np.array([[0],[0]])
+    #         temp=M@f
+    #         temp=temp.flatten()
+    #         zeta1=temp[0]
+    #         zeta2=temp[1]
+    #     else:
+    #         temp=M@f
+    #         temp=temp.flatten()
+    #         zeta1=temp[0]
+    #         zeta2=temp[1]
+    #     return(zeta1,zeta2)  
     
     def FxGraspEpsilon(self,x,y,t,nojam):
         if nojam==False:
@@ -5676,7 +6320,7 @@ class R_functions():
               
         return(Fy1)
 
-    def FxGraspU(self,x,y,t,trig):
+    def FxGraspU(self,x,y,t,trig,beta):
         
         if trig==0:
             #ft_=self.ft2(t,self.tcut1,self.p) 
@@ -5686,7 +6330,7 @@ class R_functions():
             y_=[]
             self.lengtho2_grasp = self.lengtho_grasp + 2*self.width_grasp*np.tan((np.pi/2 - theta)/2)
             self.length2_grasp = self.length_grasp +self.width_grasp*np.tan((np.pi/2 - theta)/2)
-    
+            
             x_.append(self.length_grasp*np.cos(theta) + self.xcenter_grasp)
             y_.append(self.length_grasp*np.sin(theta) + self.lengtho_grasp/2 + self.ycenter_grasp)
     
@@ -5714,7 +6358,10 @@ class R_functions():
             x_.append(self.length_grasp*np.cos(theta) + self.xcenter_grasp)
             y_.append(self.length_grasp*np.sin(theta) + self.lengtho_grasp/2 + self.ycenter_grasp)
             
-            self.segements=self.create_segment(x_,y_)       
+            xbar = np.cos(beta)*np.ones(len(x_))*x_ - np.sin(beta)*np.ones(len(x_))*y_
+            ybar = np.sin(beta)*np.ones(len(x_))*x_ + np.cos(beta)*np.ones(len(x_))*y_
+            
+            self.segements=self.create_segment(xbar,ybar)       
             # if t<self.tcut1:
             #     ft2_=self.ft2(t,0,self.p) 
             #     phi2=self.phi_segments(x,y,self.segements)
@@ -5725,15 +6372,25 @@ class R_functions():
             # elif t>=self.tcut1:
             phi_=self.dphix_segments(x,y,self.segements) 
         if trig==1:
-            fx,fy=self.field3(x,y,self.xc1,self.yc1,self.xc2,self.yc2,self.rtilda,self.rho_)
+            xbar2 = np.cos(-beta)*self.xc2 - np.sin(-beta)*self.yc2
+            ybar2 = np.sin(-beta)*self.xc2 + np.cos(-beta)*self.yc2
+            fx,fy=self.field3(x,y,self.xc1,self.yc1,xbar2,ybar2,self.rtilda,self.rho_)
             phi_=-fx
+        
+        #if trig==2:
+            #fx,fy=self.field3(x,y,0,0,0,0,self.rtilda/4,self.rho_)
+            #phi_=-fx
+        
+        #if trig==2:
+            #phi_=self.dphix_oval(x,y,self.xc1,self.yc1,0.1,0.1)
+            #phi_=Fx_point(self,x,y,0,0)
         #if t>self.tcut2 or trig==1:
             #phi_=self.dphix_oval(x,y,self.xcenter_grasp2,self.ycenter_grasp2,0.1,0.1)
 
         return(phi_)  
     
     
-    def FyGraspU(self,x,y,t,trig):
+    def FyGraspU(self,x,y,t,trig,beta):
         
         if trig==0:
             #ft_=self.ft2(t,self.tcut1,self.p) 
@@ -5771,23 +6428,30 @@ class R_functions():
             x_.append(self.length_grasp*np.cos(theta) + self.xcenter_grasp)
             y_.append(self.length_grasp*np.sin(theta) + self.lengtho_grasp/2 + self.ycenter_grasp)
             
-            self.segements=self.create_segment(x_,y_)       
+            xbar = np.cos(beta)*np.ones(len(x_))*x_ - np.sin(beta)*np.ones(len(x_))*y_
+            ybar = np.sin(beta)*np.ones(len(x_))*x_ + np.cos(beta)*np.ones(len(x_))*y_
+            
+            self.segements=self.create_segment(xbar,ybar)       
             # if t<self.tcut1:
-            #     ft2_=self.ft2(t,0,self.p*3) 
+            #     ft2_=self.ft2(t,0,self.p) 
             #     phi2=self.phi_segments(x,y,self.segements)
             #     phi1=self.phi_circle(x,y,self.xcenter,self.ycenter,self.R)
-            #     dphi2y=self.dphiy_segments(x,y,self.segements)
-            #     dphi1y=self.dphiy_circle(x,y,self.xcenter,self.ycenter,self.R)               
-            #     phi_=self.C_morphy(phi1,phi2,dphi1y,dphi2y,ft2_)
+            #     dphi2x=self.dphix_segments(x,y,self.segements)
+            #     dphi1x=self.dphix_circle(x,y,self.xcenter,self.ycenter,self.R)               
+            #     phi_=self.C_morphx(phi1,phi2,dphi1x,dphi2x,ft2_)
             # elif t>=self.tcut1:
             phi_=self.dphiy_segments(x,y,self.segements) 
+
             
+
         if trig==1:
-            fx,fy=self.field3(x,y,self.xc1,self.yc1,self.xc2,self.yc2,self.rtilda,self.rho_)
-            phi_=-fy
+            xbar2 = np.cos(-beta)*self.xc2 - np.sin(-beta)*self.yc2
+            ybar2 = np.sin(-beta)*self.xc2 + np.cos(-beta)*self.yc2
+            fx,fy=self.field3(x,y,self.xc1,self.yc1,xbar2,ybar2,self.rtilda,self.rho_)
+            phi_=-fy   
         return(phi_)  
       
-    def FGraspU(self,x,y,t,trig):
+    def FGraspU(self,x,y,t,trig,beta):
         
         if trig==0:
             #ft_=self.ft2(t,self.tcut1,self.p*3) 
@@ -5797,6 +6461,8 @@ class R_functions():
             y_=[]
             self.lengtho2_grasp = self.lengtho_grasp + 2*self.width_grasp*np.tan((np.pi/2 - theta)/2)
             self.length2_grasp = self.length_grasp +self.width_grasp*np.tan((np.pi/2 - theta)/2)
+    
+    
     
             x_.append(self.length_grasp*np.cos(theta) + self.xcenter_grasp)
             y_.append(self.length_grasp*np.sin(theta) + self.lengtho_grasp/2 + self.ycenter_grasp)
@@ -5825,7 +6491,14 @@ class R_functions():
             x_.append(self.length_grasp*np.cos(theta) + self.xcenter_grasp)
             y_.append(self.length_grasp*np.sin(theta) + self.lengtho_grasp/2 + self.ycenter_grasp)
             
-            self.segements=self.create_segment(x_,y_)       
+           
+            xbar = np.cos(beta)*np.ones(len(x_))*x_ - np.sin(beta)*np.ones(len(x_))*y_
+            ybar = np.sin(beta)*np.ones(len(x_))*x_ + np.cos(beta)*np.ones(len(x_))*y_
+            
+            self.segements=self.create_segment(xbar,ybar)      
+            
+            
+        
             # if t<self.tcut1:
             #     ft2_=self.ft2(t,0,self.p*3) 
             #     phi2=self.phi_segments(x,y,self.segements)
@@ -6364,9 +7037,6 @@ class import_data:
              self.xtarget = self.parameters['xc']
              self.ytarget = self.parameters['yc']
          #self.geom = self.parameters['ball_geometry']
-         
-         
-         
          # if control mode is shape formation
          if self.control_mode=="shape_formation":
              self.geometry = self.parameters['geometry']
@@ -6452,10 +7122,22 @@ class import_data:
              self.ballx_ = self.parameters['ballx']
              self.ballz_ = self.parameters['ballz']
              #self.bFz=self.ball_contact_forces[3,:]
-         
-         
-         
-         
+             
+             self.ball_angle=np.genfromtxt(self.files[self.files.index('ball_angle.csv') ] ,delimiter=',')
+             (m,n)=np.shape(self.ball_angle)
+             self.ball_angle=self.ball_angle[:,1:n]
+             w=self.ball_angle[1,:]
+             x=self.ball_angle[2,:]
+             y=self.ball_angle[3,:]
+             z=self.ball_angle[4,:]
+             self.yaw=[]
+             self.pitch=[]
+             self.roll=[]
+             for kkk in range(len(w)):
+                 yaw,pitch,roll=self.quaternion_to_euler(w[kkk], x[kkk], y[kkk], z[kkk])
+                 self.yaw.append(yaw)
+                 self.pitch.append(pitch)
+                 self.roll.append(roll)
          #### Potential Field values    
          #self.Field_value=np.genfromtxt(self.files[self.files.index('field_values.csv') ] ,delimiter=',')
          # (m,n)=np.shape(self.Field_value)
@@ -6833,8 +7515,133 @@ class import_data:
              self.PZ=self.pull_data[2,:]
              self.FB=self.pull_data[3,:]            
 
-
-
+             #### Version 2
+             self.temp_offset_theta = []
+             self.temp_frames = []
+             self.temp_theta = []
+             self.temp_id = []
+             self.temp_position_x = []
+             self.temp_position_z = []
+             self.temp_force_x = []
+             self.temp_force_z = []  
+             self.temp_vx = []
+             self.temp_vy = []
+             self.temp_c1 = []
+             self.temp_c2 = []
+             self.temp_force_m = []
+             self.temp_wrenches = []
+             self.temp_wrenches_norm = []
+             self.temp_n = []
+             
+             self.temp_offset_theta2 = []
+             self.temp_frames2 = []
+             self.temp_theta2 = []
+             self.temp_id2 = []
+             self.temp_position_x2 = []
+             self.temp_position_z2 = []
+             self.temp_force_x2 = []
+             self.temp_force_z2 = []  
+             self.temp_vx2 = []
+             self.temp_vy2 = []
+             self.temp_c12 = []
+             self.temp_c22 = []
+             self.temp_force_m2 = []
+             self.temp_wrenches2 = []
+             self.temp_wrenches_norm2 = []
+             self.temp_n2 = []            
+             
+         
+             self.EPSILON2=[]
+             self.HULL2=[]
+             self.HULLWRENCHNORM2=[]
+             self.HULLWRENCHMAGS2=[]
+             self.WRENCHXY2=[]
+             self.HULLXY2=[]
+             self.WRENCHXT2=[]
+             self.HULLXT2=[]
+             self.WRENCHYT2=[]
+             self.HULLYT2=[]     
+                
+             
+             self.EPSILON3=[]
+             self.HULL3=[]
+             self.HULLWRENCHNORM3=[]
+             self.HULLWRENCHMAGS3=[] 
+             self.WRENCHXY3=[]
+             self.HULLXY3=[]            
+             self.WRENCHXT3=[]
+             self.HULLXT3=[]
+             self.WRENCHYT3=[]
+             self.HULLYT3=[]   
+            
+            
+             self.EPSILON4=[]
+             self.HULL4=[]
+             self.HULLWRENCHNORM4=[]
+             self.HULLWRENCHMAGS4=[]  
+             self.WRENCHXY4=[]
+             self.HULLXY4=[]
+             self.WRENCHXT4=[]
+             self.HULLXT4=[]
+             self.WRENCHYT4=[]
+             self.HULLYT4=[]                
+             
+             self.EPSILON5=[]
+             self.centroidx=[]
+             self.centroidz=[]
+             
+             print("extract_control_forces_ball")
+             self.extract_control_forces_ball()
+             
+             print("find_contact_forces_2")
+             self.find_contact_forces_2()
+             
+             print("extract_contact_forces_ball4")
+             self.extract_contact_forces_ball_4()
+             
+             #print("find_pressure")
+             #self.find_pressure()
+             
+             #print("find_pressure_mag")
+             #self.find_pressure_mag()
+             
+             #print("average_pressure")
+             #self.average_pressure()
+             
+             print("set_up_wrenches")
+             self.set_up_wrenches()
+             
+             print("calculate_wrench_components3")
+             #self.calculate_wrench_components3()
+             
+             print("grasp analysis")
+             self.Grasp_analysis()
+             
+     def quaternion_to_euler(self,w, x, y, z):
+        """
+        Convert quaternion to Euler angles (roll, pitch, yaw).
+        :param q: A list or tuple representing the quaternion (w, x, y, z).
+        :return: A tuple containing the Euler angles (roll, pitch, yaw) in degrees.
+        """
+        
+        # roll (x-axis rotation)
+        sinr_cosp = 2 * (w * x + y * z)
+        cosr_cosp = 1 - 2 * (x * x + y * y)
+        roll = math.degrees(math.atan2(sinr_cosp, cosr_cosp))
+    
+        # pitch (y-axis rotation)
+        sinp = 2 * (w * y - z * x)
+        if abs(sinp) >= 1:
+            pitch = math.degrees(math.copysign(math.pi / 2, sinp))
+        else:
+            pitch = math.degrees(math.asin(sinp))
+    
+        # yaw (z-axis rotation)
+        siny_cosp = 2 * (w * z + x * y)
+        cosy_cosp = 1 - 2 * (y * y + z * z)
+        yaw = math.degrees(math.atan2(siny_cosp, cosy_cosp))
+    
+        return roll, pitch, yaw
 
      def angle(self,x, y):
     
@@ -6846,10 +7653,1579 @@ class import_data:
 
 
 
-      
+     def Grasp_analysis(self):
+         "execute all functions related to grasp analysis"
+         if exists(self.mainDirectory+self.name+"/graspParams.npy")==False:
+             print("calculating")
+            
+             print("calculate_epsilon4")
+             self.calculate_epsilon4()
+             
+             print("save_grasp_parameters")
+             self.save_grasp_parameters()
+             
+             self.graspParams = {}
+         else:
+             print("calculated")
+             self.load_grasp_parameters()
+     
+            
+     
+     def load_grasp_parameters(self):
+         parameters=np.load(self.mainDirectory+self.name+'/graspParams.npy',allow_pickle=True)
+         self.parameters=parameters.tolist()
+
+             
+         self.F_control = self.parameters["F_control"] 
+         self.Forces_ball_x = self.parameters["Forces_ball_x"]   
+         self.Forces_ball_z = self.parameters["Forces_ball_z"] 
+
+         self.contact_points_ball_x = self.parameters["contact_points_ball_x"]  
+         self.contact_points_ball_z = self.parameters["contact_points_ball_z"] 
+
+         self.magnitude_forces_on_ball = self.parameters["magnitude_forces_on_ball"] 
+         self.torque_ball = self.parameters["torque_ball"] 
+
+             
+         self.Pressure_x_bots = self.parameters["Pressure_x_bots"]
+         self.Pressure_z_bots = self.parameters["Pressure_z_bots"]
          
+         self.Pressure_x_particles = self.parameters["Pressure_x_particles"]
+         self.Pressure_z_particles = self.parameters["Pressure_z_particles"]
+
+         self.grasp_id = self.parameters["grasp_id"]
+             
+         self.grasp_position_x = self.parameters["grasp_position_x"]
+         self.grasp_position_z = self.parameters["grasp_position_z"]
+
+         self.grasp_force_x = self.parameters["grasp_force_x"]
+         self.grasp_force_z = self.parameters["grasp_force_z"]
+         self.grasp_torque = self.parameters["grasp_torque"]
+  
+             
+         #self.WRENCHES = self.parameters["WRENCHES"]
+         #self.WRENCH_NORM = self.parameters["WRENCH_NORM"]
+             
+         self.FRAMES = self.parameters["FRAMES"] 
+             
+         self.EPSILON = self.parameters["EPSILON"] 
+         self.HULLWRENCHNORM = self.parameters["HULLWRENCHNORM"] 
+         self.HULLWRENCHMAGS = self.parameters["HULLWRENCHMAGS"] 
+             
+         self.framex  = self.parameters["framex"] 
+         self.framez  = self.parameters["framez"] 
+
+         self.FT  = self.parameters["FT"] 
+             
+         self.Cplus  = self.parameters["Cplus"] 
+         self.Cminus  = self.parameters["Cminus"] 
+             
+         self.FCplus  = self.parameters["FCplus"]   
+         self.FCinus  = self.parameters["FCinus"] 
+             
+         self.F_mag  = self.parameters["F_mag"] 
+         self.HULL = self.parameters["HULL"] 
+             
+         self.WRENCHXY = self.parameters["WRENCHXY"] 
+         self.HULLXY = self.parameters["HULLXY"] 
+                 
+         self.WRENCHXT = self.parameters["WRENCHXT"] 
+         self.HULLXT = self.parameters["HULLXT"]
+
+         self.WRENCHYT = self.parameters["WRENCHYT"]
+         self.HULLYT = self.parameters["HULLYT"]     
+         self.ANGLE_CHECK = self.parameters["ANGLE_CHECK"]   
+         
+         
+         
+         self.temp_offset_theta = self.parameters["temp_offset_theta"]
+         self.temp_frames = self.parameters["temp_frames"]
+         self.temp_theta = self.parameters["temp_theta"]
+         self.temp_id = self.parameters["temp_id"]
+         self.temp_position_x = self.parameters["temp_position_x"]
+         self.temp_position_z = self.parameters["temp_position_z"]
+         self.temp_force_x = self.parameters["temp_force_x"]
+         self.temp_force_z = self.parameters["temp_force_z"]
+         self.temp_wrenches = self.parameters["temp_wrenches"]
+         self.temp_wrenches_norm = self.parameters["temp_wrenches_norm"]
+         self.temp_vx = self.parameters["temp_vx"]
+         self.temp_vy = self.parameters["temp_vy"]
+         self.temp_c1 = self.parameters["temp_c1"]
+         self.temp_c2 = self.parameters["temp_c2"]
+         self.EPSILON2 = self.parameters["EPSILON2"]
+         self.HULLWRENCHNORM2 = self.parameters["HULLWRENCHNORM2"]
+         self.HULLWRENCHMAGS2 = self.parameters["HULLWRENCHMAGS2"]
+         self.HULL2 = self.parameters["HULL2"]           
          
   
+         self.temp_offset_theta2 = self.parameters["temp_offset_theta2"]
+         self.temp_frames2 = self.parameters["temp_frame2s"]
+         self.temp_theta2 = self.parameters["temp_theta2"]
+         self.temp_id2 = self.parameters["temp_id2"]
+         self.temp_position_x2 = self.parameters["temp_position_x2"]
+         self.temp_position_z2 = self.parameters["temp_position_z2"]
+         self.temp_force_x2 = self.parameters["temp_force_x2"]
+         self.temp_force_z2 = self.parameters["temp_force_z2"]
+         self.temp_wrenches2 = self.parameters["temp_wrenches2"]
+         self.temp_wrenches_norm2 = self.parameters["temp_wrenches_norm2"]
+         self.temp_vx2 = self.parameters["temp_vx2"]
+         self.temp_vy2 = self.parameters["temp_vy2"]
+         self.temp_c12 = self.parameters["temp_c12"]
+         self.temp_c22 = self.parameters["temp_c22"]
+         
+       
+         self.EPSILON4 = self.parameters["EPSILON4"]
+         self.HULLWRENCHNORM4 = self.parameters["HULLWRENCHNORM4"]
+         self.HULLWRENCHMAGS4 = self.parameters["HULLWRENCHMAGS4"]
+         self.HULL4 = self.parameters["HULL4"]          
+         
+         
+     def calculate_wrench_components(self):
+         """ Calculaute the components of the 3D hull of the wrench space
+                x-y , x-tau , y-tau sections"""
+         for i in range(len(self.WRENCHES)):
+             if len(self.grasp_id[i])==0:
+                 self.WRENCHXY.append([])
+                 self.HULLXY.append([])
+                 
+                 self.WRENCHXT.append([])
+                 self.HULLXT.append([])
+
+                 self.WRENCHYT.append([])
+                 self.HULLYT.append([])
+                  
+             elif len(self.grasp_id[i])==1:
+                 self.WRENCHXY.append([])
+                 self.HULLXY.append([])
+                 
+                 self.WRENCHXT.append([])
+                 self.HULLXT.append([])
+
+                 self.WRENCHYT.append([])
+                 self.HULLYT.append([])
+             else:
+                 Wrench=self.WRENCH_NORM[i]
+                 Wrenchxy=np.zeros((Wrench.shape[0],2))
+                 Wrenchxy[:,0]=Wrench[:,0]
+                 Wrenchxy[:,1]=Wrench[:,1]
+                 hullxy = ConvexHull(Wrenchxy)
+        
+                 Wrenchxt=np.zeros((Wrench.shape[0],2))
+                 Wrenchxt[:,0]=Wrench[:,0]
+                 Wrenchxt[:,1]=Wrench[:,2]
+                 hullxt = ConvexHull(Wrenchxt)
+        
+                 Wrenchyt=np.zeros((Wrench.shape[0],2))
+                 Wrenchyt[:,0]=Wrench[:,1]
+                 Wrenchyt[:,1]=Wrench[:,2]
+                 hullyt = ConvexHull(Wrenchyt)                 
+
+                 self.WRENCHXY.append(Wrenchxy)
+                 self.HULLXY.append(hullxy)
+                 
+                 self.WRENCHXT.append(Wrenchxt)
+                 self.HULLXT.append(hullxt)
+
+                 self.WRENCHYT.append(Wrenchyt)
+                 self.HULLYT.append(hullyt)
+
+     def calculate_wrench_components2(self):
+         """ Calculaute the components of the 3D hull of the wrench space
+                x-y , x-tau , y-tau sections"""
+         for i in range(len(self.temp_wrenches)):
+             if len(self.temp_id[i])==0:
+                 self.WRENCHXY2.append([])
+                 self.HULLXY2.append([])
+                 
+                 self.WRENCHXT2.append([])
+                 self.HULLXT2.append([])
+
+                 self.WRENCHYT2.append([])
+                 self.HULLYT2.append([])
+                  
+             elif len(self.temp_id[i])==1:
+                 self.WRENCHXY2.append([])
+                 self.HULLXY2.append([])
+                 
+                 self.WRENCHXT2.append([])
+                 self.HULLXT2.append([])
+
+                 self.WRENCHYT2.append([])
+                 self.HULLYT2.append([])
+             else:
+                 Wrench=self.temp_wrenches_norm[i]
+                 Wrenchxy=np.zeros((Wrench.shape[0],2))
+                 Wrenchxy[:,0]=Wrench[:,0]
+                 Wrenchxy[:,1]=Wrench[:,1]
+                 hullxy = ConvexHull(Wrenchxy)
+        
+                 Wrenchxt=np.zeros((Wrench.shape[0],2))
+                 Wrenchxt[:,0]=Wrench[:,0]
+                 Wrenchxt[:,1]=Wrench[:,2]
+                 hullxt = ConvexHull(Wrenchxt)
+        
+                 Wrenchyt=np.zeros((Wrench.shape[0],2))
+                 Wrenchyt[:,0]=Wrench[:,1]
+                 Wrenchyt[:,1]=Wrench[:,2]
+                 hullyt = ConvexHull(Wrenchyt)                 
+                         
+                 self.WRENCHXY2.append(Wrenchxy)
+                 self.HULLXY2.append(hullxy)
+                 
+                 self.WRENCHXT2.append(Wrenchxt)
+                 self.HULLXT.append(hullxt)
+
+                 self.WRENCHYT2.append(Wrenchyt)
+                 self.HULLYT2.append(hullyt)
+                 
+     def calculate_wrench_components3(self):
+         """ Calculaute the components of the 3D hull of the wrench space
+                x-y , x-tau , y-tau sections"""
+         for i in range(len(self.temp_wrenches2)):
+             #print(i,"of ", len(self.temp_wrenches2))
+             if len(self.temp_id2[i])==0:
+                 self.WRENCHXY3.append([])
+                 self.HULLXY3.append([])
+                 
+                 self.WRENCHXT3.append([])
+                 self.HULLXT3.append([])
+
+                 self.WRENCHYT3.append([])
+                 self.HULLYT3.append([])
+                  
+             elif len(self.temp_id2[i])==1:
+                 self.WRENCHXY3.append([])
+                 self.HULLXY3.append([])
+                 
+                 self.WRENCHXT3.append([])
+                 self.HULLXT3.append([])
+
+                 self.WRENCHYT3.append([])
+                 self.HULLYT3.append([])
+                 
+             elif np.all((self.temp_wrenches2[i]==0)):
+                 self.WRENCHXY3.append([])
+                 self.HULLXY3.append([])
+                 
+                 self.WRENCHXT3.append([])
+                 self.HULLXT3.append([])
+
+                 self.WRENCHYT3.append([])
+                 self.HULLYT3.append([])                 
+             else:
+                 Wrench=self.temp_wrenches_norm2[i]
+                 Wrenchxy=np.zeros((Wrench.shape[0],2))
+                 Wrenchxy[:,0]=np.nan_to_num(Wrench[:,0])
+                 Wrenchxy[:,1]=np.nan_to_num(Wrench[:,1])
+                 hullxy = ConvexHull(Wrenchxy)
+                 #hullxy = 0
+                 Wrenchxt=np.zeros((Wrench.shape[0],2))
+                 Wrenchxt[:,0]=np.nan_to_num(Wrench[:,0])
+                 Wrenchxt[:,1]=np.nan_to_num(Wrench[:,2])
+                 hullxt = ConvexHull(Wrenchxt)
+      
+                 Wrenchyt=np.zeros((Wrench.shape[0],2))
+                 Wrenchyt[:,0]=np.nan_to_num(Wrench[:,1])
+                 Wrenchyt[:,1]=np.nan_to_num(Wrench[:,2])
+                 hullyt = ConvexHull(Wrenchyt)                 
+                         
+                 self.WRENCHXY3.append(Wrenchxy)
+                 self.HULLXY3.append(hullxy)
+                 
+                 self.WRENCHXT3.append(Wrenchxt)
+                 self.HULLXT3.append(hullxt)
+
+                 self.WRENCHYT3.append(Wrenchyt)
+                 self.HULLYT3.append(hullyt)                 
+                 
+
+     def extract_contact_forces_ball_4(self):
+
+        for i in range(len(self.time)-2):
+            F_contact_ballx_entry=self.Force_x_contact_ball["time_contact"+str(i)] # EXTRACT THE ENTRY
+            F_contact_ballz_entry=self.Force_z_contact_ball["time_contact"+str(i)] # EXTRACT THE ENTRY
+
+            #print(F_contact_ballx_entry)
+            F_contact_ballx_entry=F_contact_ballx_entry[0]['ballx'] #  FURTHER EXTRACTION 
+            F_contact_ballz_entry=F_contact_ballz_entry[0]['ballz'] #  FURTHER EXTRACTION 
+
+            Position_x_contact_entry=self.position_x_contact_ball["time_contact"+str(i)] # EXTRACT THE ENTRY
+            Position_z_contact_entry=self.position_z_contact_ball["time_contact"+str(i)] # EXTRACT THE ENTRY
+
+            #print(Position_x_contact_entry)
+            Position_x_contact_entry=Position_x_contact_entry[0]['ballx'] #  FURTHER EXTRACTION 
+            Position_z_contact_entry=Position_z_contact_entry[0]['ballz'] #  FURTHER EXTRACTION 
+            
+            self.centroidx.append(np.sum(Position_x_contact_entry)/len(Position_x_contact_entry))
+            self.centroidz.append(np.sum(Position_z_contact_entry)/len(Position_z_contact_entry))
+            
+            dir_xx_contact_ball_entry=self.dir_xx_contact_ball["time_contact"+str(i)]
+            dir_xz_contact_ball_entry=self.dir_xz_contact_ball["time_contact"+str(i)]
+            dir_zx_contact_ball_entry=self.dir_zx_contact_ball["time_contact"+str(i)]
+            dir_zz_contact_ball_entry=self.dir_zz_contact_ball["time_contact"+str(i)]
+
+
+            dir_xx_contact_ball_entry=dir_xx_contact_ball_entry[0]['ballx']
+            dir_xz_contact_ball_entry=dir_xz_contact_ball_entry[0]['ballz']
+            dir_zx_contact_ball_entry=dir_zx_contact_ball_entry[0]['ballx']
+            dir_zz_contact_ball_entry=dir_zz_contact_ball_entry[0]['ballz']
+            
+            
+            x0b,y0b=self.ballx_position[i],self.ballz_position[i]
+            
+            
+            if self.geom=="square":
+                x0b,y0b=self.ballx_position[i],self.ballz_position[i]
+                const=self.ball_radius*2-.01
+                rx=const
+                ry=const
+                w=rx/2
+                h=ry/2                    
+                x__=[w,-w,-w,w,w]
+                y__=[h,h,-h,-h,h]
+                _x_=[]
+                _y_=[]
+                t=np.pi/4
+                for ii in range(len(x__)):
+                    _x_.append(np.cos(t)*x__[ii]+np.sin(t)*y__[ii])
+                    _y_.append(-np.sin(t)*x__[ii]+np.cos(t)*y__[ii])
+                (segments)=self.create_segment(x__,y__) 
+                const_=self.ball_radius*2
+                xb,yb=0-const_/2,0 - const_/2
+                x0_=xb
+                y0_=yb
+
+            if self.geom=="c_shape":
+                x0b,y0b=self.ballx_position[i],self.ballz_position[i]
+                #x0b=self.ballx_
+                #y0b=self.ballz_
+                w=self.w/2
+                l=self.l/2
+                t=self.t
+                x__=[w,-w,-w,w,w,-w+t,-w+t,w,w]
+                y__=[-l,-l,l,l,l-t,l-t,-l+t,-l+t,-l]
+                d=.02
+                r=np.sqrt(d**2 / 2)
+                x__=[w-r,-w+r,-w+r,w-r,w-r,-w+t-r,-w+t-r,w-r,w-r]
+                y__=[-l+r,-l+r,l-r,l-r,l-t+r,l-t+r,-l+t-r,-l+t-r,-l+r]
+                (segments)=self.create_segment(x__,y__)
+
+
+                
+                #x0b=x0b+np.sign(-w/2+(t/2))*(-w/2+(t/2))
+                
+                #y0b=y0b+np.sign(y0b)*(y0b)
+                
+            if self.geom=="triangle":
+               x0b,y0b=self.ballx_position[i],self.ballz_position[i] 
+               const=self.ball_radius*2*np.pi/3
+               r=const*np.sqrt(3)/3 -.01
+               x1=-r
+               y1=0
+               x2=-r*np.cos(2*np.pi/3)
+               y2=r*np.sin(2*np.pi/3)
+               
+               x3=-r*np.cos(4*np.pi/3)
+               y3=r*np.sin(4*np.pi/3)
+               
+               x__ = [x1,x2,x3,x1]
+               y__ = [y1,y2,y3,y1]
+               (segments)=self.create_segment(x__,y__)
+
+
+
+            if self.geom=="circle":
+                x0b,y0b=self.ballx_position[i],self.ballz_position[i]
+                
+            if self.geom=="import":
+                R=1.25
+                a=0.504
+                b=0.37
+                w1=1.5
+                w2=1.26
+                Rr=np.sqrt(R**2 - (w1/2)**2)
+                
+                nsides=50
+                #theta=np.linspace(0 + np.pi/2,2.73 + np.pi/2,100)
+                #theta2=np.linspace(3.55 + np.pi/2,np.pi*2 + np.pi/2,100)
+                
+                Rbar=0.95*R
+                diff=R - Rbar
+                #print(np.arctan((a-diff)/0.9*R))
+                thetabar=np.arcsin((a-diff)/(Rbar))
+                #theta=np.linspace(3*np.pi/2 + .415,(2*np.pi + 3*np.pi/2) - .415,100,endpoint=True)
+                theta=np.linspace(3*np.pi/2 + thetabar,(2*np.pi + 3*np.pi/2) - thetabar,100,endpoint=True)
+                #theta2=np.linspace(3.55 + np.pi/2,np.pi*2 + np.pi/2,100)
+                # print(thetabar)
+                # print(3*np.pi/2 + thetabar)
+                # print((2*np.pi + 3*np.pi/2) - thetabar)
+                x=[]
+                y=[]
+                for ii in range(len(theta)):
+                    x.append(Rbar*np.cos(theta[ii]))
+                    y.append(Rbar*np.sin(theta[ii]))
+                    
+                    
+                
+                
+                
+                
+                box1_width=a-diff
+                #print(a)
+                #print(a-diff)
+                #print(np.arctan(box1_width/0.9*R))
+                box1_length=w1/2
+                box1_x=-(Rr + a)
+                box1_z=0
+                
+                
+                x.append(-box1_width)
+                y.append(box1_x - diff)
+                
+                x.append(-box1_length + diff)
+                y.append(box1_x - diff)
+                
+                x.append(-box1_length + diff)
+                y.append(box1_x - box1_width)
+                
+                x.append(box1_length-diff)
+                y.append(box1_x-box1_width)
+                
+                x.append(box1_length-diff)
+                y.append(box1_x-diff)
+                
+                
+                x.append(box1_width)
+                y.append(box1_x-diff)
+                
+                y.append(y[0])
+                x.append(x[0])
+                (segments)=self.create_segment(x,y)
+                
+                
+                #x0b,y0b=self.ballx_position[i],self.ballz_position[i]               
+                
+            X=[]
+            Y=[]
+            theta=[]
+            
+            temp_position_x = []
+            temp_position_z = []
+            temp_force_x = []
+            temp_force_z = []  
+            temp_vx = []
+            temp_vy = []
+            temp_c1 = []
+            temp_c2 = []
+            temp_id = []
+            temp_theta = []
+            temp_frames=[]
+            temp_offset_theta=[]
+            temp_wrenches=[]
+            temp_wrenches_norm=[]
+            temp_n=[]
+            frames = np.zeros((len(Position_x_contact_entry),3))
+            Vx=np.zeros((len(Position_x_contact_entry),2))
+            Vy=np.zeros((len(Position_x_contact_entry),2))
+            C1=np.zeros((2,len(Position_x_contact_entry))) # positive cone
+            C2=np.zeros((2,len(Position_x_contact_entry))) # negative cone 
+            
+            for j in range(len(Position_x_contact_entry)):
+                
+                x0,y0=Position_x_contact_entry[j],Position_z_contact_entry[j]
+                
+                #ax.text(x0-x0b,y0-y0b,str(j),size=8)
+                theta1=np.arctan2(.2,1) #+ frames[j,2]             
+                if self.geom=="square":
+                    Fx1=self.PHIDX(x0-x0b,y0-y0b,segments)
+                    Fy1=self.PHIDY(x0-x0b,y0-y0b,segments)
+                    mag=np.sqrt(Fx1**2 + Fy1**2)
+                    Fx1=-Fx1/mag
+                    Fy1=-Fy1/mag
+                    F_t=np.array([Fx1,Fy1])
+                    X.append(x0-x0b)
+                    Y.append(y0-y0b)
+                    t=self.angle(Fx1, Fy1)-np.pi/2
+                    theta.append(t)
+                
+                    frames[j,0]=x0-x0b
+                    frames[j,1]=y0-y0b
+                    frames[j,2]=t
+                    #mag=np.sqrt(F_contact_ballx_entry[j]**2 + F_contact_ballz_entry[j]**2)
+                    mag=1
+                    
+                    
+                if self.geom=="c_shape":
+                    Fx1=self.PHIDX(x0-x0b,y0-y0b,segments)
+                    Fy1=self.PHIDY(x0-x0b,y0-y0b,segments)
+                    mag=np.sqrt(Fx1**2 + Fy1**2)
+                    Fx1=-Fx1/mag
+                    Fy1=-Fy1/mag
+                    F_t=np.array([Fx1,Fy1])
+                    X.append(x0-x0b)
+                    Y.append(y0-y0b)
+                    t=self.angle(Fx1, Fy1)-np.pi/2
+                    theta.append(t)
+                
+                    frames[j,0]=x0-x0b
+                    frames[j,1]=y0-y0b
+                    frames[j,2]=t
+                    #mag=np.sqrt(F_contact_ballx_entry[j]**2 + F_contact_ballz_entry[j]**2)
+                    mag=1
+                    
+                elif self.geom=="triangle":
+                    Fx1=self.PHIDX(x0-x0b,y0-y0b,segments)
+                    Fy1=self.PHIDY(x0-x0b,y0-y0b,segments)
+                    mag=np.sqrt(Fx1**2 + Fy1**2)
+                    Fx1=-Fx1/mag
+                    Fy1=-Fy1/mag
+                    F_t=np.array([Fx1,Fy1])
+                    X.append(x0-x0b)
+                    Y.append(y0-y0b)
+                    t=self.angle(Fx1, Fy1)-np.pi/2
+                    theta.append(t)
+                
+                    frames[j,0]=x0-x0b
+                    frames[j,1]=y0-y0b
+                    frames[j,2]=t
+                    #mag=np.sqrt(F_contact_ballx_entry[j]**2 + F_contact_ballz_entry[j]**2)
+                    mag=1  
+                    
+                    
+                elif self.geom=="circle":
+                    Fx1,Fy1=(self.ballx_position[i]-x0),(self.ballz_position[i]-y0)
+                    mag=np.sqrt(Fx1**2 + Fy1**2)
+                    Fx1=Fx1/mag
+                    Fy1=Fy1/mag
+                    F_t=np.array([Fx1,Fy1])
+                    X.append(x0-x0b)
+                    Y.append(y0-y0b)
+                    t=self.angle(Fx1, Fy1)-np.pi/2
+                    theta.append(t)
+                
+                    frames[j,0]=x0-x0b
+                    frames[j,1]=y0-y0b
+                    frames[j,2]=t
+                    
+                    
+                elif self.geom=="import":
+                    Fx1=self.PHIDX(x0-x0b,y0-y0b,segments)
+                    Fy1=self.PHIDY(x0-x0b,y0-y0b,segments)
+                    mag=np.sqrt(Fx1**2 + Fy1**2)
+                    Fx1=-Fx1/mag
+                    Fy1=-Fy1/mag
+                    F_t=np.array([Fx1,Fy1])
+                    X.append(x0-x0b)
+                    Y.append(y0-y0b)
+                    t=self.angle(Fx1, Fy1)-np.pi/2
+                    theta.append(t)
+                
+                    frames[j,0]=x0-x0b
+                    frames[j,1]=y0-y0b
+                    frames[j,2]=t
+                    
+                mag=np.sqrt(F_contact_ballx_entry[j]**2 + F_contact_ballz_entry[j]**2)
+                #mag=1
+                T=np.array([[np.cos(t),-np.sin(t)],[np.sin(t),np.cos(t)]]) # transformation matrix   
+                VYpp=T@np.array([[0],[1]]) # transform coordinates X
+                VXpp=T@np.array([[1],[0]]) # transform coordinates Y
+                VXpp=VXpp.flatten() # flatten the matrix
+                VYpp=VYpp.flatten() # flatten the matrix
+            
+                Vx[j,:]=VXpp # Save the array X
+                Vy[j,:]=VYpp  # save the array Y     
+                
+                T1=np.array([[np.cos(theta1),-np.sin(theta1)],[np.sin(theta1),np.cos(theta1)]]) # transformation matrix   
+                T2=np.array([[np.cos(-theta1),-np.sin(-theta1)],[np.sin(-theta1),np.cos(-theta1)]])    
+                tem=Vy[j,:].T
+                C1[:,j]=mag*T1@tem
+                C2[:,j]=mag*T2@tem
+            
+            
+                mag2=np.sqrt(dir_xx_contact_ball_entry[j]**2 + dir_xz_contact_ball_entry[j]**2)
+                temp_dirr=[dir_xx_contact_ball_entry[j]/mag2,dir_xz_contact_ball_entry[j]/mag2]
+            
+                #print("j",str(j),np.round(t,2),"Fx:",np.round(Fx1,2),"Fy:",np.round(Fy1,2),"Fxf:",np.round(F_contact_ballx_91[j]/mag1,2),"Fyf:",np.round(F_contact_ballz_91[j]/mag1,2))
+                
+                theta1=np.arctan2(.2,1) #+ frames[j,2]
+                temp=np.round(np.nan_to_num(np.arccos(np.dot(VYpp ,temp_dirr))),2)
+                fx=F_contact_ballx_entry[j]
+                fy=F_contact_ballz_entry[j]
+                
+                mag_=np.sqrt(fx**2 +fy**2)
+                f_=np.array([fx/mag_,fy/mag_])
+                temp2=np.round(np.nan_to_num(np.arccos(np.dot(f_ ,Vy[j,:]))),2)
+                #print("temp2:", temp2)
+                if temp<np.pi and temp > np.pi-theta1:
+                    #print("triggered")
+                    fx=np.cos(-temp)*F_contact_ballx_entry[j]-np.sin(-temp)*F_contact_ballz_entry[j]
+                    fy=np.sin(-temp)*F_contact_ballx_entry[j]+np.cos(-temp)*F_contact_ballz_entry[j]
+                    dirxx=np.cos(-temp)*dir_xx_contact_ball_entry[j]-np.sin(-temp)*dir_xz_contact_ball_entry[j]
+                    dirxz=np.sin(-temp)*dir_xx_contact_ball_entry[j]+np.cos(-temp)*dir_xz_contact_ball_entry[j]
+                    temp=temp-np.pi
+                    temp2=np.round(np.nan_to_num(np.arccos(np.dot(f_ ,Vy[j,:]))),2)
+                    #print("temp2:", temp2)
+                else:
+                    fx=F_contact_ballx_entry[j]
+                    fy=F_contact_ballz_entry[j]
+                    temp=temp
+                    
+                #print(j,temp2<theta1)
+                
+                if temp<=theta1:
+                    
+                    if temp2<theta1:
+                    #print(frames[j,:])
+                    #print(j,"angle:",np.round(temp,2),"FVYdot",np.round(np.dot(F,VYpp),2),"F",np.round(F,2),"Vy",VYpp)
+                        temp_offset_theta.append(theta1)
+                        temp_frames.append(frames[j,:])
+                        temp_theta.append(frames[j,2])
+                        temp_id.append(j)
+                        temp_position_x.append(X[j])
+                        temp_position_z.append(Y[j])
+                        temp_force_x.append(fx)
+                        temp_force_z.append(fy)   
+                        #mag_=1
+                        temp_n.append(mag_*np.cos(temp2))
+                        temp_vx.append(Vx[j,:])
+                        temp_vy.append(Vy[j,:])
+                        temp_c1.append(C1[:,j])
+                        temp_c2.append(C2[:,j])                        
+    
+                        m_t=np.cross(np.array([X[j],Y[j]]),C1[:,j])
+                        temp=[C1[0,j],C1[1,j],m_t]
+                        wrench1=temp
+                        temp_wrenches.append(temp)
+
+                        wrench_norm=np.zeros(3)
+                        wrench_norm[0]=wrench1[0]
+                        wrench_norm[1]=wrench1[1]
+                        wrench_norm[2]=wrench1[2]/self.rho
+                        mag=1
+                        wrench_norm[0]=wrench_norm[0]/mag
+                        wrench_norm[1]=wrench_norm[1]/mag
+                        wrench_norm[2]=wrench_norm[2]/mag
+                        temp_wrenches_norm.append(wrench_norm)
+
+                        m_t=np.cross(np.array([X[j],Y[j]]),C2[:,j])
+                        temp=[C2[0,j],C2[1,j],m_t]
+                        wrench2=temp
+                        temp_wrenches.append(temp)
+                        
+                        wrench_norm=np.zeros(3)
+                        wrench_norm[0]=wrench2[0]
+                        wrench_norm[1]=wrench2[1]
+                        wrench_norm[2]=wrench2[2]/self.rho
+                        mag=1
+                        wrench_norm[0]=wrench_norm[0]/mag
+                        wrench_norm[1]=wrench_norm[1]/mag
+                        wrench_norm[2]=wrench_norm[2]/mag
+                        temp_wrenches_norm.append(wrench_norm) 
+
+                          
+                        
+            if len(temp_position_x)!=0:
+                 self.temp_offset_theta2.append(temp_offset_theta)
+                 self.temp_frames2.append(temp_frames)
+                 self.temp_theta2.append(temp_theta)
+                 self.temp_id2.append(temp_id)
+                 self.temp_position_x2.append(temp_position_x)
+                 self.temp_position_z2.append(temp_position_z)
+                 self.temp_force_x2.append(temp_force_x)
+                 self.temp_force_z2.append(temp_force_z)     
+                 self.temp_wrenches2.append(np.asarray(temp_wrenches))
+                 #self.temp_wrenches_norm.append(np.asarray(temp_wrenches_norm/np.max(temp_n)))
+                 self.temp_wrenches_norm2.append(np.asarray(temp_wrenches_norm))                
+                 self.temp_vx2.append(temp_vx)
+                 self.temp_vy2.append(temp_vy)
+                 self.temp_c12.append(temp_c1)
+                 self.temp_c22.append(temp_c2) 
+                 self.temp_n2.append(temp_n)
+                 #self.temp_force_m.append(temp_force_m)
+                 
+            else:
+                 self.temp_offset_theta2.append([])
+                 self.temp_frames2.append([])
+                 self.temp_theta2.append([])
+                 self.temp_id2.append([])
+                 self.temp_position_x2.append([])
+                 self.temp_position_z2.append([])
+                 self.temp_force_x2.append([])
+                 self.temp_force_z2.append([])   
+                 self.temp_wrenches2.append([])
+                 self.temp_wrenches_norm2.append([])
+                 self.temp_vx2.append([])
+                 self.temp_vy2.append([])
+                 self.temp_c12.append([])
+                 self.temp_c22.append([])
+                 self.temp_n2.append([])
+                 #self.temp_force_m.append([])                  
+                     
+
+     def extract_control_forces_ball(self):
+         "extract control forces method "
+         for i in range(len(self.time)):
+             #print(i)
+             temp_id=[]
+             temp_position_x=[]
+             temp_position_z=[]
+             temp_force_x=[]
+             temp_force_z=[]
+             temp_torque=[]
+             temp_angle_check=[]
+             
+             
+             if self.geom=="circle":
+                 for j in range(self.nb):
+                     x0,y0=self.bot_position_x[j,i],self.bot_position_z[j,i] 
+                     Fx,Fy=self.control_forces_x[j,i],self.control_forces_z[j,i]
+                     q=np.sqrt((x0-self.ballx_position[i])**2 + (y0-self.ballz_position[i])**2)
+                     qr=np.array([[(x0-self.ballx_position[i]),(y0-self.ballz_position[i]),0]])
+                     Fr=np.array([[Fx,Fy,0]])
+                     M=np.cross(qr,Fr)
+                     F=np.array([[Fx,Fy]])
+                         #Ft=self.transform_forces([x0],[y0],self.ballx[i],self.ballz[i],F)
+ 
+                
+  
+                     if q<=(2 * self.bot_width/2 + self.ball_radius):
+                          theta1=np.arctan(self.mu)
+                          x0_,y0_=(x0-self.ballx_position[i]),(y0-self.ballz_position[i]) # initia positions
+                          theta=np.arctan2(y0_,x0_) # calculate theta
+                          T=np.array([[-np.sin(theta),-np.cos(theta)],[np.cos(theta),-np.sin(theta)]]) # transformation matrix 
+                          VXpp=T@np.array([[1],[0]]) # transform coordinates X
+                          VYpp=T@np.array([[0],[1]]) # transform coordinates Y
+                          VXpp=VXpp.flatten() # flatten the matrix
+                          VYpp=VYpp.flatten() # flatten the matrix
+                          F=np.array([Fx,Fy])
+                          temp=np.arccos(np.round(np.dot(F,VYpp)/(np.linalg.norm(F)*np.linalg.norm(VYpp)),2))
+                          #print(temp)
+                          temp_angle_check.append(temp)
+                          if temp<theta1:
+                             temp_id.append(j)
+                             temp_position_x.append(x0)
+                             temp_position_z.append(y0)
+                             temp_force_x.append(Fx)
+                             temp_force_z.append(Fy)
+                             temp_torque.append(M)
+                             
+             if self.geom=="square":
+                 for j in range(self.nb):
+                     x0,y0=self.bot_position_x[j,i],self.bot_position_z[j,i] 
+                     Fx,Fy=self.control_forces_x[j,i],self.control_forces_z[j,i]
+                     q=np.sqrt((x0-self.ballx_position[i])**2 + (y0-self.ballz_position[i])**2)
+                     qr=np.array([[(x0-self.ballx_position[i]),(y0-self.ballz_position[i]),0]])
+                     Fr=np.array([[Fx,Fy,0]])
+                     M=np.cross(qr,Fr)
+                     #F=np.array([[Fx,Fy]])
+                     #Ft=self.transform_forces([x0],[y0],self.ballx[i],self.ballz[i],F)
+                     #print(qr)
+                     #print(self.square_function1(const,const,qr[0,0],qr[0,1]))
+                     xcenter=self.ballx_position[i]
+                     ycenter=self.ballz_position[i]
+            
+                     const=self.ball_radius*2
+                     rx=const
+                     ry=const
+                     w=rx/2
+                     h=ry/2                    
+                     #x=[w+xcenter,-w+xcenter,-w+xcenter,w+xcenter,w+xcenter]
+                     #y=[h+ycenter,h+ycenter,-h+ycenter,-h+ycenter,h+ycenter]
+                     x=[w,-w,-w,w,w]
+                     y=[h,h,-h,-h,h]
+                     _x_=[]
+                     _y_=[]
+                     t=np.pi/4
+                     for ii in range(len(x)):
+                         _x_.append(np.cos(t)*x[ii]+np.sin(t)*y[ii] + xcenter)
+                         _y_.append(-np.sin(t)*x[ii]+np.cos(t)*y[ii] + ycenter)
+                    
+                     #x = x + xcenter*np.ones(len(x))
+                     #y = y + ycenter*np.ones(len(x))
+                     (self.segments)=self.create_segment(_x_,_y_) 
+                
+                     if self.PHI(x0,y0,self.segments)<.2:
+                            temp_id.append(j)
+                            temp_position_x.append(x0)
+                            temp_position_z.append(y0)
+                            temp_force_x.append(Fx)
+                            temp_force_z.append(Fy)
+                            temp_torque.append(M)   
+                            
+                         
+             if self.geom=="triangle":
+                 for j in range(self.nb):
+                     x0,y0=self.bot_position_x[j,i],self.bot_position_z[j,i] 
+                     Fx,Fy=self.control_forces_x[j,i],self.control_forces_z[j,i]
+                     q=np.sqrt((x0-self.ballx_position[i])**2 + (y0-self.ballz_position[i])**2)
+                     qr=np.array([[(x0-self.ballx_position[i]),(y0-self.ballz_position[i]),0]])
+                     Fr=np.array([[Fx,Fy,0]])
+                     M=np.cross(qr,Fr)
+                     #F=np.array([[Fx,Fy]])
+                     #Ft=self.transform_forces([x0],[y0],self.ballx[i],self.ballz[i],F)
+                     #print(qr)
+                     #print(self.square_function1(const,const,qr[0,0],qr[0,1]))
+                     xcenter=self.ballx_position[i]
+                     ycenter=self.ballz_position[i]
+            
+
+                     const=(self.ball_radius)*2*np.pi/3
+                     r=const*np.sqrt(3)/3
+                     x1=r
+                     y1=0
+               
+                     x2=r*np.cos(2*np.pi/3)
+                     y2=r*np.sin(2*np.pi/3)
+               
+                     x3=r*np.cos(4*np.pi/3)
+                     y3=r*np.sin(4*np.pi/3)
+               
+                     x__ = [x1,x2,x3,x1]+xcenter
+                     y__ = [y1,y2,y3,y1]+ycenter
+                     (self.segments)=self.create_segment(x__,y__)
+      
+                     if self.PHI(x0,y0,self.segments)<.2:
+                            temp_id.append(j)
+                            temp_position_x.append(x0)
+                            temp_position_z.append(y0)
+                            temp_force_x.append(Fx)
+                            temp_force_z.append(Fy)
+                            temp_torque.append(M)                               
+             
+             if self.geom=="import":
+                 for j in range(self.nb):
+                     x0,y0=self.bot_position_x[j,i],self.bot_position_z[j,i] 
+                     Fx,Fy=self.control_forces_x[j,i],self.control_forces_z[j,i]
+                     q=np.sqrt((x0-self.ballx_position[i])**2 + (y0-self.ballz_position[i])**2)
+                     qr=np.array([[(x0-self.ballx_position[i]),(y0-self.ballz_position[i]),0]])
+                     Fr=np.array([[Fx,Fy,0]])
+                     M=np.cross(qr,Fr)
+                     #F=np.array([[Fx,Fy]])
+                     #Ft=self.transform_forces([x0],[y0],self.ballx[i],self.ballz[i],F)
+                     #print(qr)
+                     #print(self.square_function1(const,const,qr[0,0],qr[0,1]))
+                     xcenter=self.ballx_position[i]
+                     ycenter=self.ballz_position[i]
+            
+
+               
+      
+                     if self.PHI(x0,y0,self.segments)<.2:
+                            temp_id.append(j)
+                            temp_position_x.append(x0)
+                            temp_position_z.append(y0)
+                            temp_force_x.append(Fx)
+                            temp_force_z.append(Fy)
+                            temp_torque.append(M)                               
+                                        
+             
+             #print("Time= "+str(self.time[i])+" id numbers= "+str(temp_id))        
+             self.grasp_id.append(temp_id) # append index 
+             self.grasp_position_x.append(temp_position_x) # append positon x
+             self.grasp_position_z.append(temp_position_z) # append position z
+             self.grasp_force_x.append(temp_position_x) # append force x
+             self.grasp_force_z.append(temp_position_z) # append force z  
+             self.grasp_torque.append(temp_torque)   # append torque  
+             
+             
+             
+             if len(temp_position_x)==0:
+                 self.framex.append(0)
+                 self.framez.append(0)
+                 self.F_control.append([])
+                 self.FT.append(0)
+                 self.FRAMES.append([])
+                 self.Cplus.append(0)
+                 self.Cminus.append(0) 
+                 self.FCplus.append(0)  
+                 self.FCinus.append(0)
+                 self.ANGLE_CHECK.append([])
+                 
+             else:
+                 F=np.array([[Fx,Fy]])
+                 Ft=self.transform_forces([x0],[y0],self.ballx_position[i],self.ballz_position[i],F)
+                 self.FT.append(Ft)
+                 self.F_control.append(F)
+
+                 (VX,VZ,frames)=self.create_frame(temp_position_x,temp_position_z,self.ballx_position[i],self.ballz_position[i])
+                 self.framex.append(VX)
+                 self.framez.append(VZ)
+                 self.FRAMES.append(frames)
+
+                 (C1,C2)=self.create_friction_cone(VX,VZ,len(temp_position_x))               
+                 self.Cplus.append(C1)
+                 self.Cminus.append(C2)    
+                 self.FCplus.append(C1)  
+                 self.FCinus.append(C2)                 
+                 self.ANGLE_CHECK.append(temp_angle_check)
+      
+
+     def in_hull(self,p, hull):
+         """ Create hull """
+         from scipy.spatial import Delaunay
+         if not isinstance(hull,Delaunay):
+             hull = Delaunay(hull)
+               
+         return (hull.find_simplex(p)>=0)
+
+     def set_up_wrenches(self):
+         """
+         function to calcuate the wrench matrix and the normalized
+         wrench matrux using the radius of gyration
+         """
+         if self.geom=="square":
+             k=(self.ball_radius*2)/(2*np.sqrt(3))
+             
+         elif self.geom=="circle":
+             k = self.ball_radius/np.sqrt(2)
+         
+         elif self.geom=="triangle":
+             const=self.ball_radius*2*np.pi/3
+             r=const*np.sqrt(3)/3
+             x1=r
+             y1=0
+             x2=r*np.cos(2*np.pi/3)
+             y2=r*np.sin(2*np.pi/3)
+             d=np.sqrt((x1-x2)**2 +(y1-y2)**2)
+             k = d*.2041
+         else:
+             k=2.18    
+             k=1.16
+         for i in range(len(self.F_control)):
+             if len(self.F_control[i])==0:
+                 self.F_mag.append([])
+             else:
+                 self.F_mag.append(np.sqrt(self.control_forces_x[self.grasp_id[i],i]**2 + self.control_forces_z[self.grasp_id[i],i]**2))
+     
+         self.WRENCHES = self.calculate_wrenches(self.FRAMES,self.time,self.mu)   
+         #self.WRENCH_NORM = self.WRENCHES
+         
+         self.WRENCH_NORM = self.normalize_wrench(self.WRENCHES,k)
+
+
+
+      
+     def calculate_epsilon4(self):
+         """ This is for calculating the epsilon metrics for contact forces """
+         
+         for i in range(len(self.temp_wrenches2)):
+             
+             #print(str(i)+ "of"+ str(len(self.temp_wrenches))+"  "+str(len(self.temp_id[i])))
+             if len(self.temp_id2[i])==0:
+                 self.EPSILON4.append(0)
+                 #self.EPSILON5.append(0)
+                 self.HULL4.append([])
+                 self.HULLWRENCHNORM4.append([])
+                 self.HULLWRENCHMAGS4.append([])    
+                 print(str(i)+ "of"+ str(len(self.temp_wrenches2))+"  "+str(len(self.temp_id2[i]))+" "+"epsilon=0") 
+                 self.calc_type.append(1)
+             elif len(self.temp_id2[i])==1:
+                 self.EPSILON4.append(0)
+                 #self.EPSILON5.append(0)
+                 self.HULLWRENCHNORM4.append([])
+                 self.HULLWRENCHMAGS4.append([])
+                 self.HULL4.append([])
+                 print(str(i)+ "of"+ str(len(self.temp_wrenches2))+"  "+str(len(self.temp_id2[i]))+" "+"epsilon=0")
+                 self.calc_type.append(2)
+                
+             elif np.all((self.temp_wrenches_norm2[i]==0)):
+                 print(str(i)+ "of"+ str(len(self.temp_wrenches2))+"  "+str(len(self.temp_id2[i]))+" "+"epsilon=0")    
+                 self.EPSILON4.append(0)
+                 #self.EPSILON5.append(0)
+                 self.HULLWRENCHNORM4.append([])
+                 self.HULLWRENCHMAGS4.append([])
+                 self.HULL4.append([]) 
+                 self.calc_type.append(3)
+             elif len(self.temp_id2[i])>1:
+                 wrench_norm=self.temp_wrenches_norm2[i]
+                 #temp_n=self.temp_n2[i]
+                 #g=np.max()
+                 #print(wrench_norm)
+                 
+                 #hull = ConvexHull(wrench_norm)
+                 #self.HULL4.append(hull)
+                 try:
+                     hull = ConvexHull(wrench_norm)
+                     self.HULL4.append(hull)
+                     (epsilon,hullwrenchnorm,hullwrenchmags)=self.ferrari_canny_metric(wrench_norm)
+                     #print("epsilon:",epsilon)
+                     #(hullwrenchnorm2,epsilon2,hullwrenchmags2)=self.calculate_hull(hull,wrench_norm)
+                     #(epsilon,hullwrenchnorm,hullwrenchmags)
+                     #self.HULLWRENCHNORM4.append(hullwrenchnorm)
+                     #self.HULLWRENCHMAGS4.append(hullwrenchmags)
+                     #print("epsilon_",epsilon_)
+                           
+                     p=[0,0,0]
+                     if self.in_hull(p,wrench_norm)==False:
+                        self.EPSILON4.append(0)
+                        #self.EPSILON5.append(0)
+                        print(str(i)+ "of"+ str(len(self.temp_wrenches2))+"  "+str(len(self.temp_id2[i]))+" "+"epsilon=0")
+                        self.calc_type.append(4)
+                     else:
+                         epsilon=np.round(epsilon,3)
+                         print(str(i)+ "of"+ str(len(self.temp_wrenches2))+"  "+str(len(self.temp_id2[i]))+" "+"epsilon="+str(epsilon))
+                         self.EPSILON4.append(epsilon)
+                         #self.EPSILON5.append(np.round(epsilon2,3))
+                         self.calc_type.append(5)
+                 except:
+                     print(str(i)+ "of"+ str(len(self.temp_wrenches2))+"  "+str(len(self.temp_id2[i]))+" "+"epsilon=0","try00")
+                     self.EPSILON4.append(0)
+                     #self.EPSILON5.append(0)
+                     self.HULLWRENCHNORM4.append([])
+                     self.HULLWRENCHMAGS4.append([])
+                     self.HULL4.append([]) 
+                     self.calc_type.append(0)
+
+             
+     def transform_forces(self,X,Y,XB,YB,F):
+         ''' Transform the forces to the local coordinates of contact '''
+         Ft=np.zeros((len(X),2))
+         frames=np.zeros((len(X),3))
+         for i in range(len(X)):
+             x0,y0=(X[i]-XB),(Y[i]-YB) # initia positions
+             theta=np.arctan2(y0,x0)+np.pi/2 # calculate theta
+             frames[i,0],frames[i,1],frames[i,2]=x0,y0,theta
+             T=np.array([[np.cos(theta),-np.sin(theta)],[np.sin(theta),np.cos(theta)]])      # transformation matrix 
+             Ft[i,:]=T.T@F[i,:]        
+         return(Ft,frames)
+
+     def min_norm_vector_in_facet(self,facet, wrench_regularizer=1e-8):
+          """ Finds the minimum norm point in the convex hull of a given facet (aka simplex) by solving a QP.
+          Parameters
+          ----------
+          facet : 6xN :obj:`numpy.ndarray`
+             vectors forming the facet
+          wrench_regularizer : float
+             small float to make quadratic program positive semidefinite
+          Returns
+          -------
+          float
+             minimum norm of any point in the convex hull of the facet
+          Nx1 :obj:`numpy.ndarray`
+             vector of coefficients that achieves the minimum
+          """
+          dim = facet.shape[1] # num vertices in facet
+    
+          # create alpha weights for vertices of facet
+          G = facet.T.dot(facet)
+          grasp_matrix = G + wrench_regularizer * np.eye(G.shape[0])
+    
+          # Solve QP to minimize .5 x'Px + q'x subject to Gx <= h, Ax = b
+          P = cvx.matrix(2 * grasp_matrix)   # quadratic cost for Euclidean dist
+          q = cvx.matrix(np.zeros((dim, 1)))
+          G = cvx.matrix(-np.eye(dim))       # greater than zero constraint
+          h = cvx.matrix(np.zeros((dim, 1)))
+          A = cvx.matrix(np.ones((1, dim)))  # sum constraint to enforce convex
+          b = cvx.matrix(np.ones(1))         # combinations of vertices
+          
+          sol = cvx.solvers.qp(P, q, G, h, A, b,options={'show_progress':False})
+          v = np.array(sol['x'])
+          
+          min_norm = np.sqrt(sol['primal objective'])
+          v=facet@v
+          return(abs(min_norm),v)
+     
+    
+    
+     def ferrari_canny_metric(self,wrenches):
+         G=wrenches.T
+         hull = cvh.ConvexHull(wrenches)
+         min_dist = 100
+         wrenchmags=[]
+         for i in range(wrenches.shape[0]):
+             wrenchmags.append(np.linalg.norm(wrenches[i]))    
+         nfacets = np.shape(hull.simplices)[0] #how many facets
+         hullwrenchmags = np.zeros(nfacets)
+         hullwrenchnorm = np.zeros((nfacets,3))
+         i=0
+         for v in hull.vertices:
+             if np.max(np.array(v)) < G.shape[1]: # because of some occasional odd behavior from pyhull
+                 facet = G[:, v]
+                 dist, v = self.min_norm_vector_in_facet(facet, wrench_regularizer=1e-8)
+             #print(dist)
+                 hullwrenchnorm[i,:]=v.T
+                 hullwrenchmags[i]=np.linalg.norm(v)
+                 if dist < min_dist:
+                     min_dist = dist 
+                 i=i+1   
+             
+         return(min_dist,hullwrenchnorm,hullwrenchmags)
+
+
+     def calculate_hull(self,hull,Wrench):
+         """ Create a 3D hull of the wrench space and calculates the epsilon metric """
+         origin = Point3D(0,0,0)
+         nfacets = np.shape(hull.simplices)[0] #how many facets
+         hullwrenchmags = np.zeros(nfacets)
+         hullwrenchnorm = np.zeros((nfacets,3))
+         i=0
+         for s in hull.simplices:
+             triangle = Wrench[s]   #convert from simplices to 3D points
+             point1 = Point3D(triangle[0])
+             point2 = Point3D(triangle[1])
+             point3 = Point3D(triangle[2])
+             theplane = Plane(point1,point2,point3)
+             planedistance =  theplane.distance(origin)
+             temp=theplane.normal_vector
+             hullwrenchmags[i]=planedistance
+             mag=sqrt(N(temp[0])**2 + N(temp[1])**2 + N(temp[2])**2)
+             hullwrenchnorm[i,0]=N(temp[0])/mag
+             hullwrenchnorm[i,1]=N(temp[1])/mag
+             hullwrenchnorm[i,2]=N(temp[2])/mag
+             i=i+1
+         leastwrench = np.round(np.amin(hullwrenchmags),2)
+    
+         #print('least wrench (if enclosing), Union hull:',np.round(leastwrench,2))
+         epsilon=leastwrench
+         
+        
+         return(hullwrenchnorm,epsilon,hullwrenchmags)   
+
+
+         
+                 
+     def normalize_wrench(self,WRENCHES,k):
+         WRENCH_NORM=[]
+         for i in range(len(WRENCHES)):
+            if len(WRENCHES[i])==0:
+                WRENCH_NORM.append([])
+            else:
+                wrench = WRENCHES[i]
+                n = wrench.shape[0]
+                wrench_norm = np.zeros((n,3))
+                for j in range(n):
+                    wrench_norm[j,0],wrench_norm[j,1],wrench_norm[j,2]=wrench[j,0],wrench[j,1],wrench[j,2]/k
+                    #mag=np.sqrt(wrench_norm[j,0]**2 + wrench_norm[j,1]**2 + wrench_norm[j,2]**2)
+                    #mag=np.sqrt(wrench_norm[j,0]**2 + wrench_norm[j,1]**2)
+                    #mag=1
+                    #wrench_norm[j,0],wrench_norm[j,1],wrench_norm[j,2]=wrench[j,0]/mag,wrench[j,1]/mag,(wrench[j,2]/k)/mag
+                WRENCH_NORM.append(wrench_norm)       
+         return(WRENCH_NORM)
+        
+        
+     def PTrans(self,x,y,theta):
+         ct = np.cos(theta)
+         st = np.sin(theta)
+         Jbp = np.array([[ct, st, (x*st-y*ct)],[-st, ct, (x*ct+y*st)],[0,0,1]])
+         return Jbp
+     
+     def smooth(self,y, box_pts):
+         box = np.ones(box_pts)/box_pts
+         y_smooth = np.convolve(y, box, mode='same')
+         return y_smooth
+
+
+        
+     def calculate_wrenches(self,FRAMES,time,mu):
+         WRENCHES=[]
+         for i in range(len(FRAMES)):
+             if len(FRAMES[i])==0:
+                 WRENCHES.append([])
+             else:
+                 frames=FRAMES[i]
+                 n=frames.shape[0]
+                 #f_mag=F_mag[i]
+                 phi = np.arctan(mu)
+                 wrenches = np.zeros((2*n,3))
+                 for j in range(n):
+                     fl = np.array([-np.cos(phi), -np.sin(phi), 0])
+                     fr = np.array([-np.cos(phi),np.sin(phi), 0])
+                     Jb = self.PTrans(frames[j,0],frames[j,1],frames[j,2])  #WrenchUtils.py
+                     Jbtrans = Jb.transpose()
+                     wrenches[j] = Jbtrans.dot(fl)
+                     wrenches[j+n] = Jbtrans.dot(fr)
+            
+                 WRENCHES.append(wrenches)
+                 
+         return(WRENCHES)
+     
+        
+
+
+
+     def create_frame(self,X,Y,XB,YB):
+         ''' create the local frame of the bots in contact '''
+         VX=np.ones(len(X)) # empty vector ones
+         VY=np.zeros(len(X)) # empty vector zeros
+         VXC=np.zeros((len(X),2)) # empty array of contact x axis
+         VYC=np.zeros((len(X),2)) # empty array of contact y axis 
+         Frames=np.zeros((len(X),3))
+         
+         xcenter=XB
+         ycenter=YB
+         if self.geom=="square":            
+             const=self.ball_radius*2
+             rx=const
+             ry=const
+             w=rx/2
+             h=ry/2                    
+             x=[w+xcenter,-w+xcenter,-w+xcenter,w+xcenter,w+xcenter]
+             y=[h+ycenter,h+ycenter,-h+ycenter,-h+ycenter,h+ycenter]
+             (segments)=self.create_segment(x,y) 
+         if self.geom=="triangle":
+             const=(self.ball_radius)*2*np.pi/3
+             r=const*np.sqrt(3)/3
+             x1=r
+             y1=0
+               
+             x2=r*np.cos(2*np.pi/3)
+             y2=r*np.sin(2*np.pi/3)
+               
+             x3=r*np.cos(4*np.pi/3)
+             y3=r*np.sin(4*np.pi/3)
+               
+             x__ = [x1,x2,x3,x1]+xcenter
+             y__ = [y1,y2,y3,y1]+ycenter
+             (segments)=self.create_segment(x__,y__)
+
+         if self.geom=="square" or self.geom=="triangle":
+             for i in range(0,len(X)):
+                 #print((Y[i],X[i]))
+                 #Fx1=self.Fxn((Y[i],X[i]))
+                 #Fy1=self.Fyn((Y[i],X[i]))
+                 
+                 Fx1=self.PHIDX(X[i],Y[i],segments)
+                 Fy1=self.PHIDY(X[i],Y[i],segments)
+                 x0=X[i]-(X[i]-Fx1)
+                 y0=Y[i]-(Y[i]-Fy1)
+          
+                 theta=np.arctan2(y0,x0) # calculate theta
+                 T=np.array([[-np.sin(theta),-np.cos(theta)],[np.cos(theta),-np.sin(theta)]]) # transformation matrix 
+                 VXpp=T@np.array([[1],[0]]) # transform coordinates X
+                 VYpp=T@np.array([[0],[1]]) # transform coordinates Y
+                 VXpp=VXpp.flatten() # flatten the matrix
+                 VYpp=VYpp.flatten() # flatten the matrix
+                
+                 VXC[i,:]=VXpp # Save the array X
+                 VYC[i,:]=VYpp  # save the array Y               
+                           
+                 x0,y0=(X[i]-XB),(Y[i]-YB) # initia positions           
+                 Frames[i,:]=np.array([x0,y0,theta])   
+                 
+         if self.geom=="import":
+             for i in range(0,len(X)):
+                 #print((Y[i],X[i]))
+                 #Fx1=self.Fxn((Y[i],X[i]))
+                 #Fy1=self.Fyn((Y[i],X[i]))
+                 
+                 Fx1=self.F_random_objdx(X[i],Y[i])
+                 Fy1=self.F_random_objdy(X[i],Y[i])
+                 x0=X[i]-(X[i]-Fx1)
+                 y0=Y[i]-(Y[i]-Fy1)
+          
+                 theta=np.arctan2(y0,x0) # calculate theta
+                 T=np.array([[-np.sin(theta),-np.cos(theta)],[np.cos(theta),-np.sin(theta)]]) # transformation matrix 
+                 VXpp=T@np.array([[1],[0]]) # transform coordinates X
+                 VYpp=T@np.array([[0],[1]]) # transform coordinates Y
+                 VXpp=VXpp.flatten() # flatten the matrix
+                 VYpp=VYpp.flatten() # flatten the matrix
+                
+                 VXC[i,:]=VXpp # Save the array X
+                 VYC[i,:]=VYpp  # save the array Y               
+                           
+                 x0,y0=(X[i]-XB),(Y[i]-YB) # initia positions           
+                 Frames[i,:]=np.array([x0,y0,theta])                    
+                 
+            
+         if self.geom=="circle":
+             for i in range(0,len(X)):
+                 x0,y0=(X[i]-XB),(Y[i]-YB) # initia positions
+                 theta=np.arctan2(y0,x0) # calculate theta
+                 Frames[i,:]=np.array([x0,y0,theta])
+                 T=np.array([[-np.sin(theta),-np.cos(theta)],[np.cos(theta),-np.sin(theta)]]) # transformation matrix 
+                 VXpp=T@np.array([[1],[0]]) # transform coordinates X
+                 VYpp=T@np.array([[0],[1]]) # transform coordinates Y
+                 VXpp=VXpp.flatten() # flatten the matrix
+                 VYpp=VYpp.flatten() # flatten the matrix
+                
+                 VXC[i,:]=VXpp # Save the array X
+                 VYC[i,:]=VYpp  # save the array Y      
+         return(VXC,VYC,Frames)   
+
+        
+     def create_friction_cone(self,VXC,VYC,n):
+         ''' Create vectors for friction cone '''
+         C1=np.zeros((n,2)) # positive cone
+         C2=np.zeros((n,2)) # negative cone 
+         theta1=np.arctan(self.mu)
+         T1=np.array([[np.cos(theta1),-np.sin(theta1)],[np.sin(theta1),np.cos(theta1)]])
+         T2=np.array([[np.cos(-theta1),-np.sin(-theta1)],[np.sin(-theta1),np.cos(-theta1)]])
+        
+         for i in range((n)):
+             C1[i,:]=T1@VYC[i,:]
+             C2[i,:]=T2@VYC[i,:]  
+         return(C1,C2)  
+  
+
+
+     def find_contact_forces_2(self):
+        '''This function for extacting contact forces without regards for grasping'''
+        for i in range(len(self.time_contact)-1):
+            #print(np.round(self.time_contact[i],2))
+            #print(i)
+            tempx = {}
+            tempz = {}
+             
+            tempx2 = {}
+            tempz2 = {} 
+            
+            tempx21 = {}
+            tempz21 = {} 
+                        
+            tempx3 = {}
+            tempz3 = {}
+            
+            
+            tempx4 = {}
+            tempz4 = {}
+            
+            tempx5 = {}
+            tempz5 = {}
+            
+            tempx6 = {}
+            tempz6 = {}
+                        
+            
+            tempxx = {}
+            tempzz = {}
+            
+            tempxxx = {}
+            tempzzz = {}            
+            
+            tempx3["ballx"] = []
+            tempz3["ballz"] = []
+            
+            tempx4["ballx"] = []
+            tempz4["ballz"] = []
+
+            tempx5["ballx"] = []
+            tempz5["ballz"] = []
+            
+            tempx6["ballx"] = []
+            tempz6["ballz"] = []
+            
+
+            
+            for ii in range(self.ni):
+                tempx["ni{0}".format(ii)]=[]  #x position
+                tempz["ni{0}".format(ii)]=[]  #x position    
+                
+            for jj in range(self.nb):    
+                tempx2["nb{0}".format(jj)]=[]  #x position
+                tempz2["nb{0}".format(jj)]=[]  #x position
+                
+            for jj in range(self.nb):    
+                tempx21["nb{0}".format(jj)]=[]  #x position
+                tempz21["nb{0}".format(jj)]=[]  #x position
+                
+            for jj in range(self.nb):    
+                tempxx["nb{0}".format(jj)]=[]  #x position
+                tempzz["nb{0}".format(jj)]=[]  #x position  
+                
+                tempxxx["nb{0}".format(jj)]=[]  #x position
+                tempzzz["nb{0}".format(jj)]=[]  #x position      
+                
+            for j in range(int(self.number_contacts[i])):
+                temp1=self.AN[i][j]
+                temp2=self.BN[i][j]
+
+                ##### contact forces for passive particles
+                if temp1[0:4]=="gran" or temp2[0:4]=="gran":
+                    if temp2[0:4]=="gran":
+                        les=len(temp2)
+                        num=int(temp2[5:les])
+                        tempx["ni"+str(num)].append(self.x_contact_force2[j,i])
+                        tempz["ni"+str(num)].append(self.z_contact_force2[j,i])
+                        
+                     
+                    if temp1[0:4]=="gran":   
+                        les=len(temp1)
+                        num=int(temp1[5:les])
+                        tempx["ni"+str(num)].append(self.x_contact_force2[j,i])
+                        tempz["ni"+str(num)].append(self.z_contact_force2[j,i])    
+                         
+                            
+                ##### contact forces for boundary bots          
+                if temp1[0:3]=="bot" or temp2[0:3]=="bot":
+                    if temp2[0:3]=="bot":  
+                        les=len(temp2)
+                        num=int(temp2[3:les])
+                        tempx2["nb"+str(num)].append(self.x_contact_force2[j,i])
+                        tempz2["nb"+str(num)].append(self.z_contact_force2[j,i])
+                        
+                        tempx21["nb"+str(num)].append(self.Contact_points_x[j,i])
+                        tempz21["nb"+str(num)].append(self.Contact_points_z[j,i])      
+                        
+                    if temp1[0:3]=="bot":
+                        les=len(temp1)
+                        num=int(temp1[3:les])
+                        tempx2["nb"+str(num)].append(self.x_contact_force2[j,i])
+                        tempz2["nb"+str(num)].append(self.z_contact_force2[j,i]) 
+                        
+                        tempx21["nb"+str(num)].append(self.Contact_points_x[j,i])
+                        tempz21["nb"+str(num)].append(self.Contact_points_z[j,i])    
+                        
+                        
+                        
+                ##### contact forces for ball        
+                if temp1[0:4]=="ball" or temp2[0:4]=="ball" :   
+                    if temp1[0:4]=="ball":  
+                        tempx3["ballx"].append(self.x_contact_force2[j,i])
+                        tempz3["ballz"].append(self.z_contact_force2[j,i])
+                        
+                        tempx4["ballx"].append(self.Contact_points_x[j,i])
+                        tempz4["ballz"].append(self.Contact_points_z[j,i])  
+                        
+                        tempx5["ballx"].append(self.Dirxx_[j,i])
+                        tempz5["ballz"].append(self.Dirxz_[j,i]) 
+                        
+                        tempx6["ballx"].append(self.Dirzx_[j,i])
+                        tempz6["ballz"].append(self.Dirzz_[j,i])
+                        
+                    if temp2[0:4]=="ball":
+                        tempx3["ballx"].append(self.x_contact_force2[j,i])
+                        tempz3["ballz"].append(self.z_contact_force2[j,i])
+                        
+                        tempx4["ballx"].append(self.Contact_points_x[j,i])
+                        tempz4["ballz"].append(self.Contact_points_z[j,i])
+                        
+                        tempx5["ballx"].append(self.Dirxx_[j,i])
+                        tempz5["ballz"].append(self.Dirxz_[j,i]) 
+                        
+                        tempx6["ballx"].append(self.Dirzx_[j,i])
+                        tempz6["ballz"].append(self.Dirzz_[j,i])                        
+                    
+                    
+                        
+                ###### contact forces for ball and boundary robots          
+                if (temp1[0:4]=="ball" and temp2[0:3]=="bot") or (temp2[0:4]=="ball" or temp1[0:3]=="bot"):
+                    if temp1[0:4]=="ball" and temp2[0:3]=="bot" :
+                        #les=len(temp2)
+                        num=int(temp2[3:les])
+                        tempxx["nb"+str(num)].append(self.x_contact_force2[j,i])
+                        tempzz["nb"+str(num)].append(self.z_contact_force2[j,i])
+
+                        tempxxx["nb"+str(num)].append(self.Contact_points_x[j,i])
+                        tempzzz["nb"+str(num)].append(self.Contact_points_z[j,i])
+
+                    if temp2[0:4]=="ball" and temp1[0:3]=="bot" :
+                        #les=len(temp2)
+                        num=int(temp1[3:les])
+                        tempxx["nb"+str(num)].append(self.x_contact_force2[j,i])
+                        tempzz["nb"+str(num)].append(self.z_contact_force2[j,i])
+
+                        tempxxx["nb"+str(num)].append(self.Contact_points_x[j,i])
+                        tempzzz["nb"+str(num)].append(self.Contact_points_z[j,i])
+
+                
+                        
+            self.Forces_x_contact_particles["time_contact"+str(i)].append(tempx) # contact forces for passive particles x
+            self.Forces_z_contact_particles["time_contact"+str(i)].append(tempz) # contact forces for passive particles z
+             
+            self.Forces_x_ball_bot["time_contact"+str(i)].append(tempxx) # contact forces for ball and boundary robots x
+            self.Forces_z_ball_bot["time_contact"+str(i)].append(tempzz) # contact forces for ball and boundary robots  z 
+            
+            self.position_x_ball_bot["time_contact"+str(i)].append(tempxxx)  # contact position for ball and boundary robots x
+            self.position_z_ball_bot["time_contact"+str(i)].append(tempzzz)  # contact position for ball and boundary robots  z 
+            
+            self.Forces_x_contact_bots["time_contact"+str(i)].append(tempx2) # contact forces for boundary bots x
+            self.Forces_z_contact_bots["time_contact"+str(i)].append(tempz2) # contact forces for boundary bots z         
+            
+            self.position_x_contact_bot["time_contact"+str(i)].append(tempx21) # contact position for boundary bots x
+            self.position_z_contact_bot["time_contact"+str(i)].append(tempz21) # contact position for boundary bots z
+        
+            self.Force_x_contact_ball["time_contact"+str(i)].append(tempx3) # contact forces for ball x
+            self.Force_z_contact_ball["time_contact"+str(i)].append(tempz3) # contact forces for ball z   
+            
+            self.position_x_contact_ball["time_contact"+str(i)].append(tempx4) # contact position for ball x
+            self.position_z_contact_ball["time_contact"+str(i)].append(tempz4) # contact position for ball z               
+        
+
+            self.dir_xx_contact_ball["time_contact"+str(i)].append(tempx5) # contact position for ball x
+            self.dir_xz_contact_ball["time_contact"+str(i)].append(tempz5) # contact position for ball x
+        
+            self.dir_zx_contact_ball["time_contact"+str(i)].append(tempx6) # contact position for ball x
+            self.dir_zz_contact_ball["time_contact"+str(i)].append(tempz6) # contact position for ball x
+                                             
+                    
+             
+                  
+
+     def find_pressure(self):
+         ''' calculate the internal pressure '''
+
+         for i in range(len(self.time_contact)-1):
+             #print(i)
+             for j in range(int(self.number_contacts[i])):
+                 temp1=self.AN[i][j]
+                 temp2=self.BN[i][j]
+              
+                 # INTERIOR PRESSURE
+                 if temp1[0:4]=="gran" or temp2[0:4]=="gran":
+                     if temp2[0:4]=="gran":
+                         les=len(temp2)
+                         num=int(temp2[5:les])
+                         if temp2[4]=='b' :
+                             r=self.radius3 #* np.sqrt(2)
+                         else:
+                             r=self.radius2 
+                         A = np.pi * 2 * r * self.height  
+                        
+                         les=len(temp2)
+                         num=int(temp2[5:les])
+                         self.Pressure_x_particles[num,i]=abs((self.Contact_force_x[j,i]/A))+self.Pressure_x_particles[num,i]
+                         self.Pressure_z_particles[num,i]=abs((self.Contact_force_z[j,i]/A))+self.Pressure_z_particles[num,i]
+                            
+  
+                     if temp1[0:4]=="gran":
+                         if temp1[4]=='b' :
+                             r=self.radius3#*np.sqrt(2)
+                         else:
+                             r=self.radius2 
+                         A = np.pi * 2 * r * self.height    
+                         les=len(temp1)
+                         num=int(temp1[5:les])
+                         self.Pressure_x_particles[num,i]=abs((self.Contact_force_x[j,i]/A))+self.Pressure_x_particles[num,i]
+                         self.Pressure_z_particles[num,i]=abs((self.Contact_force_z[j,i]/A))+self.Pressure_z_particles[num,i]  
+
+                 # BOTS PRESSURE
+                 if temp1[0:3]=="bot" or temp2[0:3]=="bot":
+                     if temp2[0:3]=="bot":  
+                         les=len(temp2)
+                         num=int(temp2[3:les])
+                         self.Pressure_x_bots[num,i]=abs(self.Contact_force_x[j,i]/(self.bot_width/2 * 2 * np.pi * self.height))+self.Pressure_x_bots[num,i]
+                         self.Pressure_z_bots[num,i]=abs(self.Contact_force_z[j,i]/(self.bot_width/2 * 2 * np.pi * self.height))+self.Pressure_z_bots[num,i]
+                     else:
+                         les=len(temp1)
+                         num=int(temp1[3:les])
+                         self.Pressure_x_bots[num,i]=abs(self.Contact_force_x[j,i]/(self.bot_width/2 * 2 * np.pi * self.height))+self.Pressure_x_bots[num,i]
+                         self.Pressure_z_bots[num,i]=abs(self.Contact_force_z[j,i]/(self.bot_width/2 * 2 * np.pi * self.height))+self.Pressure_z_bots[num,i]
+                        
+
+     def find_pressure_mag(self):
+        FX=np.vstack([self.Pressure_x_particles])
+        FZ=np.vstack([self.Pressure_z_particles])
+        X=np.vstack([self.particle_position_x])
+        Z=np.vstack([self.particle_position_z])  
+        for j in range(len(self.time)-1):
+            for i in range(self.ni-1):
+                self.MAG_pressure_no_boundary[i,j]=np.sqrt(FZ[i,j]**2+FX[i,j]**2)   
+         
+
+        FX=np.vstack([self.Pressure_x_bots,self.Pressure_x_particles])
+        FZ=np.vstack([self.Pressure_z_bots,self.Pressure_z_particles])
+        X=np.vstack([self.bot_position_x,self.particle_position_x])
+        Z=np.vstack([self.bot_position_z,self.particle_position_z])  
+        for j in range(len(self.time)-1):
+            for i in range(self.nb+self.ni-1):
+                self.MAG_pressure[i,j]=np.sqrt(FZ[i,j]**2+FX[i,j]**2)  
+
+     
+     def average_pressure(self):
+         for j in range(len(self.time)-1):
+             self.Mag_avg_pressure.append(np.sum(self.MAG_pressure[:,j])/len(self.MAG_pressure[:,j]))
+             self.Mag_avg_pressure_no_boundary.append(np.sum(self.MAG_pressure_no_boundary[:,j])/len(self.MAG_pressure_no_boundary[:,j]))
+             
  
      def smooth_epsilon(self,epsilon):
         if len(epsilon)<10:
@@ -6880,6 +9256,193 @@ class import_data:
         return ret[n - 1:] / n
     
     
+     def save_grasp_parameters(self):
+         self.graspParams = {}
+
+     
+         self.graspParams["F_control"] = self.F_control 
+         self.graspParams["Forces_ball_x"] = self.Forces_ball_x  
+         self.graspParams["Forces_ball_z"] = self.Forces_ball_z
+
+         self.graspParams["contact_points_ball_x"] = self.contact_points_ball_x  
+         self.graspParams["contact_points_ball_z"] = self.contact_points_ball_z
+
+         self.graspParams["magnitude_forces_on_ball"] = self.magnitude_forces_on_ball
+         self.graspParams["torque_ball"] = self.torque_ball
+
+             
+         self.graspParams["Pressure_x_bots"] = self.Pressure_x_bots
+         self.graspParams["Pressure_z_bots"] = self.Pressure_z_bots
+         
+         self.graspParams["Pressure_x_particles"] = self.Pressure_x_particles
+         self.graspParams["Pressure_z_particles"] = self.Pressure_z_particles
+         
+         self.graspParams["MAG_pressure"] = self.MAG_pressure
+         self.graspParams["MAG_pressure_no_boundary"] = self.MAG_pressure_no_boundary
+
+
+
+         
+         self.graspParams["bot_contact_forces_x"]=self.bot_contact_forces_x
+         self.graspParams["bot_contact_forces_y"]=self.bot_contact_forces_y
+         self.graspParams["bot_contact_forces_z"]=self.bot_contact_forces_z        
+
+
+         self.graspParams["bot_total_forces_x"] = self.bot_total_forces_x
+         self.graspParams["bot_total_forces_y"] = self.bot_total_forces_y
+         self.graspParams["bot_total_forces_z"] = self.bot_total_forces_z
+         
+    
+
+
+         self.graspParams["particle_contact_forces_x"] = self.particle_contact_forces_x
+         self.graspParams["particle_contact_forces_y"] = self.particle_contact_forces_y
+         self.graspParams["particle_contact_forces_z"] = self.particle_contact_forces_z       
+
+
+         self.graspParams["particle_total_forces_x"] = self.particle_total_forces_x
+         self.graspParams["particle_total_forces_y"] = self.particle_total_forces_y
+         self.graspParams["particle_total_forces_z"] = self.particle_total_forces_z
+         
+
+
+         # self.graspParams["Forces_x_contact_particles"] = self.Forces_x_contact_particles
+         # self.graspParams["Forces_z_contact_particles"] = self.Forces_z_contact_particles
+             
+         # self.graspParams["Forces_x_contact_bots"] = self.Forces_x_contact_bots
+         # self.graspParams["Forces_z_contact_bots"] = self.Forces_z_contact_bots
+
+
+
+
+
+         self.graspParams["grasp_id"] = self.grasp_id
+             
+         self.graspParams["grasp_position_x"] = self.grasp_position_x
+         self.graspParams["grasp_position_z"] = self.grasp_position_z
+
+         self.graspParams["grasp_force_x"] = self.grasp_force_x
+         self.graspParams["grasp_force_z"] = self.grasp_force_z
+         self.graspParams["grasp_torque"] = self.grasp_torque
+  
+             
+         self.graspParams["WRENCHES"] = self.WRENCHES
+         self.graspParams["WRENCH_NORM"] = self.WRENCH_NORM
+             
+         self.graspParams["FRAMES"] = self.FRAMES
+             
+         self.graspParams["EPSILON"] = self.EPSILON
+         self.graspParams["HULLWRENCHNORM"] = self.HULLWRENCHNORM
+         self.graspParams["HULLWRENCHMAGS"] = self.HULLWRENCHNORM
+             
+         self.graspParams["framex"]  = self.framex
+         self.graspParams["framez"]  = self.framez
+
+         self.graspParams["FT"]  = self.FT
+             
+         self.graspParams["Cplus"]  = self.Cplus
+         self.graspParams["Cminus"]  = self.Cminus
+             
+         self.graspParams["FCplus"]  = self.FCplus  
+         self.graspParams["FCinus"]  = self.FCinus
+             
+         self.graspParams["F_mag"]  = self.F_mag
+         self.graspParams["HULL"] = self.HULL
+             
+         self.graspParams["WRENCHXY"] = self.WRENCHXY
+         self.graspParams["HULLXY"] = self.HULLXY
+                 
+         self.graspParams["WRENCHXT"] = self.WRENCHXT
+         self.graspParams["HULLXT"] = self.HULLXT
+
+         self.graspParams["WRENCHYT"] = self.WRENCHYT
+         self.graspParams["HULLYT"] = self.HULLYT     
+         self.graspParams["ANGLE_CHECK"] = self.ANGLE_CHECK
+         
+         
+         
+         
+         ### THESE ARE FORM COJNTACT POINTS ###
+         self.graspParams["temp_offset_theta"]=self.temp_offset_theta
+         self.graspParams["temp_frames"]=self.temp_frames
+         self.graspParams["temp_theta"]=self.temp_theta
+         self.graspParams["temp_id"]=self.temp_id
+         self.graspParams["temp_position_x"]=self.temp_position_x
+         self.graspParams["temp_position_z"]=self.temp_position_z
+         self.graspParams["temp_force_x"]=self.temp_force_x
+         self.graspParams["temp_force_z"]=self.temp_force_z
+         self.graspParams["temp_wrenches"]=self.temp_wrenches
+         self.graspParams["temp_wrenches_norm"]=self.temp_wrenches_norm
+         self.graspParams["temp_vx"]=self.temp_vx
+         self.graspParams["temp_vy"]=self.temp_vy
+         self.graspParams["temp_c1"]=self.temp_c1
+         self.graspParams["temp_c2"]=self.temp_c2
+         self.graspParams["EPSILON2"] = self.EPSILON2
+         self.graspParams["HULLWRENCHNORM2"] = self.HULLWRENCHNORM2
+         self.graspParams["HULLWRENCHMAGS2"] = self.HULLWRENCHMAGS2
+         self.graspParams["HULL2"] = self.HULL2  
+         
+         self.graspParams["WRENCHXY2"] = self.WRENCHXY2
+         self.graspParams["HULLXY2"] = self.HULLXY2
+                 
+         self.graspParams["WRENCHXT2"] = self.WRENCHXT2
+         self.graspParams["HULLXT2"] = self.HULLXT2
+
+         self.graspParams["WRENCHYT2"] = self.WRENCHYT2
+         self.graspParams["HULLYT2"] = self.HULLYT2
+         
+         
+         self.graspParams["temp_offset_theta2"]=self.temp_offset_theta2
+         self.graspParams["temp_frame2s"]=self.temp_frames2
+         self.graspParams["temp_theta2"]=self.temp_theta2
+         self.graspParams["temp_id2"]=self.temp_id2
+         self.graspParams["temp_position_x2"]=self.temp_position_x2
+         self.graspParams["temp_position_z2"]=self.temp_position_z2
+         self.graspParams["temp_force_x2"]=self.temp_force_x2
+         self.graspParams["temp_force_z2"]=self.temp_force_z2
+         self.graspParams["temp_wrenches2"]=self.temp_wrenches2
+         self.graspParams["temp_wrenches_norm2"]=self.temp_wrenches_norm2
+         self.graspParams["temp_vx2"]=self.temp_vx2
+         self.graspParams["temp_vy2"]=self.temp_vy2
+         self.graspParams["temp_c12"]=self.temp_c12
+         self.graspParams["temp_c22"]=self.temp_c22
+         
+         self.graspParams["EPSILON3"] = self.EPSILON3
+         self.graspParams["HULLWRENCHNORM3"] = self.HULLWRENCHNORM3
+         self.graspParams["HULLWRENCHMAGS3"] = self.HULLWRENCHMAGS3
+         self.graspParams["HULL3"] = self.HULL3  
+         
+         self.graspParams["WRENCHXY3"] = self.WRENCHXY3
+         self.graspParams["HULLXY3"] = self.HULLXY3
+                 
+         self.graspParams["WRENCHXT3"] = self.WRENCHXT3
+         self.graspParams["HULLXT3"] = self.HULLXT3
+
+         self.graspParams["WRENCHYT3"] = self.WRENCHYT3
+         self.graspParams["HULLYT3"] = self.HULLYT3        
+         
+         self.graspParams["EPSILON4"] = self.EPSILON4
+         self.graspParams["HULLWRENCHNORM4"] = self.HULLWRENCHNORM4
+         self.graspParams["HULLWRENCHMAGS4"] = self.HULLWRENCHMAGS4
+         self.graspParams["HULL4"] = self.HULL4  
+         
+         self.graspParams["WRENCHXY4"] = self.WRENCHXY4
+         self.graspParams["HULLXY4"] = self.HULLXY4
+                 
+         self.graspParams["WRENCHXT4"] = self.WRENCHXT4
+         self.graspParams["HULLXT4"] = self.HULLXT4
+
+         self.graspParams["WRENCHYT4"] = self.WRENCHYT4
+         self.graspParams["HULLYT4"] = self.HULLYT4                
+         
+       
+         
+         
+         self.graspParams['number_parameters'] = len(self.graspParams)
+
+         np.save(self.mainDirectory+'/'+self.name+'/graspParams.npy',self.graspParams)
+         
+
 
      def plot_epsilon4(self): 
          """ Epsilon regaridng the contact foprces without the smoothed out signal"""
@@ -6941,7 +9504,7 @@ class import_data:
          plt.close('all')
         
      def plot_Qcm(self): 
-         """ Qcm vs time """
+         """ Epsilon regaridng the contact foprces """
          fig, axs = plt.subplots(nrows=1, ncols=1,figsize=(5,3),dpi=300)
          axs.plot(self.time,self.Qcm,color='g',linewidth=1)
          axs.set_title('Qcm'+" vs time" )
@@ -6958,7 +9521,6 @@ class import_data:
      
      
      def sort_epsilon_and_theta(self):
-         """ function used to sort epsilon measurement vs the angle of approach """
         theta=self.THETA#[0:-2] 
         epsilon=self.EPSILON_
         for k, g in itertools.groupby(theta):
@@ -7067,7 +9629,43 @@ class import_data:
          plt.savefig(self.mainDirectory+'/'+self.name+'/'+'epsilon_theta_section.pdf')   
          plt.close('all')
          
+     def plot_pressure(self): 
+         """ Epsilon regaridng the contact foprces """
+ 
+         fig, axs = plt.subplots(nrows=1, ncols=1,figsize=(5,3),dpi=300)
+         axs.plot(self.time[0:-1],self.Mag_avg_pressure,color='g',linewidth=1)
+         x_ticks = np.linspace(self.time[0], self.time[-2],5,endpoint=True)
+         y_ticks = np.linspace(np.min(self.Mag_avg_pressure), np.max(self.Mag_avg_pressure),10,endpoint=True)
+         axs.set_xticks(np.round(x_ticks,2))
+         axs.set_yticks(np.round(y_ticks,2))
+         axs.set_title('Pressue'+" vs time" )
+         axs.set_ylabel('Pressure (N/m^2)',labelpad=1)
+         axs.set_xlabel('time [s]',labelpad=-2)
+         axs.xaxis.set_tick_params(width=.25,length=2,pad=1)
+         axs.yaxis.set_tick_params(width=.25,length=2,pad=1)
+         axs.grid(True)
+         plt.tight_layout()
+         plt.savefig(self.mainDirectory+'/'+self.name+'/'+'average_pressure.jpg')
+         plt.savefig(self.mainDirectory+'/'+self.name+'/'+'average_pressure.svg')    
+         plt.savefig(self.mainDirectory+'/'+self.name+'/'+'average_pressure.pdf')     
      
+         fig, axs = plt.subplots(nrows=1, ncols=1,figsize=(5,3),dpi=300)
+         axs.plot(self.time[0:-1],self.Mag_avg_pressure_no_boundary,color='b',linewidth=1)
+         x_ticks = np.linspace(self.time[0], self.time[-2],5,endpoint=True)
+         y_ticks = np.linspace(np.min(self.Mag_avg_pressure_no_boundary), np.max(self.Mag_avg_pressure_no_boundary),10,endpoint=True)
+         axs.set_xticks(np.round(x_ticks,2))
+         axs.set_yticks(np.round(y_ticks,2))
+         axs.set_title('Pressue_no boundary'+" vs time" )
+         axs.set_ylabel('Pressure (N/m^2)',labelpad=1)
+         axs.set_xlabel('time [s]',labelpad=-2)
+         axs.xaxis.set_tick_params(width=.25,length=2,pad=1)
+         axs.yaxis.set_tick_params(width=.25,length=2,pad=1)
+         axs.grid(True)
+         plt.tight_layout()
+         plt.savefig(self.mainDirectory+'/'+self.name+'/'+'average_pressure_no_boundary.jpg')
+         plt.savefig(self.mainDirectory+'/'+self.name+'/'+'average_pressure_no_boundary.svg')    
+         plt.savefig(self.mainDirectory+'/'+self.name+'/'+'average_pressure_no_boundary.pdf')          
+         plt.close('all')
      
      def plot_contact_number(self):
          """ contact numbers"""
@@ -7093,7 +9691,60 @@ class import_data:
          plt.savefig(self.mainDirectory+'/'+self.name+'/'+'number of contact.svg')    
          plt.savefig(self.mainDirectory+'/'+self.name+'/'+'number of contact.pdf')           
          
+     def plot_control_forces(self):
+         ''' plot the control forces'''
+         direct = os.path.join(self.mainDirectory+'/'+self.name+'/'+'_force_analysis')    
+         if not os.path.isdir(direct):
+             os.makedirs(direct)         
+         fig, axs = plt.subplots(nrows=2, ncols=1,figsize=(5,4),dpi=300)
+         FX=[]
+         FY=[]
+         for i in range(len(self.time)):
+             fxtemp=[]
+             fytemp=[]
+             for j in range(0,self.nb):
+                 Fx,Fy=self.control_forces_x[j,i],self.control_forces_z[j,i]  
+                 fxtemp.append(Fx)
+                 fytemp.append(Fy)
+             FX.append(np.sum(fxtemp))
+             FY.append(np.sum(fytemp)) 
+               
+         axs[0].plot(self.time,FX,color='tab:red',linewidth=1,label='x')
+         x_ticks = np.linspace(self.time[0], self.time[-1],5,endpoint=True)
+         y_ticks = np.linspace(np.min(FX), np.max(FX),5,endpoint=True)
+         axs[0].xaxis.set_tick_params(width=.25,length=2,pad=1)
+         axs[0].yaxis.set_tick_params(width=.25,length=2,pad=1)
+         axs[0].set_xticks(np.round(x_ticks,1))
+         axs[0].set_yticks(np.round(y_ticks,1))
+         axs[0].set_title(r'$\Sigma F_{cx}$'+" vs time" )
+         axs[0].set_ylabel('$\Sigma F_{cx}$',labelpad=1)         
+         axs[0].grid(True)        
+     # axs[0].set_xlim([2.5,10])  
+        
+         axs[1].plot(self.time,FY,color='tab:blue',linewidth=1,label='y')
+         x_ticks = np.linspace(self.time[0], self.time[-1],5,endpoint=True)
+         y_ticks = np.linspace(np.min(FY), np.max(FY),5,endpoint=True)
+         axs[1].xaxis.set_tick_params(width=.25,length=2,pad=1)
+         axs[1].yaxis.set_tick_params(width=.25,length=2,pad=1)
+         axs[1].set_xticks(np.round(x_ticks,1))
+         axs[1].set_yticks(np.round(y_ticks,1))
+         axs[1].set_title(r'$\Sigma F_{cy}$'+" vs time" )
+         axs[1].set_ylabel('$\Sigma F_{cy}$',labelpad=1)
+         axs[1].set_xticks(np.round(x_ticks,2))
+         axs[1].grid(True)   
+     # axs[1].set_xlim([2.5,10])  
+        
 
+         
+     # axs[2].set_xlim([2.5,10]) 
+         #fig.suptitle('Control forces', fontsize=16)        
+         plt.tight_layout()
+         plt.savefig(direct+"/control forces.jpg")
+         plt.savefig(direct+"/control forces.pdf")
+         plt.savefig(direct+"/control forces.svg")
+         plt.savefig(direct+"/control forces.eps")
+         plt.close('all')          
+         
          
      def plot_ball_position(self):
          ''' plot the control forces'''
@@ -7141,7 +9792,7 @@ class import_data:
 
          
      def plot_ball_position_vs_estimate(self):
-         ''' plot the ball position vs the center of contact hull '''
+         ''' plot the control forces'''
          direct = os.path.join(self.mainDirectory+'/'+self.name)    
          if not os.path.isdir(direct):
              os.makedirs(direct)         
@@ -7279,7 +9930,7 @@ class import_data:
          plt.close('all') 
 
      def plot_ball_contact_forces(self):
-         ''' plot the ball contact forces '''
+         ''' plot the control forces'''
          direct = os.path.join(self.mainDirectory+'/'+self.name+'/'+'_force_analysis')    
          if not os.path.isdir(direct):
              os.makedirs(direct)         
@@ -7335,8 +9986,10 @@ class import_data:
          plt.close('all')  
         
      def plot_potential_Field_value(self):
-         ''' plot the sum of the potential field sum'''
-        
+         ''' plot the control forces'''
+         #direct = os.path.join(self.mainDirectory+'/'+self.name+'/'+'_potential_Field_sum')    
+         #if not os.path.isdir(direct):
+         #    os.makedirs(direct)         
          fig, axs = plt.subplots(nrows=1, ncols=1,figsize=(5,4),dpi=300)
          axs.plot(self.time,self.Field_value_sum,color='tab:red',linewidth=1)
          #x_ticks = np.linspace(self.time[0], self.time[-1],5,endpoint=True)
@@ -7392,8 +10045,21 @@ class import_data:
          
     
      def plot_potential_Field_value_individual(self):
-         ''' plot the potnetial field individial values'''
- 
+         ''' plot the control forces'''
+        #direct = os.path.join(self.mainDirectory+'/'+self.name+'/'+'_potential_Field_individual')    
+         #if not os.path.isdir(direct):
+         #    os.makedirs(direct)      
+         
+         #time_label=(self.time[len(self.time)]-self.time[0])/dx +1
+         #nb_label=np.linspace(1,30,30,endpoint=True)
+         #vi=np.linspace(vimax,vimin,stepsv,endpoint=True)
+         #vi_1=vi
+         #stepsnb=(self.nb-1) + 1
+         
+         
+         #nb_label=np.linspace(1,30,stepsnb,endpoint=True)
+         #NB=np.linspace(1,self.nb,self.nb,endpoint=True)         
+         
          NB_=np.linspace(0,self.nb-1,self.nb,endpoint=True)
          T,NB__ = np.meshgrid(self.time,NB_)
          fig, axs = plt.subplots(nrows=1, ncols=1,figsize=(5,5),dpi=300)
@@ -7699,7 +10365,6 @@ class import_data:
         
          plt.close('all')    
 
-     #### Video create functions
      def create_frames_search(self,membrane,d,entry,title):
         ''' Create frames to show the robot and the pull force and epsilon metric in one plot'''
         fm._rebuild()
@@ -7707,7 +10372,13 @@ class import_data:
         plt.rcParams['mathtext.fontset'] = 'dejavuserif'
         plt.rcParams['font.size'] = 8
         plt.rcParams['axes.linewidth'] = .1
+        
+
         count=0
+        Num_contact1=[]
+        Num_contact2=[]
+        for i in range(len(self.temp_id2)):
+            Num_contact1.append(len(self.temp_id2[i]))
         i=entry    
         #for i in range(len(self.time)-2):    
   
@@ -7744,8 +10415,10 @@ class import_data:
             r=const*np.sqrt(3)/3
             x1=-r
             y1=0
+           
             x2=-r*np.cos(2*np.pi/3)
             y2=r*np.sin(2*np.pi/3)
+           
             x3=-r*np.cos(4*np.pi/3)
             y3=r*np.sin(4*np.pi/3)
            
@@ -7849,7 +10522,7 @@ class import_data:
 
 
      def create_frames_rfunction(self,entry):
-        ''' Create frames for a video this was used to see the instantaneous R-function used for grasping_epsilon '''
+        ''' Create frames for a video '''
         fm._rebuild()
         plt.rcParams['font.family'] = 'Times New Roman'
         plt.rcParams['mathtext.fontset'] = 'dejavuserif'
@@ -7909,10 +10582,22 @@ class import_data:
         #axs.set_yticks(x_ticks)
         axs.set_title('$\phi(x)$')
         fig.colorbar(im1, ax=axs)
-       
+        # if save==True:
+        #     plt.savefig(Directory+'/'+name+'_'+'time'+str(np.round(self.time[i],2))+name+'.jpg')
+        #     plt.savefig(Directory+'/'+name+'_'+'time'+str(np.round(self.time[i],2))+name+'.svg')    
+        #     plt.savefig(Directory+'/'+name+'_'+'time'+str(np.round(self.time[i],2))+name+'.pdf')
+        
+            
+        #     plt.close('all')          
+
+         
+
+
+
+
 
      def create_frames_snapshot(self,name,save,membrane,Directory,entry,wxmin,wxmax,wymin,wymax,fxs,fys,title_on):
-        ''' Create frames for for single snapshot  '''
+        ''' Create frames for a video '''
         fm._rebuild()
         plt.rcParams['font.family'] = 'Times New Roman'
         plt.rcParams['mathtext.fontset'] = 'dejavuserif'
@@ -7939,6 +10624,9 @@ class import_data:
             (self.segments)=self.create_segment(x,y) 
             
         if self.geom=="triangle":
+            #const=self.ball_radius*2*np.pi/3
+            #r=np.sqrt((const**2)/(2-2*np.cos(7*np.pi/6)))
+            
             const=self.ball_radius*2*np.pi/3
             #r=np.sqrt((const**2)/(2-2*np.cos(7*np.pi/6)))
             r=const*np.sqrt(3)/3
@@ -7957,7 +10645,8 @@ class import_data:
             (self.segments)=self.create_segment(x__,y__)   
         
         
-        if self.geom=="import": 
+        if self.geom=="import":
+                
             R=1.25
             nsides=50
             theta=np.linspace(3*np.pi/2 + .415,(2*np.pi + 3*np.pi/2) - .415,nsides,endpoint=True)
@@ -8008,6 +10697,7 @@ class import_data:
             (self.segments)=self.create_segment(y__,x__)
         
         
+        #ax.plot(x,y)
         for j in range(0,self.nb):
             x0,y0=self.bot_position_x[j,i],self.bot_position_z[j,i]
             if self.geom=="square":
@@ -8110,7 +10800,847 @@ class import_data:
             plt.close('all')          
 
          
+     # def create_frames(self,membrane,wxmin,wxmax,wymin,wymax):
+     #    ''' Create frames for a video '''
+     #    fm._rebuild()
+     #    plt.rcParams['font.family'] = 'Times New Roman'
+     #    plt.rcParams['mathtext.fontset'] = 'dejavuserif'
+     #    plt.rcParams['font.size'] = 8
+     #    plt.rcParams['axes.linewidth'] = .1
+     #    direct = os.path.join(self.mainDirectory+self.name,'_frames')    
+     #    if not os.path.isdir(direct):
+     #        os.makedirs(direct)
+     #    count=0
+     #    fxb = self.Psi.Fx_point(self.X,self.Y,0,0)
+     #    fyb = self.Psi.Fy_point(self.X,self.Y,0,0)   
+     #    Fz1 = fxb-1*fyb
+     #    Fx1 = -fyb-1*fxb
+     #    for i in range(len(self.time)-2):    
+     #        fig = plt.figure(dpi=300)
+     #        fig.set_size_inches(4, 4)
+            
+     #        ax = plt.axes(xlim=(wxmin,wxmax), ylim=(wymin, wymax))
+     #        xcenter=self.ballx_position[i]
+     #        ycenter=self.ballz_position[i]
+            
+            
+     #        if self.geom=="square":
+     #            const=self.ball_radius*2
+     #            rx=const
+     #            ry=const
+     #            w=rx/2
+     #            h=ry/2                    
+     #            x=[w+xcenter,-w+xcenter,-w+xcenter,w+xcenter,w+xcenter]
+     #            y=[h+ycenter,h+ycenter,-h+ycenter,-h+ycenter,h+ycenter]
+     #            (self.segments)=self.create_segment(x,y) 
+                
+     #        if self.geom=="triangle":
+     #            #const=self.ball_radius*2*np.pi/3
+     #            #r=np.sqrt((const**2)/(2-2*np.cos(7*np.pi/6)))
+                
+     #            const=self.ball_radius*2*np.pi/3
+     #            #r=np.sqrt((const**2)/(2-2*np.cos(7*np.pi/6)))
+     #            r=const*np.sqrt(3)/3
+     #            x1=-r
+     #            y1=0
+               
+     #            x2=-r*np.cos(2*np.pi/3)
+     #            y2=r*np.sin(2*np.pi/3)
+               
+     #            x3=-r*np.cos(4*np.pi/3)
+     #            y3=r*np.sin(4*np.pi/3)
+               
+     #            x__ = [x1,x2,x3,x1]
+     #            y__ = [y1,y2,y3,y1]
+               
+     #            (self.segments)=self.create_segment(x__,y__)   
+            
+     #        #ax.plot(x,y)
+     #        for j in range(0,self.nb):
+     #            x0,y0=self.bot_position_x[j,i],self.bot_position_z[j,i]
+     #            if self.geom=="square":
+     #                if self.PHI(x0,y0,self.segments)<.15:
+     #                    patch = plt.Circle((x0, y0),self.bot_width/2, fc='tab:red')
+     #                    ax.add_patch(patch)
+                   
+     #                else:
+     #                    patch = plt.Circle((x0, y0),self.bot_width/2, fc='k')
+     #                    ax.add_patch(patch) 
+                        
+     #            elif self.geom=="triangle":
+     #                if self.PHI(x0-xcenter,y0-ycenter,self.segments)<.1:
+     #                    patch = plt.Circle((x0, y0),self.bot_width/2, fc='tab:red')
+     #                    ax.add_patch(patch)
+                   
+     #                else:
+     #                    patch = plt.Circle((x0, y0),self.bot_width/2, fc='k')
+     #                    ax.add_patch(patch)                         
+                        
+     #            elif self.geom=="circle":
+                    
+     #                q=np.sqrt((x0-self.ballx_position[i])**2 + (y0-self.ballz_position[i])**2)
+     #                if q<=(2 * self.bot_width/2 + self.ball_radius):
+     #                    patch = plt.Circle((x0, y0),self.bot_width/2, fc='tab:red')
+     #                    ax.add_patch(patch)
+                   
+     #                else:
+     #                    patch = plt.Circle((x0, y0),self.bot_width/2, fc='k')
+     #                    ax.add_patch(patch)  
+                        
+                        
+     #            else:
+     #                if self.F_random_obj(x0-self.ballx_position[i],y0-self.ballz_position[i])<.2:
+     #                    patch = plt.Circle((x0, y0),self.bot_width/2, fc='tab:red')
+     #                    ax.add_patch(patch)
+                   
+     #                else:
+     #                    patch = plt.Circle((x0, y0),self.bot_width/2, fc='k')
+     #                    ax.add_patch(patch)  
+                    
+     #        if membrane==True:
+     #            for j in range(0,self.nm):
+                    
+     #                x0,y0=self.membrane_position_x[j,i],self.membrane_position_z[j,i]  
+     #                patch = plt.Circle((x0, y0),self.skin_width/2, fc='tab:red')
+     #                ax.add_patch(patch)
+                
+                
 
+     #        for j in range(self.ni):
+     #            x0,y0=self.particle_position_x[j,i],self.particle_position_z[j,i]
+
+     #            if np.round(self.Rm[j],4)==0.0508:
+     #                c='tab:blue'
+     #            else:
+     #                c='tab:green'
+                    
+     #            patch = plt.Circle((x0, y0),self.Rm[j], fc=c)
+     #            ax.add_patch(patch)         
+     
+     #        if self.control_mode=="grasping" or self.control_mode=="grasping_explore":
+     #            if self.geom=="circle":
+     #                x0,y0=self.ballx_position[i],self.ballz_position[i]
+     #                patch = plt.Circle((x0, y0),self.ball_radius,fc='none',edgecolor='black',linewidth=1)
+     #                ax.add_patch(patch)
+            
+     #            elif self.geom=="square":
+     #                const_=self.ball_radius*2
+     #                x0,y0=self.ballx_position[i] - const_/2,self.ballz_position[i] - const_/2
+     #                patch = matplotlib.patches.Rectangle((x0, y0),const_, const_,fc='none',edgecolor='black',linewidth=1)     
+     #                ax.add_patch(patch)   
+                    
+     #            elif self.geom=="triangle":
+     #                x0,y0=self.ballx_position[i],self.ballz_position[i] 
+     #                const=self.ball_radius*2*np.pi/3
+     #                #r=np.sqrt((const**2)/(2-2*np.cos(7*np.pi/6)))
+     #                r=const*np.sqrt(3)/3
+     #                #print(r)
+     #                patch = matplotlib.patches.RegularPolygon((x0,y0),int(3),r,orientation=np.pi/2,fc='none',edgecolor='black',linewidth=1)
+     #                ax.add_patch(patch) 
+     #                #xp=np.hstack([self.segments[:,0],self.segments[0,0]])
+     #                #yp=np.hstack([self.segments[:,1],self.segments[0,1]])
+     #                #ax.plot(xp+x0,yp+y0,color='tab:red',linestyle='dashed',linewidth=2,zorder=0)
+               
+     #            elif self.geom=="import":
+     #                # R=1.25
+     #                # theta1=0.41
+     #                # theta2=2*np.pi-theta1
+     #                # theta=np.linspace(theta1,theta2,100)
+
+     #                # x1_=-R*np.cos(theta)
+     #                # y1_=R*np.sin(theta)
+
+
+     #                # a=.5
+     #                # b=1.65
+     #                # c=2.02
+
+     #                # w1=.5
+     #                # w2=.63
+
+
+     #                # x2_=[x1_[0],x1_[0]-a]
+     #                # y2_=[w1,w1]
+
+     #                # x3_=[-b,-b]
+     #                # y3_=[w1,w2]
+
+     #                # x4_=[-b,-c]
+     #                # y4_=[w2,w2]
+
+     #                # x5_=[-c,-c]
+     #                # y5_=[w2,-w2]
+
+     #                # x6_=[-c,-b]
+     #                # y6_=[-w2,-w2]
+
+     #                # x7_=[-b,-b]
+     #                # y7_=[-w1,-w2]
+
+     #                # x8_=[-b,x1_[-1]]
+     #                # y8_=[-w1,-w1]
+     #                # ax.plot(x1_,y1_,color='k')
+     #                # ax.plot(x2_,y2_,color='k')
+     #                # ax.plot(x3_,y3_,color='k')
+     #                # ax.plot(x4_,y4_,color='k')
+     #                # ax.plot(x5_,y5_,color='k')
+     #                # ax.plot(x6_,y6_,color='k')
+     #                # ax.plot(x7_,y7_,color='k')
+     #                # ax.plot(x8_,y8_,color='k')
+     #                x0,y0=self.ballx_position[i],self.ballz_position[i] 
+     #                R=1.25
+     #                theta1=0.41
+     #                theta2=2*np.pi-theta1
+     #                theta=np.linspace(theta1,theta2,100)
+
+     #                theta3=0.41
+     #                theta4=2*np.pi-theta1
+
+     #                x1_=-R*np.cos(theta)+x0
+     #                y1_=R*np.sin(theta)+y0
+
+     #                x1a_=R*np.cos(theta3)
+     #                y1a_=R*np.sin(theta3)
+
+     #                x1b_=R*np.cos(theta4)
+     #                y1b_=R*np.sin(theta4)
+
+     #                a=.5
+     #                b=1.65
+     #                c=2.02
+
+     #                w1=.5
+     #                w2=.63
+
+     #                p1=-R*np.cos(theta[0])
+     #                p2=-R*np.cos(theta[-1])
+     #                x2_=[p1,p1-a]+x0*np.ones(2)
+     #                y2_=[w1,w1]+y0*np.ones(2)
+
+     #                x3_=[-b,-b]+x0*np.ones(2)
+     #                y3_=[w1,w2]+y0*np.ones(2)
+
+     #                x4_=[-b,-c]+x0*np.ones(2)
+     #                y4_=[w2,w2]+y0*np.ones(2)
+
+     #                x5_=[-c,-c]+x0*np.ones(2)
+     #                y5_=[w2,-w2]+y0*np.ones(2)
+
+     #                x6_=[-c,-b]+x0*np.ones(2)
+     #                y6_=[-w2,-w2]+y0*np.ones(2)
+
+     #                x7_=[-b,-b]+x0*np.ones(2)
+     #                y7_=[-w1,-w2]+y0*np.ones(2)
+
+     #                x8_=[-b,p2]+x0*np.ones(2)
+     #                y8_=[-w1,-w1]+y0*np.ones(2)
+
+     #                # x9_=[x1_[-1],x1a_]
+     #                # y9_=[w1,w1]
+
+     #                # x10_=[x1a_,x1a_+a]
+     #                # y10_=[w1,w1]
+
+     #                # x11_=[b,b]
+     #                # y11_=[w1,w2]
+
+     #                # x12_=[b,c]
+     #                # y12_=[w2,w2]
+
+     #                # x13_=[c,c]
+     #                # y13_=[w2,-w2]
+
+     #                # x14_=[c,b]
+     #                # y14_=[-w2,-w2]
+
+     #                # x15_=[b,b]
+     #                # y15_=[-w1,-w2]
+
+     #                # x16_=[b,x1b_]
+     #                # y16_=[-w1,-w1]
+        
+     #                # x17_=[x1b_,x1_[-1]]
+     #                # y17_=[-w1,-w1]
+     #                #x_=[x2_[0],x2_[1],x3_[1],x4_[1],x5_[1],x6_[1],x7_[0],x8_[1],x9_[1],x10_[1],x11_[1],x12_[1],x13_[1],x14_[1],x15_[0],x16_[1]]
+     #                #y_=[y2_[0],y2_[1],y3_[1],y4_[1],y5_[1],y6_[1],y7_[0],y8_[1],y9_[1],y10_[1],y11_[1],y12_[1],y13_[1],y14_[1],y15_[0],y16_[1]]
+     #                ax.plot(x1_,y1_,color='k')
+     #                ax.plot(x2_,y2_,color='k')
+     #                ax.plot(x3_,y3_,color='k')
+     #                ax.plot(x4_,y4_,color='k')
+     #                ax.plot(x5_,y5_,color='k')
+     #                ax.plot(x6_,y6_,color='k')
+     #                ax.plot(x7_,y7_,color='k')
+     #                ax.plot(x8_,y8_,color='k')
+
+     #                # ax.plot(x9_,y9_,color='k')
+     #                # ax.plot(x10_,y10_,color='k')
+     #                # ax.plot(x11_,y11_,color='k')
+     #                # ax.plot(x12_,y12_,color='k')
+     #                # ax.plot(x13_,y13_,color='k')
+     #                # ax.plot(x14_,y14_,color='k')
+     #                # ax.plot(x15_,y15_,color='k')
+     #                # ax.plot(x16_,y16_,color='k')
+     #                # ax.plot(x17_,y17_,color='k')
+            
+     #        #ax.streamplot(self.X,self.Y,Fx1,Fz1,color='b',density = 2,linewidth=0.1,arrowsize=0.25)
+            
+     #        plt.title('Time= ' + str(np.round(self.time[i],0)),fontsize=12)
+     #        plt.gca().set_aspect('equal', adjustable='box')
+            
+     #        plt.savefig(direct+"/frame%04d.jpg" % count)
+     #        print(str(i)+ "of"+ str(len(self.time-1)))     
+     #        count=count+1 
+            
+     #        plt.close('all')          
+     #    self.create_video('_frames','frames')
+
+
+
+
+  
+        
+     def create_frames_contact_forces(self,wxmax=-0.5,wxmin=-2.5,wymin=-1,wymax=1):
+        fm._rebuild()
+        plt.rcParams['font.family'] = 'Times New Roman'
+        plt.rcParams['mathtext.fontset'] = 'dejavuserif'
+        plt.rcParams['font.size'] = 8
+        plt.rcParams['axes.linewidth'] = .1
+        
+        direct1 = os.path.join(self.mainDirectory+self.name,'_contact_forces_all')    
+        if not os.path.isdir(direct1):
+            os.makedirs(direct1)
+            
+            
+        direct2 = os.path.join(self.mainDirectory+self.name,'_contact_forces_within_cone')    
+        if not os.path.isdir(direct2):
+            os.makedirs(direct2)
+                       
+        count=0
+
+        for i in range(len(self.time)-2):
+            F_contact_ballx_entry=self.Force_x_contact_ball["time_contact"+str(i)] # EXTRACT THE ENTRY
+            F_contact_ballz_entry=self.Force_z_contact_ball["time_contact"+str(i)] # EXTRACT THE ENTRY
+
+            #print(F_contact_ballx_entry)
+            F_contact_ballx_entry=F_contact_ballx_entry[0]['ballx'] #  FURTHER EXTRACTION 
+            F_contact_ballz_entry=F_contact_ballz_entry[0]['ballz'] #  FURTHER EXTRACTION 
+            
+        
+            Position_x_contact_entry=self.position_x_contact_ball["time_contact"+str(i)] # EXTRACT THE ENTRY
+            Position_z_contact_entry=self.position_z_contact_ball["time_contact"+str(i)] # EXTRACT THE ENTRY
+
+            #print(Position_x_contact_entry)
+            Position_x_contact_entry=Position_x_contact_entry[0]['ballx'] #  FURTHER EXTRACTION 
+            Position_z_contact_entry=Position_z_contact_entry[0]['ballz'] #  FURTHER EXTRACTION 
+
+            dir_xx_contact_ball_entry=self.dir_xx_contact_ball["time_contact"+str(i)]
+            dir_xz_contact_ball_entry=self.dir_xz_contact_ball["time_contact"+str(i)]
+            dir_zx_contact_ball_entry=self.dir_zx_contact_ball["time_contact"+str(i)]
+            dir_zz_contact_ball_entry=self.dir_zz_contact_ball["time_contact"+str(i)]
+
+            dir_xx_contact_ball_entry=dir_xx_contact_ball_entry[0]['ballx']
+            dir_xz_contact_ball_entry=dir_xz_contact_ball_entry[0]['ballz']
+            dir_zx_contact_ball_entry=dir_zx_contact_ball_entry[0]['ballx']
+            dir_zz_contact_ball_entry=dir_zz_contact_ball_entry[0]['ballz']
+            
+            
+            x0b,y0b=self.ballx_position[i],self.ballz_position[i]
+            
+            
+            if self.geom=="square":
+                const=self.ball_radius*2-.01
+                rx=const
+                ry=const
+                w=rx/2
+                h=ry/2                    
+
+                x__=[w,-w,-w,w,w]
+                y__=[h,h,-h,-h,h]
+                (segments)=self.create_segment(x__,y__) 
+
+            if self.geom=="triangle":
+                const=self.ball_radius*2*np.pi/3
+                r=const*np.sqrt(3)/3 -.01
+                x1=r
+                y1=0
+               
+                x2=r*np.cos(2*np.pi/3)
+                y2=r*np.sin(2*np.pi/3)
+               
+                x3=r*np.cos(4*np.pi/3)
+                y3=r*np.sin(4*np.pi/3)
+               
+                x__ = [x1,x2,x3,x1]
+                y__ = [y1,y2,y3,y1]
+                (segments)=self.create_segment(x__,y__)
+
+            const=(wxmax-wxmin)/(wymax-wymin)
+
+
+            fig = plt.figure(dpi=300)
+            fig.set_size_inches(const*6,6)
+            ax = plt.axes(xlim=(wxmin,wxmax), ylim=(wymin, wymax))
+            if self.geom=="square":
+                const_=self.ball_radius*2
+                xb,yb=0-const_/2,0 - const_/2
+                x0_=xb
+                y0_=yb
+                patch = matplotlib.patches.Rectangle((x0_, y0_),const_, const_,fc='none',edgecolor='tab:grey')     
+                ax.add_patch(patch)
+            if self.geom=="circle":
+                x0_=0
+                y0_=0              
+                patch = plt.Circle((x0_, y0_),self.ball_radius,fc='none',edgecolor='tab:grey')
+                ax.add_patch(patch)
+                
+            if self.geom=="triangle":               
+                const=self.ball_radius*2*np.pi/3
+                r=const*np.sqrt(3)/3 +.01
+                patch = matplotlib.patches.RegularPolygon((0,0),int(3),r,orientation=-np.pi/2,fc='none',edgecolor='tab:grey')
+                ax.add_patch(patch) 
+                
+            if self.geom=="import":
+                R=1.25
+                theta1=0.41
+                theta2=2*np.pi-theta1
+                theta=np.linspace(theta1,theta2,100)
+
+                x1_=-R*np.cos(theta)
+                y1_=R*np.sin(theta)
+
+
+                a=.5
+                b=1.65
+                c=2.02
+
+                w1=.5
+                w2=.63
+                
+                x2_=[x1_[0],x1_[0]-a]
+                y2_=[w1,w1]
+
+                x3_=[-b,-b]
+                y3_=[w1,w2]
+
+                x4_=[-b,-c]
+                y4_=[w2,w2]
+
+                x5_=[-c,-c]
+                y5_=[w2,-w2]
+
+                x6_=[-c,-b]
+                y6_=[-w2,-w2]
+
+                x7_=[-b,-b]
+                y7_=[-w1,-w2]
+
+                x8_=[-b,x1_[-1]]
+                y8_=[-w1,-w1]
+                ax.plot(x1_,y1_,color='k')
+                ax.plot(x2_,y2_,color='k')
+                ax.plot(x3_,y3_,color='k')
+                ax.plot(x4_,y4_,color='k')
+                ax.plot(x5_,y5_,color='k')
+                ax.plot(x6_,y6_,color='k')
+                ax.plot(x7_,y7_,color='k')
+                ax.plot(x8_,y8_,color='k') 
+                
+            
+            X=[]
+            Y=[]
+            theta=[]
+            
+            temp_position_x = []
+            temp_position_z = []
+            temp_force_x = []
+            temp_force_z = []  
+            temp_vx = []
+            temp_vy = []
+            temp_c1 = []
+            temp_c2 = []
+            temp_id = []
+            temp_theta = []
+            temp_frames=[]
+            temp_offset_theta=[]
+
+
+
+            frames = np.zeros((len(Position_x_contact_entry),3))
+            Vx=np.zeros((len(Position_x_contact_entry),2))
+            Vy=np.zeros((len(Position_x_contact_entry),2))
+            C1=np.zeros((2,len(Position_x_contact_entry))) # positive cone
+            C2=np.zeros((2,len(Position_x_contact_entry))) # negative cone 
+            for j in range(len(Position_x_contact_entry)):
+                x0,y0=Position_x_contact_entry[j],Position_z_contact_entry[j]
+                ax.text(x0-x0b,y0-y0b,str(j),size=8)
+                theta1=np.arctan2(.2,1) #+ frames[j,2]             
+                if self.geom=="square" or self.geom=="triangle":
+                    Fx1=self.PHIDX(x0-x0b,y0-y0b,segments)
+                    Fy1=self.PHIDY(x0-x0b,y0-y0b,segments)
+                    mag=np.sqrt(Fx1**2 + Fy1**2)
+                    Fx1=-Fx1/mag
+                    Fy1=-Fy1/mag
+                    F_t=np.array([Fx1,Fy1])
+                    X.append(x0-x0b)
+                    Y.append(y0-y0b)
+                    t=self.angle(Fx1, Fy1)-np.pi/2
+                    theta.append(t)
+                
+                    frames[j,0]=x0-x0b
+                    frames[j,1]=y0-y0b
+                    frames[j,2]=t
+                    #mag=np.sqrt(F_contact_ballx_entry[j]**2 + F_contact_ballz_entry[j]**2)
+                    mag=1
+                
+                    
+                if self.geom=="import":
+                    Fx1,Fy1=self.F_random_objdx(x0-x0b,y0-y0b),self.F_random_objdy(x0-x0b,y0-y0b)
+                    mag=np.sqrt(Fx1**2 + Fy1**2)
+                    Fx1=Fx1/mag
+                    Fy1=Fy1/mag
+                    F_t=np.array([Fx1,Fy1])
+                    X.append(x0-x0b)
+                    Y.append(y0-y0b)
+                    t=self.angle(Fx1, Fy1)-np.pi/2
+                    theta.append(t)
+                
+                    frames[j,0]=x0-x0b
+                    frames[j,1]=y0-y0b
+                    frames[j,2]=t
+                    
+                    
+                if self.geom=="circle":
+                    Fx1,Fy1=(self.ballx_position[i]-x0),(self.ballz_position[i]-y0)
+                    mag=np.sqrt(Fx1**2 + Fy1**2)
+                    Fx1=Fx1/mag
+                    Fy1=Fy1/mag
+                    F_t=np.array([Fx1,Fy1])
+                    X.append(x0-x0b)
+                    Y.append(y0-y0b)
+                    t=self.angle(Fx1, Fy1)-np.pi/2
+                    theta.append(t)
+                
+                    frames[j,0]=x0-x0b
+                    frames[j,1]=y0-y0b
+                    frames[j,2]=t
+                    
+                    
+                    
+                    
+            
+                
+                T=np.array([[np.cos(t),-np.sin(t)],[np.sin(t),np.cos(t)]]) # transformation matrix   
+                VYpp=T@np.array([[0],[1]]) # transform coordinates X
+                VXpp=T@np.array([[1],[0]]) # transform coordinates Y
+                VXpp=VXpp.flatten() # flatten the matrix
+                VYpp=VYpp.flatten() # flatten the matrix
+            
+                Vx[j,:]=VXpp # Save the array X
+                Vy[j,:]=VYpp  # save the array Y     
+                
+                T1=np.array([[np.cos(theta1),-np.sin(theta1)],[np.sin(theta1),np.cos(theta1)]]) # transformation matrix   
+                T2=np.array([[np.cos(-theta1),-np.sin(-theta1)],[np.sin(-theta1),np.cos(-theta1)]])    
+                tem=Vy[j,:].T
+                C1[:,j]=T1@tem
+                C2[:,j]=T2@tem
+            
+            
+                
+                mag1 = np.sqrt(F_contact_ballx_entry[j]**2 + F_contact_ballz_entry[j]**2)
+                mag2=np.sqrt(dir_xx_contact_ball_entry[j]**2 + dir_xz_contact_ball_entry[j]**2)
+                mag3=np.sqrt(dir_zx_contact_ball_entry[j]**2 + dir_zz_contact_ball_entry[j]**2) 
+                temp_dirr=[dir_xx_contact_ball_entry[j]/mag2,dir_xz_contact_ball_entry[j]/mag2]
+            
+                
+                # ax.quiver(x0-x0b,y0-y0b, dir_xx_contact_ball_entry[j]/mag2,dir_xz_contact_ball_entry[j]/mag2,scale=20,color="k",width=.007,zorder=3)    
+                # ax.quiver(x0-x0b,y0-y0b, F_contact_ballx_entry[j]/mag1,F_contact_ballz_entry[j]/mag1,scale=10, color="tab:orange",width=.007,zorder=5)      
+                # ax.quiver(x0-x0b,y0-y0b, Fx1,Fy1,scale=10, color="green",width=.007,zorder=1)
+                # ax.quiver(x0-x0b,y0-y0b,C1[0,j],C1[1,j] ,color="magenta", scale=10,label='Positive cone')     
+                # ax.quiver(x0-x0b,y0-y0b,C2[0,j],C2[1,j] ,color="magenta", scale=10,label='negative cone')
+                # ax.quiver(x0-x0b,y0-y0b, VXpp[0],VXpp[1],scale=15,color="b",width=.007,zorder=2)  
+                # ax.quiver(x0-x0b,y0-y0b, VYpp[0],VYpp[1],scale=15,color="r",width=.007,zorder=2)  
+            
+
+                theta1=np.arctan2(.2,1) 
+                temp=np.round(np.nan_to_num(np.arccos(np.dot(VYpp ,temp_dirr))),2)
+                if temp<np.pi and temp > np.pi-theta1:
+                    #print("triggered")
+                    fx=np.cos(-temp)*F_contact_ballx_entry[j]-np.sin(-temp)*F_contact_ballz_entry[j]
+                    fy=np.sin(-temp)*F_contact_ballx_entry[j]+np.cos(-temp)*F_contact_ballz_entry[j]
+                    dirxx=np.cos(-temp)*dir_xx_contact_ball_entry[j]-np.sin(-temp)*dir_xz_contact_ball_entry[j]
+                    dirxz=np.sin(-temp)*dir_xx_contact_ball_entry[j]+np.cos(-temp)*dir_xz_contact_ball_entry[j]
+                    temp=temp-np.pi
+                    
+                    ax.quiver(x0-x0b,y0-y0b, dirxx/mag2,dirxz/mag2,scale=20,color="k",width=.007,zorder=3)    
+                    ax.quiver(x0-x0b,y0-y0b, fx/mag1,fy/mag1,scale=10, color="tab:orange",width=.007,zorder=5)      
+                    ax.quiver(x0-x0b,y0-y0b, Fx1,Fy1,scale=10, color="green",width=.007,zorder=1)
+                    ax.quiver(x0-x0b,y0-y0b,C1[0,j],C1[1,j] ,color="magenta", scale=10,label='Positive cone')     
+                    ax.quiver(x0-x0b,y0-y0b,C2[0,j],C2[1,j] ,color="magenta", scale=10,label='negative cone')
+                    ax.quiver(x0-x0b,y0-y0b, VXpp[0],VXpp[1],scale=15,color="b",width=.007,zorder=2)  
+                    ax.quiver(x0-x0b,y0-y0b, VYpp[0],VYpp[1],scale=15,color="r",width=.007,zorder=2)  
+            
+                else:
+                    temp=temp
+                    fx=F_contact_ballx_entry[j]
+                    fy=F_contact_ballz_entry[j]
+                    ax.quiver(x0-x0b,y0-y0b, dir_xx_contact_ball_entry[j]/mag2,dir_xz_contact_ball_entry[j]/mag2,scale=20,color="k",width=.007,zorder=3)    
+                    ax.quiver(x0-x0b,y0-y0b, F_contact_ballx_entry[j]/mag1,F_contact_ballz_entry[j]/mag1,scale=10, color="tab:orange",width=.007,zorder=5)      
+                    ax.quiver(x0-x0b,y0-y0b, Fx1,Fy1,scale=10, color="green",width=.007,zorder=1)
+                    ax.quiver(x0-x0b,y0-y0b,C1[0,j],C1[1,j] ,color="magenta", scale=10,label='Positive cone')     
+                    ax.quiver(x0-x0b,y0-y0b,C2[0,j],C2[1,j] ,color="magenta", scale=10,label='negative cone')
+                    ax.quiver(x0-x0b,y0-y0b, VXpp[0],VXpp[1],scale=15,color="b",width=.007,zorder=2)  
+                    ax.quiver(x0-x0b,y0-y0b, VYpp[0],VYpp[1],scale=15,color="r",width=.007,zorder=2)  
+                #ax.set_xlim([-2,-1])
+                mag_=np.sqrt(fx**2 +fy**2)
+                f_=np.array([fx/mag_,fy/mag_])
+                temp2=np.round(np.nan_to_num(np.arccos(np.dot(f_ ,Vy[j,:]))),2)
+ 
+                if temp<=theta1:
+                    
+                    if temp2<theta1:
+                 
+                        temp_offset_theta.append(theta1)
+                        temp_frames.append(frames[j,:])
+                        temp_theta.append(frames[j,2])
+                        temp_id.append(j)
+                        temp_position_x.append(X[j])
+                        temp_position_z.append(Y[j])
+                        temp_force_x.append(fx)
+                        temp_force_z.append(fy)       
+                        temp_vx.append(Vx[j,:])
+                        temp_vy.append(Vy[j,:])
+                        temp_c1.append(C1[:,j])
+                        temp_c2.append(C2[:,j])
+
+            plt.title('Time= ' + str(np.round(self.time[i],0)),fontsize=12)
+            plt.gca().set_aspect('equal', adjustable='box')
+            
+            plt.savefig(direct1+"/frame%04d.jpg" % count)
+            plt.close('all') 
+
+
+            # wxmax=d
+            # wxmin=-d
+            # wymin=-d
+            # wymax=d
+            const=(wxmax-wxmin)/(wymax-wymin)
+            fig = plt.figure(dpi=300)
+            fig.set_size_inches(const*6,6)
+            ax = plt.axes(xlim=(wxmin,wxmax), ylim=(wymin, wymax))
+            const_=self.ball_radius*2
+            xb,yb=0-const_/2,0 - const_/2
+            x0_=xb
+            y0_=yb
+            if self.geom=="square":
+                const_=self.ball_radius*2
+                xb,yb=0-const_/2,0 - const_/2
+                x0_=xb
+                y0_=yb
+                patch = matplotlib.patches.Rectangle((x0_, y0_),const_, const_,fc='none',edgecolor='tab:grey')     
+                ax.add_patch(patch)
+            if self.geom=="circle":
+                x0_=0
+                y0_=0              
+                patch = plt.Circle((x0_, y0_),self.ball_radius,fc='none',edgecolor='tab:grey')
+                ax.add_patch(patch)
+                
+            if self.geom=="triangle":               
+                const=self.ball_radius*2*np.pi/3
+                r=const*np.sqrt(3)/3
+                patch = matplotlib.patches.RegularPolygon((0,0),int(3),r,orientation=-np.pi/2,fc='none',edgecolor='tab:grey')
+                ax.add_patch(patch) 
+             
+            if self.geom=="import":
+                R=1.25
+                theta1=0.41
+                theta2=2*np.pi-theta1
+                theta=np.linspace(theta1,theta2,100)
+
+                x1_=-R*np.cos(theta)
+                y1_=R*np.sin(theta)
+
+
+                a=.5
+                b=1.65
+                c=2.02
+
+                w1=.5
+                w2=.63
+                
+                x2_=[x1_[0],x1_[0]-a]
+                y2_=[w1,w1]
+
+                x3_=[-b,-b]
+                y3_=[w1,w2]
+
+                x4_=[-b,-c]
+                y4_=[w2,w2]
+
+                x5_=[-c,-c]
+                y5_=[w2,-w2]
+
+                x6_=[-c,-b]
+                y6_=[-w2,-w2]
+
+                x7_=[-b,-b]
+                y7_=[-w1,-w2]
+
+                x8_=[-b,x1_[-1]]
+                y8_=[-w1,-w1]
+                ax.plot(x1_,y1_,color='k')
+                ax.plot(x2_,y2_,color='k')
+                ax.plot(x3_,y3_,color='k')
+                ax.plot(x4_,y4_,color='k')
+                ax.plot(x5_,y5_,color='k')
+                ax.plot(x6_,y6_,color='k')
+                ax.plot(x7_,y7_,color='k')
+                ax.plot(x8_,y8_,color='k')      
+             
+                
+            for j in range(len(temp_id)):
+                x0,y0=temp_position_x[j],temp_position_z[j]
+                vx=temp_vx[j]
+                vy=temp_vy[j]
+                c1=temp_c1[j]
+                c2=temp_c2[j]
+                fx=temp_force_x[j]
+                fy=temp_force_z[j]    
+                ax.text(x0,y0,str(j),size=10)
+                mag=np.sqrt(fx**2 + fy**2)
+                ax.quiver(x0,y0, fx/mag,fy/mag,scale=10,color="g",width=.007,zorder=1)  
+                ax.quiver(x0,y0, vx[0],vx[1],scale=15,color="b",width=.005,zorder=2)  
+                ax.quiver(x0,y0, vy[0],vy[1],scale=15,color="r",width=.005,zorder=2) 
+                ax.quiver(x0,y0,c1[0],c1[1] ,color="magenta",width=.002, scale=10,label='Positive cone')     
+                ax.quiver(x0,y0,c2[0],c2[1] ,color="magenta",width=.002, scale=10,label='negative cone')
+
+            plt.title('Time= ' + str(np.round(self.time[i],0)),fontsize=12)
+            plt.gca().set_aspect('equal', adjustable='box')
+            
+            plt.savefig(direct2+"/frame%04d.jpg" % count)
+                 
+            count=count+1 
+            
+            plt.close('all')    
+        
+            
+        
+        
+        
+        
+        self.create_video('_contact_forces_within_cone','_contact_forces_within_cone') 
+        self.create_video('_contact_forces_all','_contact_forces_all')    
+
+            # wxmax=d
+            # wxmin=-d
+            # wymin=-d
+            # wymax=d
+            # const=(wxmax-wxmin)/(wymax-wymin)
+            # fig = plt.figure(dpi=300)
+            # fig.set_size_inches(const*3,3)
+            # ax = plt.axes(xlim=(wxmin,wxmax), ylim=(wymin, wymax))
+            # const_=self.ball_radius*2
+            # xb,yb=0-const_/2,0 - const_/2
+            # x0_=xb
+            # y0_=yb
+            # if self.geom=="square":
+            #     const_=self.ball_radius*2
+            #     xb,yb=0-const_/2,0 - const_/2
+            #     x0_=xb
+            #     y0_=yb
+            #     patch = matplotlib.patches.Rectangle((x0_, y0_),const_, const_,fc='none',edgecolor='tab:grey')     
+            #     ax.add_patch(patch)
+            # if self.geom=="circle":
+            #     x0_=0
+            #     y0_=0              
+            #     patch = plt.Circle((x0_, y0_),self.ball_radius,fc='none',edgecolor='tab:grey')
+            #     ax.add_patch(patch)
+                
+            # if self.geom=="triangle":               
+            #     const=self.ball_radius*2*np.pi/3
+            #     r=const*np.sqrt(3)/3
+            #     patch = matplotlib.patches.RegularPolygon((0,0),int(3),r,orientation=-np.pi/2,fc='none',edgecolor='tab:grey')
+            #     ax.add_patch(patch) 
+             
+            # if self.geom=="import":
+            #     R=1.25
+            #     theta1=0.41
+            #     theta2=2*np.pi-theta1
+            #     theta=np.linspace(theta1,theta2,100)
+
+            #     x1_=-R*np.cos(theta)
+            #     y1_=R*np.sin(theta)
+
+
+            #     a=.5
+            #     b=1.65
+            #     c=2.02
+
+            #     w1=.5
+            #     w2=.63
+                
+            #     x2_=[x1_[0],x1_[0]-a]
+            #     y2_=[w1,w1]
+
+            #     x3_=[-b,-b]
+            #     y3_=[w1,w2]
+
+            #     x4_=[-b,-c]
+            #     y4_=[w2,w2]
+
+            #     x5_=[-c,-c]
+            #     y5_=[w2,-w2]
+
+            #     x6_=[-c,-b]
+            #     y6_=[-w2,-w2]
+
+            #     x7_=[-b,-b]
+            #     y7_=[-w1,-w2]
+
+            #     x8_=[-b,x1_[-1]]
+            #     y8_=[-w1,-w1]
+            #     ax.plot(x1_,y1_,color='k')
+            #     ax.plot(x2_,y2_,color='k')
+            #     ax.plot(x3_,y3_,color='k')
+            #     ax.plot(x4_,y4_,color='k')
+            #     ax.plot(x5_,y5_,color='k')
+            #     ax.plot(x6_,y6_,color='k')
+            #     ax.plot(x7_,y7_,color='k')
+            #     ax.plot(x8_,y8_,color='k')      
+             
+                
+            # for j in range(len(temp_id)):
+            #     x0,y0=temp_position_x[j],temp_position_z[j]
+            #     vx=temp_vx[j]
+            #     vy=temp_vy[j]
+            #     c1=temp_c1[j]
+            #     c2=temp_c2[j]
+            #     fx=temp_force_x[j]
+            #     fy=temp_force_z[j]    
+            #     ax.text(x0,y0,str(j),size=10)
+            #     mag=np.sqrt(fx**2 + fy**2)
+            #     ax.quiver(x0,y0, fx/mag,fy/mag,scale=10,color="g",width=.007,zorder=1)  
+            #     ax.quiver(x0,y0, vx[0],vx[1],scale=15,color="b",width=.005,zorder=2)  
+            #     ax.quiver(x0,y0, vy[0],vy[1],scale=15,color="r",width=.005,zorder=2) 
+            #     ax.quiver(x0,y0,c1[0],c1[1] ,color="magenta",width=.002, scale=10,label='Positive cone')     
+            #     ax.quiver(x0,y0,c2[0],c2[1] ,color="magenta",width=.002, scale=10,label='negative cone')
+
+            # plt.title('Time= ' + str(np.round(self.time[i],0)),fontsize=12)
+            # plt.gca().set_aspect('equal', adjustable='box')
+            
+            # plt.savefig(direct2+"/frame%04d.jpg" % count)
+                 
+            # count=count+1 
+            
+            # plt.close('all')    
+        
+            
+        
+        
+        
+        
+        #self.create_video('_contact_forces_within_cone','_contact_forces_within_cone') 
+        #self.create_video('_contact_forces_all','_contact_forces_all')         
+        
      def Forcechains(self):
         """ create plot force chains"""
         fm._rebuild()
@@ -8332,8 +11862,531 @@ class import_data:
         self.create_video('_contact_arrow_frames','_contact_arrow_frames')        
         
         
+     def create_frames_pressure_no_boundary(self):
+        fm._rebuild()
+        plt.rcParams['font.family'] = 'Times New Roman'
+        plt.rcParams['mathtext.fontset'] = 'dejavuserif'
+        plt.rcParams['font.size'] = 8
+        plt.rcParams['axes.linewidth'] = .1
+        
+        
+        direct = os.path.join(self.mainDirectory+self.name,'_pressure_no_boundary_frames')    
+        if not os.path.isdir(direct):
+            os.makedirs(direct)
+
+        FX=np.vstack([self.Pressure_x_particles])
+        FZ=np.vstack([self.Pressure_z_particles])
+        X=np.vstack([self.particle_position_x])
+        Z=np.vstack([self.particle_position_z])  
+        
+        count=0
+        
+        self.MAG_pressure_no_boundary=np.zeros((self.ni,len(self.time)-1))
+
+        for j in range(len(self.time)-1):
+            for i in range(self.ni-1):
+                self.MAG_pressure_no_boundary[i,j]=np.sqrt(FZ[i,j]**2+FX[i,j]**2)    
+
+
+        for i in range(len(self.time)-1):    
+            plt.figure(i,figsize=(4,4),dpi=300)
+            plt.tricontourf(X[:,i],Z[:,i],self.MAG_pressure_no_boundary[:,i],cmap='jet')
+            #plt.plot(X[0:self.nb,i],Z[0:self.nb,i], 'ko ')
+            #plt.plot(X[self.nb:self.ni+self.nb,i],Z[self.nb:self.ni+self.nb,i], 'ro ')
+            plt.grid(True)
+            plt.colorbar()
+            plt.xlabel('x position(m)')
+            plt.ylabel('z position(m)')
+            plt.title('t='+str(round(self.time[i],3)))
+            plt.savefig(direct+"/frame%04d.jpg" % count) 
+            print(str(i)+ "of"+ str(len(self.time)))
+            plt.close('all')
+            count=count+1   
+
+        self.create_video('_pressure_no_boundary_frames','_pressure_no_boundary_frames')  
+
+
+     def create_frames_pressure(self):
+     
+        fm._rebuild()
+        plt.rcParams['font.family'] = 'Times New Roman'
+        plt.rcParams['mathtext.fontset'] = 'dejavuserif'
+        plt.rcParams['font.size'] = 8
+        plt.rcParams['axes.linewidth'] = .1
+        direct = os.path.join(self.mainDirectory+self.name,'_pressure_frames')    
+        if not os.path.isdir(direct):
+            os.makedirs(direct)
+
+        FX=np.vstack([self.Pressure_x_bots,self.Pressure_x_particles])
+        FZ=np.vstack([self.Pressure_z_bots,self.Pressure_z_particles])
+        X=np.vstack([self.bot_position_x,self.particle_position_x])
+        Z=np.vstack([self.bot_position_z,self.particle_position_z])  
+        
+        count=0
+        self.MAG_pressure=np.zeros((self.ni+self.nb,len(self.time)-1))
+        for j in range(len(self.time)-1):
+            for i in range(self.nb+self.ni-1):
+                self.MAG_pressure[i,j]=np.sqrt(FZ[i,j]**2+FX[i,j]**2)    
+
+
+        for i in range(len(self.time)-1):    
+            plt.figure(i,figsize=(4,4),dpi=300)
+            plt.tricontourf(X[:,i],Z[:,i],self.MAG_pressure[:,i],cmap='jet')
+            plt.plot(X[0:self.nb,i],Z[0:self.nb,i], 'ko ')
+            plt.plot(X[self.nb:self.ni+self.nb,i],Z[self.nb:self.ni+self.nb,i], 'ro ')
+            plt.grid(True)
+            plt.colorbar()
+            plt.xlabel('x position(m)')
+            plt.ylabel('z position(m)')
+            plt.title('t='+str(round(self.time[i],3)))
+            plt.savefig(direct+"/frame%04d.jpg" % count) 
+            print(str(i)+ "of"+ str(len(self.time)))
+            plt.close('all')
+            count=count+1   
+            
+            
+        self.create_video('_pressure_frames','_pressure_frames')  
+     
+        
+     def create_frames_control_forces(self,d):
+        ''' Create frames for a video '''
+        fm._rebuild()
+        plt.rcParams['font.family'] = 'Times New Roman'
+        plt.rcParams['mathtext.fontset'] = 'dejavuserif'
+        plt.rcParams['font.size'] = 8
+        plt.rcParams['axes.linewidth'] = .1
+        direct = os.path.join(self.mainDirectory+self.name,'_control_frames')    
+        if not os.path.isdir(direct):
+            os.makedirs(direct)
+        count=0
+        for i in range(len(self.time)-1):    
+            x0,y0=self.ballx_position[i],self.ballz_position[i]
+            wxmax=x0+d
+            wxmin=x0-d
+            wymax=y0+d
+            wymin=y0-d
+            const=(wxmax-wxmin)/(wymax-wymin)
+            fig = plt.figure(dpi=300)
+            fig.set_size_inches(const*4, 4)
+            ax = plt.axes(xlim=(wxmin,wxmax), ylim=(wymin, wymax))
+            # BOUNDARY ROBOTS
+            for j in range(0,self.nb):
+                x0,y0=self.bot_position_x[j,i],self.bot_position_z[j,i]  
+                patch = plt.Circle((x0, y0),self.bot_width/2, fc='black')
+                ax.add_patch(patch)
+                ax.quiver(x0,y0, self.control_forces_x[j,i],self.control_forces_z[j,i], color="tab:purple", scale=10,width=0.002)
+                ax.quiver(x0,y0, self.bot_contact_forces_x[j,i],self.bot_contact_forces_z[j,i], color="tab:blue", scale=1000,width=0.002)            
+                ax.quiver(x0,y0, self.bot_total_forces_x[j,i],self.bot_total_forces_z[j,i], color="tab:red", scale=10,width=0.002)            
+
+            if self.geom=="circle":
+                x0,y0=self.ballx_position[i],self.ballz_position[i]
+                patch = plt.Circle((x0, y0),self.ball_radius,fc='tab:gray',edgecolor='black',linewidth=1)
+                ax.add_patch(patch)
+            
+            if self.geom=="square":
+                const_=self.ball_radius*2
+                x0,y0=self.ballx_position[i]-const_/2,self.ballz_position[i] - const_/2
+                patch = patches.Rectangle((x0, y0),const_, const_,fc='none',edgecolor='tab:grey')     
+                ax.add_patch(patch)
+                patch = plt.Circle((x0, y0),self.a2,fc='none',edgecolor='tab:blue',linewidth=1)
+                ax.add_patch(patch)
+            if self.geom=="triangle":
+                const_=self.ball_radius*2*np.pi/3
+                r=const_*np.sqrt(3)/3
+                x0,y0=self.ballx_position[i],self.ballz_position[i]
+                patch = matplotlib.patches.RegularPolygon((x0,y0),int(3),r,orientation=-np.pi/2,fc='none',edgecolor='black',linewidth=1)
+                ax.add_patch(patch) 
+                
+            if self.geom=="import":           
+                R=1.25
+                theta1=0.41
+                theta2=2*np.pi-theta1
+                theta=np.linspace(theta1,theta2,100)
+
+                x1_=-R*np.cos(theta)
+                y1_=R*np.sin(theta)
+
+
+                a=.5
+                b=1.65
+                c=2.02
+
+                w1=.5
+                w2=.63
+                x2_=[x1_[0],x1_[0]-a]
+                y2_=[w1,w1]
+
+                x3_=[-b,-b]
+                y3_=[w1,w2]
+
+                x4_=[-b,-c]
+                y4_=[w2,w2]
+
+                x5_=[-c,-c]
+                y5_=[w2,-w2]
+
+                x6_=[-c,-b]
+                y6_=[-w2,-w2]
+
+                x7_=[-b,-b]
+                y7_=[-w1,-w2]
+
+                x8_=[-b,x1_[-1]]
+                y8_=[-w1,-w1]
+                ax.plot(x1_,y1_,color='k')
+                ax.plot(x2_,y2_,color='k')
+                ax.plot(x3_,y3_,color='k')
+                ax.plot(x4_,y4_,color='k')
+                ax.plot(x5_,y5_,color='k')
+                ax.plot(x6_,y6_,color='k')
+                ax.plot(x7_,y7_,color='k')
+                ax.plot(x8_,y8_,color='k')    
+            
+            
+            
+            fig.suptitle('Time= ' + str(np.round(self.time[i],0)))
+            plt.savefig(direct+"/frame%04d.jpg" % count)
+                 
+            count=count+1 
+            
+            plt.close('all')             
+        self.create_video('_control_frames','_control_frames')         
+        
+        
+     def create__frames_robot_forces(self):
+        ''' Create frames for for total forces '''
+        
+        fm._rebuild()
+        plt.rcParams['font.family'] = 'Times New Roman'
+        plt.rcParams['mathtext.fontset'] = 'dejavuserif'
+        plt.rcParams['font.size'] = 8
+        plt.rcParams['axes.linewidth'] = .1
+        direct = os.path.join(self.mainDirectory+self.name,'_forces_frames')    
+        if not os.path.isdir(direct):
+            os.makedirs(direct)
+        count=0
+        for i in range(len(self.time)-1):    
+            x0,y0=self.ballx_position[i],self.ballz_position[i]
+            d=1
+            wxmax=x0+d
+            wxmin=x0-d
+            wymax=y0+d
+            wymin=y0-d
+            const=(wxmax-wxmin)/(wymax-wymin)
+            fig = plt.figure(dpi=300)
+            fig.set_size_inches(const*4, 4)
+            ax = plt.axes(xlim=(wxmin,wxmax), ylim=(wymin, wymax))
+            # BOUNDARY ROBOTS
+            for j in range(0,self.nb):
+                x0,y0=self.bot_position_x[j,i],self.bot_position_z[j,i]  
+                patch = plt.Circle((x0, y0),self.bot_width/2, fc='none',edgecolor='k',lw=1)
+                ax.add_patch(patch)
+                #ax.quiver(x0,y0, self.control_forces_x[j,i],self.control_forces_z[j,i], color="tab:purple", scale=10,width=0.005)
+                mag1 = np.sqrt(self.bot_contact_forces_x[j,i]**2 + self.bot_contact_forces_z[j,i]**2)
+                mag2 = np.sqrt(self.bot_total_forces_x[j,i]**2 + self.bot_total_forces_z[j,i]**2)
+                ax.quiver(x0,y0, self.bot_contact_forces_x[j,i]/mag1,self.bot_contact_forces_z[j,i]/mag1, color="tab:orange", scale=10,width=0.007)            
+                ax.quiver(x0,y0, self.bot_total_forces_x[j,i]/mag2,self.bot_total_forces_z[j,i]/mag2, color="tab:purple", scale=10,width=0.007)            
+
+            if self.geom=="circle":
+                x0,y0=self.ballx_position[i],self.ballz_position[i]
+                patch = plt.Circle((x0, y0),self.ball_radius,fc='tab:gray',edgecolor='black',linewidth=1)
+                ax.add_patch(patch)
+            
+            if self.geom=="square":
+                const_=self.ball_radius*2
+                x0,y0=self.ballx_position[i]-const_/2,self.ballz_position[i] - const_/2
+                
+                patch = patches.Rectangle((x0, y0),const_, const_,fc='none',edgecolor='tab:grey')     
+                ax.add_patch(patch)
+                
+                patch = plt.Circle((self.xc2, self.yc2),self.a2,fc='none',edgecolor='blue',linewidth=1)    
+                ax.add_patch(patch)
+                
+            if self.geom=="triangle":
+                const_=self.ball_radius*2*np.pi/3
+                r=const_*np.sqrt(3)/3
+                x0,y0=self.ballx_position[i],self.ballz_position[i]
+                patch = RegularPolygon((x0,y0),3,r,orientation=-np.pi/2,fc='tab:gray',edgecolor='tab:grey')
+                ax.add_patch(patch)  
+                
+            if self.grasp_id[i]!=[]:
+                
+                xo=self.grasp_position_x[i]
+                zo=self.grasp_position_z[i]
+                
+                Fx=self.grasp_force_x[i]
+                Fz=self.grasp_force_z[i]
+                #print("Fx:",np.round(Fx,2))
+                #print("Fz:",np.round(Fz,2))
+                vx=self.framex[i]
+                vz=self.framez[i]
+                cp=self.Cplus[i]
+                cm=self.Cminus[i]   
+                #F=self.F_control[i]
+                #F=F.flatten()
+                #print(F)
+                #Fx=F[0]
+                #Fy=F[1]
+                #vxn=self.FRAMENX[i]            
+            #print('vx',vx,'vxn',vxn)
+            #print('sum',vx+vxn)
+                #plt.quiver(xo,zo, Fx,Fz, color="tab:purple", scale=10,width=0.002)  
+                #ax.quiver(xo,zo, self.control_forces_x[self.grasp_id[i],i],self.control_forces_z[self.grasp_id[i],i], color="tab:purple", scale=10,width=0.005)
+                plt.quiver(xo,zo, vx[:,0], vx[:,1], color="tab:blue", scale=10,width=0.007,label='controller dir')  
+                plt.quiver(xo,zo, vz[:,0], vz[:,1], color="tab:green", scale=10,width=0.007,label='controller dir') 
+                plt.quiver(xo,zo, cp[:,0], cp[:,1], color="tab:red", scale=10,width=0.007)   
+                plt.quiver(xo,zo, cm[:,0], cm[:,1], color="tab:red", scale=10,width=0.007)               
+            fig.suptitle('Time= ' + str(np.round(self.time[i],0)))
+            plt.savefig(direct+"/frame%04d.jpg" % count) 
+            count=count+1 
+            plt.close('all')  
+            
+        self.create_video('_forces_frames','_forces_frames') 
+         
+        
+     def create_wrenches_slices_frames(self):
+         fm._rebuild()
+         plt.rcParams['font.family'] = 'Times New Roman'
+         plt.rcParams['mathtext.fontset'] = 'dejavuserif'
+         plt.rcParams['font.size'] = 8
+         plt.rcParams['axes.linewidth'] = .1
+         direct = os.path.join(self.mainDirectory+self.name,'_grasping_frames_wrenches_slices')    
+         if not os.path.isdir(direct):
+             os.makedirs(direct)
+         count=0
+         for i in range(len(self.time)-1):    
+             fig, axs = plt.subplots(nrows=1, ncols=3,figsize=(5,2),dpi=300)   
+             #print(self.grasp_id[i])
+             if self.grasp_id[i]!=[] and len(self.grasp_id[i])>1:
+                 Wrenchxy=self.WRENCHXY[i]
+                 #print(Wrenchxy)
+                 hullxy=self.HULLXY[i]
+                 
+                 Wrenchxt=self.WRENCHXT[i]
+                 hullxt=self.HULLXT[i]
+                 
+                 Wrenchyt=self.WRENCHYT[i]
+                 hullyt=self.HULLYT[i]
+                 epsilon1=self.EPSILON[i]
+        
+                
+            
+                 axs[0].set_aspect('equal', adjustable='box')
+                 axs[0].scatter(Wrenchxy[:,0],Wrenchxy[:,1],color='k',s=1)
+                 axs[0].fill(Wrenchxy[hullxy.vertices,0], Wrenchxy[hullxy.vertices,1], 'tab:red', alpha=0.3)
+                 for j in range((Wrenchxy.shape[0])):
+                     axs[0].arrow(0,0,Wrenchxy[j,0],Wrenchxy[j,1],color="green",zorder=3,head_width=0.05,head_length=0.03)
+                    
+                 #for i in range((minnorm.shape[0])): 
+                     #axs[0].arrow(0,0,epsilon1*minnorm[i,0],epsilon1*minnorm[i,1],color="orange",zorder=3,head_width=0.05,head_length=0.03)    
+                    
+                 patch = plt.Circle((0,0),epsilon1 , fc='tab:blue',alpha=0.5)
+                 axs[0].add_patch(patch)
+                 axs[0].set_title(r'$x-y$')
+                 axs[0].set_xlabel('$x$',labelpad=1)
+                 axs[0].set_ylabel('$y$',labelpad=-2)
+                 axs[0].xaxis.set_tick_params(width=.25,length=2,pad=1)
+                 axs[0].yaxis.set_tick_params(width=.25,length=2,pad=1)
+                 xticks=[-1,-0.5,0,0.5,1]
+                 yticks=[-1,-0.5,0,0.5,1]
+                 #xticks=[-1,-0.5,0,0.5,1]
+                 #yticks=[-2,-1,0,1,2]
+                 axs[0].set_xticks(np.round(xticks,1))
+                 axs[0].set_yticks(np.round(yticks,1))
+                 #axs[0].set_xlim([-1,1])
+                 #axs[0].set_ylim([-2,2])
+                 axs[0].grid(True,linewidth=0.5)  
+                
+                
+                
+                
+                 axs[1].set_aspect('equal', adjustable='box')
+                 axs[1].scatter(Wrenchxt[:,0],Wrenchxt[:,1],color='k',s=1)
+                 axs[1].fill(Wrenchxt[hullxt.vertices,0], Wrenchxt[hullxt.vertices,1], 'tab:red', alpha=0.3)
+                 patch = plt.Circle((0,0),epsilon1 , fc='tab:blue',alpha=0.5)
+                 for j in range((Wrenchxt.shape[0])):
+                     axs[1].arrow(0,0,Wrenchxt[j,0],Wrenchxt[j,1],color="green",zorder=3,head_width=0.05,head_length=0.03)
+                    
+                    
+                 #for i in range((minnorm.shape[0])): 
+                     #axs[1].arrow(0,0,epsilon1*minnorm[i,0],epsilon1*minnorm[i,2],color="orange",zorder=3,head_width=0.05,head_length=0.03)    
+                    
+                 axs[1].add_patch(patch)
+                 axs[1].set_title(r'$x-\tau$')
+                 axs[1].set_xlabel('$x$',labelpad=1)
+                 axs[1].set_ylabel(r'$\tau$',labelpad=-2)
+                 axs[1].xaxis.set_tick_params(width=.25,length=2,pad=1)
+                 axs[1].yaxis.set_tick_params(width=.25,length=2,pad=1)
+                 xticks=[-1,-0.5,0,0.5,1]
+                 yticks=[-1,-0.5,0,0.5,1]
+                 #yticks=[-2,-1,0,1,2]
+                 axs[1].set_xticks(np.round(xticks,1))
+                 axs[1].set_yticks(np.round(yticks,1))
+                 #axs[1].set_xlim([-1,1])
+                 #axs[1].set_ylim([-2,2])
+                 axs[1].grid(True,linewidth=0.5)  
+                
+                
+                 axs[2].set_aspect('equal', adjustable='box')
+                 axs[2].scatter(Wrenchyt[:,0],Wrenchyt[:,1],color='k',s=1)
+                 axs[2].fill(Wrenchyt[hullyt.vertices,0], Wrenchyt[hullyt.vertices,1], 'tab:red', alpha=0.3)
+                 patch = plt.Circle((0,0),epsilon1 , fc='tab:blue',alpha=0.5)
+                 for j in range((Wrenchyt.shape[0])):
+                     axs[2].arrow(0,0,Wrenchyt[j,0],Wrenchyt[j,1],color="green",zorder=3,head_width=0.05,head_length=0.03)
+                    
+                 #for i in range((minnorm.shape[0])): 
+                     #axs[2].arrow(0,0,epsilon1*minnorm[i,1],epsilon1*minnorm[i,2],color="orange",zorder=3,head_width=0.05,head_length=0.03)    
+                    
+                 axs[2].add_patch(patch)
+                 axs[2].set_title(r'$y-\tau$')
+                 axs[2].set_xlabel('$y$',labelpad=1)
+                 axs[2].set_ylabel(r'$\tau$',labelpad=0)
+                 axs[2].xaxis.set_tick_params(width=.25,length=2,pad=1)
+                 axs[2].yaxis.set_tick_params(width=.25,length=2,pad=1)
+                 xticks=[-1,-0.5,0,0.5,1]
+                 yticks=[-1,-0.5,0,0.5,1]
+                 axs[2].set_xticks(np.round(xticks,1))
+                 axs[2].set_yticks(np.round(yticks,1))
+                 #axs[2].set_xlim([-1,1])
+                 #axs[2].set_ylim([-2,2])
+                 fig.suptitle('Time= ' + str(np.round(self.time[i],0))+"  $\epsilon$="+str(epsilon1),fontsize=12)
+                 plt.tight_layout()
+                 axs[2].grid(True,linewidth=0.5) 
+                 plt.savefig(direct+"/frame%04d.jpg" % count)  
+                 count=count+1 
+                 plt.close('all') 
+
+             else:
+                 fig.suptitle('Time= ' + str(np.round(self.time[i],0))+"  $\epsilon$="+str(0),fontsize=12)
+                 plt.savefig(direct+"/frame%04d.jpg" % count)  
+                 count=count+1 
+                 plt.close('all')         
+        
+         self.create_video('_grasping_frames_wrenches_slices','_grasping_frames_wrenches_slices')         
+
+     def create_wrenches_slices_frames2(self):
+         fm._rebuild()
+         plt.rcParams['font.family'] = 'Times New Roman'
+         plt.rcParams['mathtext.fontset'] = 'dejavuserif'
+         plt.rcParams['font.size'] = 8
+         plt.rcParams['axes.linewidth'] = .1
+         direct = os.path.join(self.mainDirectory+self.name,'_grasping_frames_wrenches_slices2')    
+         if not os.path.isdir(direct):
+             os.makedirs(direct)
+         count=0
+         for i in range(len(self.time)-2):    
+             print(str(i)+ "of"+ str(len(self.time-1))) 
+             fig, axs = plt.subplots(nrows=1, ncols=3,figsize=(5,2),dpi=300)   
+             #print(self.grasp_id[i])
+             if self.temp_id2[i]!=[] and len(self.temp_id2[i])>1:
+                 Wrenchxy=self.WRENCHXY3[i]
+                 #print(Wrenchxy)
+                 hullxy=self.HULLXY3[i]
+                 
+                 Wrenchxt=self.WRENCHXT3[i]
+                 hullxt=self.HULLXT3[i]
+                 
+                 Wrenchyt=self.WRENCHYT3[i]
+                 hullyt=self.HULLYT3[i]
+                 epsilon1=self.EPSILON4[i]
+        
+                
+            
+                 axs[0].set_aspect('equal', adjustable='box')
+                 axs[0].scatter(Wrenchxy[:,0],Wrenchxy[:,1],color='k',s=1)
+                 axs[0].fill(Wrenchxy[hullxy.vertices,0], Wrenchxy[hullxy.vertices,1], 'tab:red', alpha=0.3)
+                 for j in range((Wrenchxy.shape[0])):
+                     axs[0].arrow(0,0,Wrenchxy[j,0],Wrenchxy[j,1],color="green",zorder=3,head_width=0.05,head_length=0.03)
+                    
+                 #for i in range((minnorm.shape[0])): 
+                     #axs[0].arrow(0,0,epsilon1*minnorm[i,0],epsilon1*minnorm[i,1],color="orange",zorder=3,head_width=0.05,head_length=0.03)    
+                    
+                 patch = plt.Circle((0,0),epsilon1 , fc='tab:blue',alpha=0.5)
+                 axs[0].add_patch(patch)
+                 axs[0].set_title(r'$x-y$')
+                 axs[0].set_xlabel('$x$',labelpad=1)
+                 axs[0].set_ylabel('$y$',labelpad=-2)
+                 axs[0].xaxis.set_tick_params(width=.25,length=2,pad=1)
+                 axs[0].yaxis.set_tick_params(width=.25,length=2,pad=1)
+                 #xticks=[-1,-0.5,0,0.5,1]
+                 #yticks=[-1,-0.5,0,0.5,1]
+                 #xticks=[-1,-0.5,0,0.5,1]
+                 #yticks=[-2,-1,0,1,2]
+                 #axs[0].set_xticks(np.round(xticks,1))
+                 #axs[0].set_yticks(np.round(yticks,1))
+                 #axs[0].set_xlim([-1,1])
+                 #axs[0].set_ylim([-2,2])
+                 axs[0].grid(True,linewidth=0.5)  
+                
+                
+                
+                
+                 axs[1].set_aspect('equal', adjustable='box')
+                 axs[1].scatter(Wrenchxt[:,0],Wrenchxt[:,1],color='k',s=1)
+                 axs[1].fill(Wrenchxt[hullxt.vertices,0], Wrenchxt[hullxt.vertices,1], 'tab:red', alpha=0.3)
+                 patch = plt.Circle((0,0),epsilon1 , fc='tab:blue',alpha=0.5)
+                 for j in range((Wrenchxt.shape[0])):
+                     axs[1].arrow(0,0,Wrenchxt[j,0],Wrenchxt[j,1],color="green",zorder=3,head_width=0.05,head_length=0.03)
+                    
+                    
+                 #for i in range((minnorm.shape[0])): 
+                     #axs[1].arrow(0,0,epsilon1*minnorm[i,0],epsilon1*minnorm[i,2],color="orange",zorder=3,head_width=0.05,head_length=0.03)    
+                    
+                 axs[1].add_patch(patch)
+                 axs[1].set_title(r'$x-\tau$')
+                 axs[1].set_xlabel('$x$',labelpad=1)
+                 axs[1].set_ylabel(r'$\tau$',labelpad=-2)
+                 axs[1].xaxis.set_tick_params(width=.25,length=2,pad=1)
+                 axs[1].yaxis.set_tick_params(width=.25,length=2,pad=1)
+                 #xticks=[-1,-0.5,0,0.5,1]
+                 #ticks=[-1,-0.5,0,0.5,1]
+                 #yticks=[-2,-1,0,1,2]
+                 #axs[1].set_xticks(np.round(xticks,1))
+                 #axs[1].set_yticks(np.round(yticks,1))
+                 #axs[1].set_xlim([-1,1])
+                 #axs[1].set_ylim([-2,2])
+                 axs[1].grid(True,linewidth=0.5)  
+                
+                
+                 axs[2].set_aspect('equal', adjustable='box')
+                 axs[2].scatter(Wrenchyt[:,0],Wrenchyt[:,1],color='k',s=1)
+                 axs[2].fill(Wrenchyt[hullyt.vertices,0], Wrenchyt[hullyt.vertices,1], 'tab:red', alpha=0.3)
+                 patch = plt.Circle((0,0),epsilon1 , fc='tab:blue',alpha=0.5)
+                 for j in range((Wrenchyt.shape[0])):
+                     axs[2].arrow(0,0,Wrenchyt[j,0],Wrenchyt[j,1],color="green",zorder=3,head_width=0.05,head_length=0.03)
+                    
+                 #for i in range((minnorm.shape[0])): 
+                     #axs[2].arrow(0,0,epsilon1*minnorm[i,1],epsilon1*minnorm[i,2],color="orange",zorder=3,head_width=0.05,head_length=0.03)    
+                    
+                 axs[2].add_patch(patch)
+                 axs[2].set_title(r'$y-\tau$')
+                 axs[2].set_xlabel('$y$',labelpad=1)
+                 axs[2].set_ylabel(r'$\tau$',labelpad=0)
+                 axs[2].xaxis.set_tick_params(width=.25,length=2,pad=1)
+                 axs[2].yaxis.set_tick_params(width=.25,length=2,pad=1)
+                 #xticks=[-1,-0.5,0,0.5,1]
+                 #yticks=[-1,-0.5,0,0.5,1]
+                 #axs[2].set_xticks(np.round(xticks,1))
+                 #axs[2].set_yticks(np.round(yticks,1))
+                 #axs[2].set_xlim([-1,1])
+                 #axs[2].set_ylim([-2,2])
+                 fig.suptitle('Time= ' + str(np.round(self.time[i],0))+"  $\epsilon$="+str(epsilon1),fontsize=12)
+                 plt.tight_layout()
+                 axs[2].grid(True,linewidth=0.5) 
+                 plt.savefig(direct+"/frame%04d.jpg" % count)  
+                 count=count+1 
+                 plt.close('all') 
+
+             else:
+                 fig.suptitle('Time= ' + str(np.round(self.time[i],0))+"  $\epsilon$="+str(0),fontsize=12)
+                 plt.savefig(direct+"/frame%04d.jpg" % count)  
+                 count=count+1 
+                 plt.close('all')         
+ 
+         self.create_video('_grasping_frames_wrenches_slices2','_grasping_frames_wrenches_slices2')         
+
      def create_frames(self,membrane,wxmin,wxmax,wymin,wymax):
-        ''' Create frames of sim for robot'''
+        ''' Create frames to show the robot and the pull force and epsilon metric in one plot'''
         fm._rebuild()
         plt.rcParams['font.family'] = 'Times New Roman'
         plt.rcParams['mathtext.fontset'] = 'dejavuserif'
@@ -8598,7 +12651,832 @@ class import_data:
         self.create_video('_frames_combined','_frames_combined') 
 
 
-    
+     def create_frames_u(self,membrane,wxmin,wxmax,wymin,wymax):
+        ''' Create frames to show the robot and the pull force and epsilon metric in one plot'''
+        fm._rebuild()
+        plt.rcParams['font.family'] = 'Times New Roman'
+        plt.rcParams['mathtext.fontset'] = 'dejavuserif'
+        plt.rcParams['font.size'] = 8
+        plt.rcParams['axes.linewidth'] = .1
+        
+        direct = os.path.join(self.mainDirectory+self.name,'_frames_combined')    
+        if not os.path.isdir(direct):
+            os.makedirs(direct)
+        count=0
+        #Num_contact1=[]
+       # Num_contact2=[]
+        #for i in range(len(self.temp_id2)):
+        #    Num_contact1.append(len(self.temp_id2[i]))
+        # self.lengtho_grasp=self.parameters["lengtho_grasp"]
+        # self.length_grasp=self.parameters["length_grasp"]
+        # self.width_grasp=self.parameters["width_grasp"]
+        # self.xcenter_grasp=self.parameters["xcenter_grasp"]
+        # self.ycenter_grasp=self.parameters["ycenter_grasp"]
+        # self.xcenter_grasp2=self.parameters["xcenter_grasp2"]
+        # self.ycenter_grasp2=self.parameters["ycenter_grasp2"]
+        
+        for i in range(len(self.time)-2):
+            #theta=(1-self.tanh(t))*np.pi/2 + self.tanh(t)*0
+            x_=[]
+            y_=[]
+            #self.tcut1=self.parameters['tcut1']
+            # self.lengtho_grasp=self.parameters["lengtho_grasp"]
+            # self.length_grasp=self.parameters["length_grasp"]
+            # self.width_grasp=self.parameters["width_grasp"]
+            # self.xcenter_grasp=self.parameters["xcenter_grasp"]
+            # self.ycenter_grasp=self.parameters["ycenter_grasp"]
+            # self.xcenter_grasp2=self.parameters["xcenter_grasp2"]
+            # self.ycenter_grasp2=self.parameters["ycenter_grasp2"]
+            #if self.time[i]<self.tcut1:
+                #theta=np.pi/2
+           # else:
+                #theta=0
+            
+            theta=(1-self.Psi.ft2(self.time[i],self.tcut1,self.p))*np.pi/2 + self.Psi.ft2(self.time[i],self.tcut1,self.p)*0
+            
+            self.lengtho2_grasp = self.lengtho_grasp + 2*self.width_grasp*np.tan((np.pi/2 - theta)/2)
+            self.length2_grasp = self.length_grasp +self.width_grasp*np.tan((np.pi/2 - theta)/2)
+
+            x_.append(self.length_grasp*np.cos(theta) + self.xcenter_grasp)
+            y_.append(self.length_grasp*np.sin(theta) + self.lengtho_grasp/2 + self.ycenter_grasp)
+
+            x_.append(0 + self.xcenter_grasp)
+            y_.append(self.lengtho_grasp/2 + self.ycenter_grasp)
+
+            x_.append(0 + self.xcenter_grasp)
+            y_.append(-self.lengtho_grasp/2 + self.ycenter_grasp)
+
+            x_.append(self.length_grasp*np.cos(-theta) + self.xcenter_grasp)
+            y_.append(self.length_grasp*np.sin(-theta) - self.lengtho_grasp/2 + self.ycenter_grasp)
+
+
+            x_.append(self.length2_grasp*np.cos(-theta) + self.xcenter_grasp - self.width_grasp)
+            y_.append(self.length2_grasp*np.sin(-theta) - self.lengtho2_grasp/2 + self.ycenter_grasp)
+        
+            x_.append(0 + self.xcenter_grasp - self.width_grasp)
+            y_.append(-self.lengtho2_grasp/2 + self.ycenter_grasp)
+   
+            x_.append(0 + self.xcenter_grasp - self.width_grasp)
+            y_.append(self.lengtho2_grasp/2 + self.ycenter_grasp)
+   
+            x_.append(self.length2_grasp*np.cos(theta) - self.width_grasp + self.xcenter_grasp)
+            y_.append(self.length2_grasp*np.sin(theta) + self.lengtho2_grasp/2 + self.ycenter_grasp)
+        
+            x_.append(self.length_grasp*np.cos(theta) + self.xcenter_grasp)
+            y_.append(self.length_grasp*np.sin(theta) + self.lengtho_grasp/2 + self.ycenter_grasp)
+        
+  
+            fig, axs = plt.subplots(nrows=1, ncols=1,figsize=(3,3),dpi=300)
+            
+            if self.time[i]<=self.tcut2:
+                axs.plot(x_,y_,color='tab:red',linestyle='dashed',linewidth=1,zorder=2)
+            else:
+                theta_=np.linspace(0,2*np.pi,300)
+                x_=0.1*np.cos(theta_)+self.xcenter_grasp2
+                y_=0.1*np.sin(theta_)+self.ycenter_grasp2
+                axs.plot(x_,y_,color='tab:red',linewidth=2,zorder=2)
+            #epsilon=np.asarray(self.EPSILON)
+            xcenter=self.ballx_position[i]
+            ycenter=self.ballz_position[i]
+            
+            x0b=self.ballx_position[2]
+            y0b=self.ballz_position[2]
+            #wxmax=x0b+d
+            #wxmin=x0b-d
+            #wymax=y0b+d
+            #wymin=y0b-d
+            
+     
+            axs.set_xlim([wxmin,wxmax])
+            axs.set_ylim([wymin,wymax])
+            #### Square
+            if self.geom=="square":
+                const=self.ball_radius*2
+                rx=const
+                ry=const
+                w=rx/2
+                h=ry/2                    
+                x=[w+xcenter,-w+xcenter,-w+xcenter,w+xcenter,w+xcenter]
+                y=[h+ycenter,h+ycenter,-h+ycenter,-h+ycenter,h+ycenter]
+                (self.segments)=self.create_segment(x,y) 
+            
+            #### Triangle
+            if self.geom=="triangle":
+                #const=self.ball_radius*2*np.pi/3
+                #r=np.sqrt((const**2)/(2-2*np.cos(7*np.pi/6)))
+                
+                const=self.ball_radius*2*np.pi/3
+                #r=np.sqrt((const**2)/(2-2*np.cos(7*np.pi/6)))
+                r=const*np.sqrt(3)/3
+                x1=-r
+                y1=0
+               
+                x2=-r*np.cos(2*np.pi/3)
+                y2=r*np.sin(2*np.pi/3)
+               
+                x3=-r*np.cos(4*np.pi/3)
+                y3=r*np.sin(4*np.pi/3)
+               
+                x__ = [x1,x2,x3,x1]
+                y__ = [y1,y2,y3,y1]
+               
+                (self.segments)=self.create_segment(x__,y__)   
+            #### c shape
+            if self.geom=="c_shape":
+                #x0b,y0b=self.ballx_position[i],self.ballz_position[i]
+                w=self.w/2
+                l=self.l/2
+                t=self.t
+                x__=[w,-w,-w,w,w,-w+t,-w+t,w,w]
+                y__=[-l,-l,l,l,l-t,l-t,-l+t,-l+t,-l]
+                (self.segments)=self.create_segment(x__,y__)
+
+            
+            #ax.plot(x,y)
+            for j in range(0,self.nb):
+                x0,y0=self.bot_position_x[j,i],self.bot_position_z[j,i]
+                if self.geom=="square":
+                    #if self.PHI(x0-xcenter,y0-ycenter,self.segments)<.1:
+                        #patch = plt.Circle((x0, y0),self.bot_width/2, fc='tab:red')
+                        #axs[0].add_patch(patch)
+                   
+                    #else:
+                    patch = plt.Circle((x0, y0),self.bot_width/2, fc='k')
+                    axs.add_patch(patch) 
+                        
+                if self.geom=="triangle":
+                    if self.PHI(x0-xcenter,y0-ycenter,self.segments)<.1:
+                        patch = plt.Circle((x0, y0),self.bot_width/2, fc='tab:red')
+                        axs.add_patch(patch)
+                   
+                    else:
+                        patch = plt.Circle((x0, y0),self.bot_width/2, fc='k')
+                        axs.add_patch(patch)                         
+                
+                        
+                
+                if self.geom=="c_shape":
+                    difx=self.ballx_position[0]-self.ballx_
+                   
+                    dify=self.ballz_position[0]-self.ballz_
+                    
+                    if self.PHI(x0+(x0b-difx),y0+(x0b-difx),self.segments)<.1:
+                        patch = plt.Circle((x0, y0),self.bot_width/2, fc='tab:red')
+                        axs.add_patch(patch)
+                   
+                    else:
+                        patch = plt.Circle((x0, y0),self.bot_width/2, fc='k')
+                        axs.add_patch(patch)    
+                        
+                if self.geom=="circle":
+                    
+                    q=np.sqrt((x0-self.ballx_position[i])**2 + (y0-self.ballz_position[i])**2)
+                    #if q<=(2 * self.bot_width/2 + self.ball_radius):
+                        #patch = plt.Circle((x0, y0),self.bot_width/2, fc='tab:red')
+                        #axs[0].add_patch(patch)
+                   
+                    #else:
+                    patch = plt.Circle((x0, y0),self.bot_width/2, fc='k')
+                    axs.add_patch(patch)  
+                               
+                
+            if membrane==True:
+                for j in range(0,self.nm):
+                    
+                    x0,y0=self.membrane_position_x[j,i],self.membrane_position_z[j,i]  
+                    patch = plt.Circle((x0, y0),self.skin_width/2, fc='tab:red')
+                    axs.add_patch(patch)
+                
+                
+
+            for j in range(self.ni):
+                x0,y0=self.particle_position_x[j,i],self.particle_position_z[j,i]
+
+                if np.round(self.Rm[j],4)==0.0508:
+                    c='tab:blue'
+                else:
+                    c='tab:green'
+                patch = plt.Circle((x0, y0),self.Rm[j], fc=c)
+                axs.add_patch(patch)         
+     
+            if self.control_mode=="grasping" or self.control_mode=="grasping_explore" or self.control_mode=="grasping_u":
+
+                if self.geom=="circle":
+                    x0,y0=self.ballx_position[i]+self.ballx,self.ballz_position[i]+self.ballz
+                    patch = plt.Circle((x0, y0),self.ball_radius,fc='none',edgecolor='black',linewidth=1)
+                    axs.add_patch(patch)
+            
+                if self.geom=="square":
+                    const_=self.ball_radius*2
+                    x0,y0=self.ballx_position[i] - const_/2,self.ballz_position[i] - const_/2
+                    patch = matplotlib.patches.Rectangle((x0, y0),const_, const_,fc='none',edgecolor='black',linewidth=1)     
+                    axs.add_patch(patch)   
+                    
+                if self.geom=="triangle":
+                    x0,y0=self.ballx_position[i],self.ballz_position[i] 
+                    const=self.ball_radius*2*np.pi/3
+                    #r=np.sqrt((const**2)/(2-2*np.cos(7*np.pi/6)))
+                    r=const*np.sqrt(3)/3
+                    #print(r)
+                    patch = matplotlib.patches.RegularPolygon((x0,y0),int(3),r,orientation=np.pi/2,fc='none',edgecolor='black',linewidth=1)
+                    axs.add_patch(patch) 
+                    #xp=np.hstack([self.segments[:,0],self.segments[0,0]])
+                    #yp=np.hstack([self.segments[:,1],self.segments[0,1]])
+                    #axs[0].plot(xp+x0,yp+y0,color='tab:red',linestyle='dashed',linewidth=2,zorder=0)
+            
+            
+                if self.geom=="c_shape":
+                   x0b,y0b=self.ballx_position[i],self.ballz_position[i] 
+                   difx=self.ballx_position[0]-self.ballx_
+                   
+                   dify=self.ballz_position[0]-self.ballz_
+                   
+                   x__=x__+np.ones(len(x__))*(x0b-difx)
+                   y__=y__+np.ones(len(x__))*(y0b-dify)
+                   axs.plot(x__,y__)
+                   
+                if self.geom=="import":  
+                   x0b,y0b=self.ballx_position[i],self.ballz_position[i] 
+                   difx=self.ballx_position[0]-self.ballx_
+                   
+                   dify=self.ballz_position[0]-self.ballz_
+                   
+                   x__=x__+np.ones(len(x__))*(y0b-dify)
+                   y__=y__+np.ones(len(x__))*(x0b-difx)
+                   axs.plot(y__,x__,color="k")
+                    
+            axs.set_title('Time= ' + str(np.round(self.time[i],0)),fontsize=12)
+            print(str(i)+ "of"+ str(len(self.time-1))+" "+"theta="+str(np.round(theta,2)))
+            #plt.gca().set_aspect('equal', adjustable='box')
+            #fig.delaxes(axs[1,1])
+            plt.savefig(direct+"/frame%04d.jpg" % count)
+                 
+            count=count+1 
+            
+            plt.close('all')          
+        self.create_video('_frames_combined','_frames_combined') 
+
+     def create_frames_u2(self,membrane,wxmin,wxmax,wymin,wymax):
+        ''' Create frames to show the robot and the pull force and epsilon metric in one plot'''
+        fm._rebuild()
+        plt.rcParams['font.family'] = 'Times New Roman'
+        plt.rcParams['mathtext.fontset'] = 'dejavuserif'
+        plt.rcParams['font.size'] = 8
+        plt.rcParams['axes.linewidth'] = .1
+        
+        direct = os.path.join(self.mainDirectory+self.name,'_frames_combinedu2')    
+        if not os.path.isdir(direct):
+            os.makedirs(direct)
+        count=0
+        #Num_contact1=[]
+       # Num_contact2=[]
+        #for i in range(len(self.temp_id2)):
+        #    Num_contact1.append(len(self.temp_id2[i]))
+        # self.lengtho_grasp=self.parameters["lengtho_grasp"]
+        # self.length_grasp=self.parameters["length_grasp"]
+        # self.width_grasp=self.parameters["width_grasp"]
+        # self.xcenter_grasp=self.parameters["xcenter_grasp"]
+        # self.ycenter_grasp=self.parameters["ycenter_grasp"]
+        # self.xcenter_grasp2=self.parameters["xcenter_grasp2"]
+        # self.ycenter_grasp2=self.parameters["ycenter_grasp2"]
+        
+        for i in range(len(self.time)-2):
+            #theta=(1-self.tanh(t))*np.pi/2 + self.tanh(t)*0
+            x_=[]
+            y_=[]
+            #self.tcut1=self.parameters['tcut1']
+            # self.lengtho_grasp=self.parameters["lengtho_grasp"]
+            # self.length_grasp=self.parameters["length_grasp"]
+            # self.width_grasp=self.parameters["width_grasp"]
+            # self.xcenter_grasp=self.parameters["xcenter_grasp"]
+            # self.ycenter_grasp=self.parameters["ycenter_grasp"]
+            # self.xcenter_grasp2=self.parameters["xcenter_grasp2"]
+            # self.ycenter_grasp2=self.parameters["ycenter_grasp2"]
+            #if self.time[i]<self.tcut1:
+                #theta=np.pi/2
+           # else:
+                #theta=0
+            
+            theta=(1-self.Psi.ft2(self.time[i],self.tcut1,self.p))*np.pi/2 + self.Psi.ft2(self.time[i],self.tcut1,self.p)*0
+            
+            self.lengtho2_grasp = self.lengtho_grasp + 2*self.width_grasp*np.tan((np.pi/2 - theta)/2)
+            self.length2_grasp = self.length_grasp +self.width_grasp*np.tan((np.pi/2 - theta)/2)
+
+            x_.append(self.length_grasp*np.cos(theta) + self.xcenter_grasp)
+            y_.append(self.length_grasp*np.sin(theta) + self.lengtho_grasp/2 + self.ycenter_grasp)
+
+            x_.append(0 + self.xcenter_grasp)
+            y_.append(self.lengtho_grasp/2 + self.ycenter_grasp)
+
+            x_.append(0 + self.xcenter_grasp)
+            y_.append(-self.lengtho_grasp/2 + self.ycenter_grasp)
+
+            x_.append(self.length_grasp*np.cos(-theta) + self.xcenter_grasp)
+            y_.append(self.length_grasp*np.sin(-theta) - self.lengtho_grasp/2 + self.ycenter_grasp)
+
+
+            x_.append(self.length2_grasp*np.cos(-theta) + self.xcenter_grasp - self.width_grasp)
+            y_.append(self.length2_grasp*np.sin(-theta) - self.lengtho2_grasp/2 + self.ycenter_grasp)
+        
+            x_.append(0 + self.xcenter_grasp - self.width_grasp)
+            y_.append(-self.lengtho2_grasp/2 + self.ycenter_grasp)
+   
+            x_.append(0 + self.xcenter_grasp - self.width_grasp)
+            y_.append(self.lengtho2_grasp/2 + self.ycenter_grasp)
+   
+            x_.append(self.length2_grasp*np.cos(theta) - self.width_grasp + self.xcenter_grasp)
+            y_.append(self.length2_grasp*np.sin(theta) + self.lengtho2_grasp/2 + self.ycenter_grasp)
+        
+            x_.append(self.length_grasp*np.cos(theta) + self.xcenter_grasp)
+            y_.append(self.length_grasp*np.sin(theta) + self.lengtho_grasp/2 + self.ycenter_grasp)
+        
+  
+            fig, axs = plt.subplots(nrows=1, ncols=3,figsize=(9,3),dpi=300)
+            
+            dx=np.gradient(self.Field_value_sum,self.time)
+            
+            axs[2].plot(self.time[:i],dx[:i],color='tab:orange',linewidth=1)
+            axs[2].scatter(self.time[i-1],dx[i-1],color='k',s=30)
+            #x_ticks = np.linspace(self.time[0], self.time[-1],5,endpoint=True)
+            #y_ticks = np.linspace(np.min(self.bFx), np.max(self.bFx),5,endpoint=True)
+            axs[2].xaxis.set_tick_params(width=.25,length=2,pad=1)
+            axs[2].yaxis.set_tick_params(width=.25,length=2,pad=1)
+            #axs[0].set_ylim([0,100])
+         
+            #axs[0].set_xticks(np.round(x_ticks,2))
+            #axs[0].set_yticks(np.round(y_ticks,2))
+            axs[2].set_title('D$\Sigma \phi$'+str(np.round(dx[i],2)))
+            #axs[0].set_ylabel('ball Force  [x]',labelpad=1)         
+            axs[2].grid(True) 
+            
+            
+            
+            axs[1].plot(self.time[:i],self.Field_value_sum[:i],color='tab:red',linewidth=1)
+            axs[1].scatter(self.time[i-1],self.Field_value_sum[i-1],color='tab:blue',s=30)
+            #x_ticks = np.linspace(self.time[0], self.time[-1],5,endpoint=True)
+            #y_ticks = np.linspace(np.min(self.bFx), np.max(self.bFx),5,endpoint=True)
+            axs[1].xaxis.set_tick_params(width=.25,length=2,pad=1)
+            axs[1].yaxis.set_tick_params(width=.25,length=2,pad=1)
+            #axs[0].set_ylim([0,100])
+         
+            #axs[0].set_xticks(np.round(x_ticks,2))
+            #axs[0].set_yticks(np.round(y_ticks,2))
+            axs[1].set_title('$\Sigma \phi$'+str(np.round(self.Field_value_sum[i],2)))
+            #axs[0].set_ylabel('ball Force  [x]',labelpad=1)         
+            axs[1].grid(True) 
+            
+            
+            if self.time[i]<=self.tcut2:
+                axs[0].plot(x_,y_,color='tab:red',linestyle='dashed',linewidth=1,zorder=2)
+            else:
+                theta_=np.linspace(0,2*np.pi,300)
+                x_=0.1*np.cos(theta_)+self.xcenter_grasp2
+                y_=0.1*np.sin(theta_)+self.ycenter_grasp2
+                axs[0].plot(x_,y_,color='tab:red',linewidth=2,zorder=2)
+            #epsilon=np.asarray(self.EPSILON)
+            xcenter=self.ballx_position[i]
+            ycenter=self.ballz_position[i]
+            
+            x0b=self.ballx_position[2]
+            y0b=self.ballz_position[2]
+            #wxmax=x0b+d
+            #wxmin=x0b-d
+            #wymax=y0b+d
+            #wymin=y0b-d
+            
+     
+            axs[0].set_xlim([wxmin,wxmax])
+            axs[0].set_ylim([wymin,wymax])
+            #### Square
+            if self.geom=="square":
+                const=self.ball_radius*2
+                rx=const
+                ry=const
+                w=rx/2
+                h=ry/2                    
+                x=[w+xcenter,-w+xcenter,-w+xcenter,w+xcenter,w+xcenter]
+                y=[h+ycenter,h+ycenter,-h+ycenter,-h+ycenter,h+ycenter]
+                (self.segments)=self.create_segment(x,y) 
+            
+            #### Triangle
+            if self.geom=="triangle":
+                #const=self.ball_radius*2*np.pi/3
+                #r=np.sqrt((const**2)/(2-2*np.cos(7*np.pi/6)))
+                
+                const=self.ball_radius*2*np.pi/3
+                #r=np.sqrt((const**2)/(2-2*np.cos(7*np.pi/6)))
+                r=const*np.sqrt(3)/3
+                x1=-r
+                y1=0
+               
+                x2=-r*np.cos(2*np.pi/3)
+                y2=r*np.sin(2*np.pi/3)
+               
+                x3=-r*np.cos(4*np.pi/3)
+                y3=r*np.sin(4*np.pi/3)
+               
+                x__ = [x1,x2,x3,x1]
+                y__ = [y1,y2,y3,y1]
+               
+                (self.segments)=self.create_segment(x__,y__)   
+            #### c shape
+            if self.geom=="c_shape":
+                #x0b,y0b=self.ballx_position[i],self.ballz_position[i]
+                w=self.w/2
+                l=self.l/2
+                t=self.t
+                x__=[w,-w,-w,w,w,-w+t,-w+t,w,w]
+                y__=[-l,-l,l,l,l-t,l-t,-l+t,-l+t,-l]
+                (self.segments)=self.create_segment(x__,y__)
+
+            
+            #ax.plot(x,y)
+            for j in range(0,self.nb):
+                x0,y0=self.bot_position_x[j,i],self.bot_position_z[j,i]
+                if self.geom=="square":
+                    #if self.PHI(x0-xcenter,y0-ycenter,self.segments)<.1:
+                        #patch = plt.Circle((x0, y0),self.bot_width/2, fc='tab:red')
+                        #axs[0].add_patch(patch)
+                   
+                    #else:
+                    patch = plt.Circle((x0, y0),self.bot_width/2, fc='k')
+                    axs[0].add_patch(patch) 
+                        
+                if self.geom=="triangle":
+                    if self.PHI(x0-xcenter,y0-ycenter,self.segments)<.1:
+                        patch = plt.Circle((x0, y0),self.bot_width/2, fc='tab:red')
+                        axs[0].add_patch(patch)
+                   
+                    else:
+                        patch = plt.Circle((x0, y0),self.bot_width/2, fc='k')
+                        axs[0].add_patch(patch)                         
+                
+                        
+                
+                if self.geom=="c_shape":
+                    difx=self.ballx_position[0]-self.ballx_
+                   
+                    dify=self.ballz_position[0]-self.ballz_
+                    
+                    if self.PHI(x0+(x0b-difx),y0+(x0b-difx),self.segments)<.1:
+                        patch = plt.Circle((x0, y0),self.bot_width/2, fc='tab:red')
+                        axs[0].add_patch(patch)
+                   
+                    else:
+                        patch = plt.Circle((x0, y0),self.bot_width/2, fc='k')
+                        axs[0].add_patch(patch)    
+                        
+                if self.geom=="circle":
+                    
+                    q=np.sqrt((x0-self.ballx_position[i])**2 + (y0-self.ballz_position[i])**2)
+                    #if q<=(2 * self.bot_width/2 + self.ball_radius):
+                        #patch = plt.Circle((x0, y0),self.bot_width/2, fc='tab:red')
+                        #axs[0].add_patch(patch)
+                   
+                    #else:
+                    patch = plt.Circle((x0, y0),self.bot_width/2, fc='k')
+                    axs[0].add_patch(patch)  
+                               
+                
+            if membrane==True:
+                for j in range(0,self.nm):
+                    
+                    x0,y0=self.membrane_position_x[j,i],self.membrane_position_z[j,i]  
+                    patch = plt.Circle((x0, y0),self.skin_width/2, fc='tab:red')
+                    axs[0].add_patch(patch)
+                
+                
+
+            for j in range(self.ni):
+                x0,y0=self.particle_position_x[j,i],self.particle_position_z[j,i]
+
+                if np.round(self.Rm[j],4)==0.0508:
+                    c='tab:blue'
+                else:
+                    c='tab:green'
+                patch = plt.Circle((x0, y0),self.Rm[j], fc=c)
+                axs[0].add_patch(patch)         
+     
+            if self.control_mode=="grasping" or self.control_mode=="grasping_explore" or self.control_mode=="grasping_u":
+
+                if self.geom=="circle":
+                    x0,y0=self.ballx_position[i]+self.ballx,self.ballz_position[i]+self.ballz
+                    patch = plt.Circle((x0, y0),self.ball_radius,fc='none',edgecolor='black',linewidth=1)
+                    axs[0].add_patch(patch)
+            
+                if self.geom=="square":
+                    const_=self.ball_radius*2
+                    x0,y0=self.ballx_position[i] - const_/2,self.ballz_position[i] - const_/2
+                    patch = matplotlib.patches.Rectangle((x0, y0),const_, const_,fc='none',edgecolor='black',linewidth=1)     
+                    axs[0].add_patch(patch)   
+                    
+                if self.geom=="triangle":
+                    x0,y0=self.ballx_position[i],self.ballz_position[i] 
+                    const=self.ball_radius*2*np.pi/3
+                    #r=np.sqrt((const**2)/(2-2*np.cos(7*np.pi/6)))
+                    r=const*np.sqrt(3)/3
+                    #print(r)
+                    patch = matplotlib.patches.RegularPolygon((x0,y0),int(3),r,orientation=np.pi/2,fc='none',edgecolor='black',linewidth=1)
+                    axs[0].add_patch(patch) 
+                    #xp=np.hstack([self.segments[:,0],self.segments[0,0]])
+                    #yp=np.hstack([self.segments[:,1],self.segments[0,1]])
+                    #axs[0].plot(xp+x0,yp+y0,color='tab:red',linestyle='dashed',linewidth=2,zorder=0)
+            
+            
+                if self.geom=="c_shape":
+                   x0b,y0b=self.ballx_position[i],self.ballz_position[i] 
+                   difx=self.ballx_position[0]-self.ballx_
+                   
+                   dify=self.ballz_position[0]-self.ballz_
+                   
+                   x__=x__+np.ones(len(x__))*(x0b-difx)
+                   y__=y__+np.ones(len(x__))*(y0b-dify)
+                   axs[0].plot(x__,y__)
+                   
+                if self.geom=="import":  
+                   x0b,y0b=self.ballx_position[i],self.ballz_position[i] 
+                   difx=self.ballx_position[0]-self.ballx_
+                   
+                   dify=self.ballz_position[0]-self.ballz_
+                   
+                   x__=x__+np.ones(len(x__))*(y0b-dify)
+                   y__=y__+np.ones(len(x__))*(x0b-difx)
+                   axs[0].plot(y__,x__,color="k")
+                    
+            axs[0].set_title('Time= ' + str(np.round(self.time[i],0)),fontsize=12)
+            print(str(i)+ "of"+ str(len(self.time-1))+" "+"theta="+str(np.round(theta,2)))
+            #plt.gca().set_aspect('equal', adjustable='box')
+            #fig.delaxes(axs[1,1])
+            plt.savefig(direct+"/frame%04d.jpg" % count)
+                 
+            count=count+1 
+            
+            plt.close('all')          
+        self.create_video('_frames_combinedu2','_frames_combinedu2') 
+        
+     def create_frames_u3_only_robot(self,membrane,wxmin,wxmax,wymin,wymax):
+        ''' Create frames to show the robot and the pull force and epsilon metric in one plot'''
+        fm._rebuild()
+        plt.rcParams['font.family'] = 'Times New Roman'
+        plt.rcParams['mathtext.fontset'] = 'dejavuserif'
+        plt.rcParams['font.size'] = 8
+        plt.rcParams['axes.linewidth'] = .1
+        
+        direct = os.path.join(self.mainDirectory+self.name,'_frames_combinedu3_only_robot')    
+        if not os.path.isdir(direct):
+            os.makedirs(direct)
+        count=0
+ 
+        a = self.rtilda
+        b = self.rtilda
+        delta = .01
+        #x = np.arange(wxmin,wxmax, delta)
+        #y = np.arange(wymin,wymax, delta)
+        #X,Y=np.meshgrid(x,y)
+        #zeta1,zeta2=self.Psi.field4(x,y,self.xc1,self.yc1,self.xc2,self.yc2,self.rtilda,self.Psi.rho_)
+
+        for i in range(len(self.time)-2):
+            #theta=(1-self.tanh(t))*np.pi/2 + self.tanh(t)*0
+            x_=[]
+            y_=[]
+
+            theta=np.pi/2
+            #theta=(1-self.Psi.ft2(self.time[i],self.tcut1,self.p))*np.pi/2 + self.Psi.ft2(self.time[i],self.tcut1,self.p)*0
+            
+            self.lengtho2_grasp = self.lengtho_grasp + 2*self.width_grasp*np.tan((np.pi/2 - theta)/2)
+            self.length2_grasp = self.length_grasp +self.width_grasp*np.tan((np.pi/2 - theta)/2)
+
+            x_.append(self.length_grasp*np.cos(theta) + self.xcenter_grasp)
+            y_.append(self.length_grasp*np.sin(theta) + self.lengtho_grasp/2 + self.ycenter_grasp)
+
+            x_.append(0 + self.xcenter_grasp)
+            y_.append(self.lengtho_grasp/2 + self.ycenter_grasp)
+
+            x_.append(0 + self.xcenter_grasp)
+            y_.append(-self.lengtho_grasp/2 + self.ycenter_grasp)
+
+            x_.append(self.length_grasp*np.cos(-theta) + self.xcenter_grasp)
+            y_.append(self.length_grasp*np.sin(-theta) - self.lengtho_grasp/2 + self.ycenter_grasp)
+
+
+            x_.append(self.length2_grasp*np.cos(-theta) + self.xcenter_grasp - self.width_grasp)
+            y_.append(self.length2_grasp*np.sin(-theta) - self.lengtho2_grasp/2 + self.ycenter_grasp)
+        
+            x_.append(0 + self.xcenter_grasp - self.width_grasp)
+            y_.append(-self.lengtho2_grasp/2 + self.ycenter_grasp)
+   
+            x_.append(0 + self.xcenter_grasp - self.width_grasp)
+            y_.append(self.lengtho2_grasp/2 + self.ycenter_grasp)
+   
+            x_.append(self.length2_grasp*np.cos(theta) - self.width_grasp + self.xcenter_grasp)
+            y_.append(self.length2_grasp*np.sin(theta) + self.lengtho2_grasp/2 + self.ycenter_grasp)
+        
+            x_.append(self.length_grasp*np.cos(theta) + self.xcenter_grasp)
+            y_.append(self.length_grasp*np.sin(theta) + self.lengtho_grasp/2 + self.ycenter_grasp)
+        
+  
+            fig, axs = plt.subplots(nrows=1, ncols=1,figsize=(6.5,6.5),dpi=300)
+            bx=self.ballx_position
+            
+            if self.TRIG1_[i]==0:
+                #patch = plt.Circle((self.xc2,self.yc2),.1, fc='tab:red')
+                #axs.add_patch(patch)
+                axs.plot(x_,y_,color='m',linestyle='dashed',linewidth=1,zorder=2)
+                #axs[0,0].plot(x_,y_,color='tab:red',linestyle='dashed',linewidth=1,zorder=2)
+            else:
+                #axs[0,0].streamplot(X, Y, zeta1, zeta2, color = 'tab:red', density = 1, linewidth = 0.25, arrowsize = 0.5, arrowstyle ='->')
+                patch = plt.Circle((self.xc2,self.yc2),.05, fc='m')
+                axs.add_patch(patch)
+            xcenter=self.ballx_position[i]
+            ycenter=self.ballz_position[i]
+            
+            x0b=self.ballx_position[2]
+            y0b=self.ballz_position[2]
+            #wxmax=x0b+d
+            #wxmin=x0b-d
+            #wymax=y0b+d
+            #wymin=y0b-d
+            
+     
+            axs.set_xlim([wxmin,wxmax])
+            axs.set_ylim([wymin,wymax])
+            #### Square
+            if self.geom=="square":
+                const=self.ball_radius*2
+                rx=const
+                ry=const
+                w=rx/2
+                h=ry/2                    
+                x=[w+xcenter,-w+xcenter,-w+xcenter,w+xcenter,w+xcenter]
+                y=[h+ycenter,h+ycenter,-h+ycenter,-h+ycenter,h+ycenter]
+                (self.segments)=self.create_segment(x,y) 
+            
+            #### Triangle
+            if self.geom=="triangle":
+                #const=self.ball_radius*2*np.pi/3
+                #r=np.sqrt((const**2)/(2-2*np.cos(7*np.pi/6)))
+                
+                const=self.ball_radius*2*np.pi/3
+                #r=np.sqrt((const**2)/(2-2*np.cos(7*np.pi/6)))
+                r=const*np.sqrt(3)/3
+                x1=-r
+                y1=0
+               
+                x2=-r*np.cos(2*np.pi/3)
+                y2=r*np.sin(2*np.pi/3)
+               
+                x3=-r*np.cos(4*np.pi/3)
+                y3=r*np.sin(4*np.pi/3)
+               
+                x__ = [x1,x2,x3,x1]
+                y__ = [y1,y2,y3,y1]
+               
+                (self.segments)=self.create_segment(x__,y__)   
+            #### c shape
+            if self.geom=="c_shape":
+                #x0b,y0b=self.ballx_position[i],self.ballz_position[i]
+                w=self.w/2
+                l=self.l/2
+                t=self.t
+                x__=[w,-w,-w,w,w,-w+t,-w+t,w,w]
+                y__=[-l,-l,l,l,l-t,l-t,-l+t,-l+t,-l]
+                (self.segments)=self.create_segment(x__,y__)
+
+            
+            #ax.plot(x,y)
+            for j in range(0,self.nb):
+                x0,y0=self.bot_position_x[j,i],self.bot_position_z[j,i]
+                if self.geom=="square":
+                    #if self.PHI(x0-xcenter,y0-ycenter,self.segments)<.1:
+                        #patch = plt.Circle((x0, y0),self.bot_width/2, fc='tab:red')
+                        #axs[0].add_patch(patch)
+                   
+                    #else:
+                    patch = plt.Circle((x0, y0),self.bot_width/2, fc='k')
+                    axs.add_patch(patch) 
+                        
+                if self.geom=="triangle":
+                    if self.PHI(x0-xcenter,y0-ycenter,self.segments)<.1:
+                        patch = plt.Circle((x0, y0),self.bot_width/2, fc='tab:red')
+                        axs.add_patch(patch)
+                   
+                    else:
+                        patch = plt.Circle((x0, y0),self.bot_width/2, fc='k')
+                        axs.add_patch(patch)                         
+                
+                        
+                
+                if self.geom=="c_shape":
+                    #difx=self.ballx_position[0]-self.ballx_
+                   
+                    #dify=self.ballz_position[0]-self.ballz_
+                    
+                    #if self.PHI(x0+(x0b-difx),y0+(x0b-difx),self.segments)<.1:
+                       # patch = plt.Circle((x0, y0),self.bot_width/2, fc='tab:red')
+                        #axs[0,0].add_patch(patch)
+                   
+                    #else:
+                    patch = plt.Circle((x0, y0),self.bot_width/2, fc='k')
+                    axs.add_patch(patch)    
+                        
+                if self.geom=="circle":
+                    
+                    q=np.sqrt((x0-self.ballx_position[i])**2 + (y0-self.ballz_position[i])**2)
+                    #if q<=(2 * self.bot_width/2 + self.ball_radius):
+                        #patch = plt.Circle((x0, y0),self.bot_width/2, fc='tab:red')
+                        #axs[0].add_patch(patch)
+                   
+                    #else:
+                    patch = plt.Circle((x0, y0),self.bot_width/2, fc='k')
+                    axs.add_patch(patch)  
+                               
+                
+            if membrane==True:
+                for j in range(0,self.nm):
+                    
+                    x0,y0=self.membrane_position_x[j,i],self.membrane_position_z[j,i]  
+                    patch = plt.Circle((x0, y0),self.skin_width/2, fc='tab:red')
+                    axs[0,0].add_patch(patch)
+                
+                
+
+            for j in range(self.ni):
+                x0,y0=self.particle_position_x[j,i],self.particle_position_z[j,i]
+
+                if np.round(self.Rm[j],4)==0.0508:
+                    c='tab:blue'
+                else:
+                    c='tab:green'
+                patch = plt.Circle((x0, y0),self.Rm[j], fc=c)
+                axs.add_patch(patch)         
+     
+            if self.control_mode=="grasping" or self.control_mode=="grasping_explore" or self.control_mode=="grasping_u":
+
+                if self.geom=="circle":
+                    x0,y0=self.ballx_position[i]+self.ballx,self.ballz_position[i]+self.ballz
+                    patch = plt.Circle((x0, y0),self.ball_radius,fc='none',edgecolor='black',linewidth=1)
+                    axs.add_patch(patch)
+            
+                if self.geom=="square":
+                    const_=self.ball_radius*2
+                    x0,y0=self.ballx_position[i] - const_/2,self.ballz_position[i] - const_/2
+                    ts = axs.transData
+ 
+                    tr = matplotlib.transforms.Affine2D().rotate_deg_around(self.ballx_position[i],self.ballz_position[i], -self.pitch[i])
+                    t = tr + ts
+                    patch = matplotlib.patches.Rectangle((x0, y0),const_, const_,fc='none',edgecolor='black',linewidth=1,transform=t)     
+                    
+                    #t=matplotlib.transforms.Affine2D().rotate_deg(-self.pitch[i]) + axs.transData
+                    #patch.set_transform(t)
+                    axs.add_patch(patch)   
+                    
+                if self.geom=="triangle":
+                    x0,y0=self.ballx_position[i],self.ballz_position[i] 
+                    const=self.ball_radius*2*np.pi/3
+                    #r=np.sqrt((const**2)/(2-2*np.cos(7*np.pi/6)))
+                    r=const*np.sqrt(3)/3
+                    #print(r)
+                    patch = matplotlib.patches.RegularPolygon((x0,y0),int(3),r,orientation=np.pi/2,fc='none',edgecolor='black',linewidth=1)
+                    axs.add_patch(patch) 
+                    #xp=np.hstack([self.segments[:,0],self.segments[0,0]])
+                    #yp=np.hstack([self.segments[:,1],self.segments[0,1]])
+                    #axs[0].plot(xp+x0,yp+y0,color='tab:red',linestyle='dashed',linewidth=2,zorder=0)
+            
+            
+                if self.geom=="c_shape":
+                   x0b,y0b=self.ballx_position[i],self.ballz_position[i] 
+                   difx=self.ballx_position[0]-self.ballx_
+                   
+                   dify=self.ballz_position[0]-self.ballz_
+                   
+                   x__=x__+np.ones(len(x__))*(x0b-difx)
+                   y__=y__+np.ones(len(x__))*(y0b-dify)
+                   theta=(np.pi/180)*-self.pitch[i]
+                   xprime = x__*np.cos(theta) + y__*np.sin(theta)
+                   yprime = -x__*np.sin(theta) + y__*np.cos(theta)
+                   axs.plot(xprime,yprime,color='k')
+                   
+                if self.geom=="import":  
+                   x0b,y0b=self.ballx_position[i],self.ballz_position[i] 
+                   difx=self.ballx_position[0]-self.ballx_
+                   
+                   dify=self.ballz_position[0]-self.ballz_
+                   
+                   x__=x__+np.ones(len(x__))*(y0b-dify)
+                   y__=y__+np.ones(len(x__))*(x0b-difx)
+                   axs.plot(y__,x__,color="k")
+                    
+            axs.set_title('Time= ' + str(np.round(self.time[i],0)),fontsize=12)
+            #print(str(i)+ "of"+ str(len(self.time-1))+" "+"theta="+str(np.round(theta,2)))
+            print(str(i)+ "of"+ str(len(self.time-1)))
+            #plt.gca().set_aspect('equal', adjustable='box')
+            #fig.delaxes(axs[1,1])
+            plt.savefig(direct+"/frame%04d.jpg" % count)
+                 
+            count=count+1 
+            
+            plt.close('all')          
+        self.create_video('_frames_combinedu3_only_robot','_frames_combinedu3_only_robot') 
      def create_frames_u3(self,membrane,wxmin,wxmax,wymin,wymax):
         ''' Create frames to show the robot and the pull force and epsilon metric in one plot'''
         fm._rebuild()
@@ -8903,6 +13781,298 @@ class import_data:
             plt.close('all')          
         self.create_video('_frames_combinedu3','_frames_combinedu3') 
 
+
+     def create_frames_u4(self,membrane,wxmin,wxmax,wymin,wymax):
+        ''' Create frames to show the robot and the pull force and epsilon metric in one plot'''
+        fm._rebuild()
+        plt.rcParams['font.family'] = 'Times New Roman'
+        plt.rcParams['mathtext.fontset'] = 'dejavuserif'
+        plt.rcParams['font.size'] = 8
+        plt.rcParams['axes.linewidth'] = .1
+        
+        direct = os.path.join(self.mainDirectory+self.name,'_frames_combinedu4')    
+        if not os.path.isdir(direct):
+            os.makedirs(direct)
+        count=0
+ 
+        a = self.rtilda
+        b = self.rtilda
+        delta = .01
+        #x = np.arange(wxmin,wxmax, delta)
+        #y = np.arange(wymin,wymax, delta)
+        #X,Y=np.meshgrid(x,y)
+        #zeta1,zeta2=self.Psi.field4(x,y,self.xc1,self.yc1,self.xc2,self.yc2,self.rtilda,self.Psi.rho_)
+
+        for i in range(len(self.time)-2):
+            #theta=(1-self.tanh(t))*np.pi/2 + self.tanh(t)*0
+            x_=[]
+            y_=[]
+
+            theta=np.pi/2
+            #theta=(1-self.Psi.ft2(self.time[i],self.tcut1,self.p))*np.pi/2 + self.Psi.ft2(self.time[i],self.tcut1,self.p)*0
+            
+            self.lengtho2_grasp = self.lengtho_grasp + 2*self.width_grasp*np.tan((np.pi/2 - theta)/2)
+            self.length2_grasp = self.length_grasp +self.width_grasp*np.tan((np.pi/2 - theta)/2)
+
+            x_.append(self.length_grasp*np.cos(theta) + self.xcenter_grasp)
+            y_.append(self.length_grasp*np.sin(theta) + self.lengtho_grasp/2 + self.ycenter_grasp)
+
+            x_.append(0 + self.xcenter_grasp)
+            y_.append(self.lengtho_grasp/2 + self.ycenter_grasp)
+
+            x_.append(0 + self.xcenter_grasp)
+            y_.append(-self.lengtho_grasp/2 + self.ycenter_grasp)
+
+            x_.append(self.length_grasp*np.cos(-theta) + self.xcenter_grasp)
+            y_.append(self.length_grasp*np.sin(-theta) - self.lengtho_grasp/2 + self.ycenter_grasp)
+
+
+            x_.append(self.length2_grasp*np.cos(-theta) + self.xcenter_grasp - self.width_grasp)
+            y_.append(self.length2_grasp*np.sin(-theta) - self.lengtho2_grasp/2 + self.ycenter_grasp)
+        
+            x_.append(0 + self.xcenter_grasp - self.width_grasp)
+            y_.append(-self.lengtho2_grasp/2 + self.ycenter_grasp)
+   
+            x_.append(0 + self.xcenter_grasp - self.width_grasp)
+            y_.append(self.lengtho2_grasp/2 + self.ycenter_grasp)
+   
+            x_.append(self.length2_grasp*np.cos(theta) - self.width_grasp + self.xcenter_grasp)
+            y_.append(self.length2_grasp*np.sin(theta) + self.lengtho2_grasp/2 + self.ycenter_grasp)
+        
+            x_.append(self.length_grasp*np.cos(theta) + self.xcenter_grasp)
+            y_.append(self.length_grasp*np.sin(theta) + self.lengtho_grasp/2 + self.ycenter_grasp)
+        
+
+            #fig, axs = plt.subplots(nrows=2, ncols=2,figsize=(6.5,6.5),dpi=300)
+            plt.figure(figsize=(10, 6.5),dpi=300)
+            ax1 = plt.subplot(2,3,1)
+            ax2 = plt.subplot(2,3,2)
+            ax3 = plt.subplot(2,3,3)
+            ax4 = plt.subplot(2,1,2)
+            axes = [ax1, ax2, ax3, ax4]
+            bx=self.ballx_position
+
+
+            
+            ax2.plot(self.time[:i],np.dot(self.Field_value_sum[:i],1/self.nb),color='tab:red',linewidth=1)
+            ax2.scatter(self.time[i-1],np.dot(self.Field_value_sum[i-1],1/self.nb),color='k',s=30)
+            ax2.xaxis.set_tick_params(width=.25,length=2,pad=1)
+            ax2.yaxis.set_tick_params(width=.25,length=2,pad=1)
+            ax2.set_title('$\phi_{avg}$'+str(np.round(self.Field_value_sum[i]/self.nb,2)))
+            #axs[0].set_ylabel('ball Force  [x]',labelpad=1)         
+            ax2.grid(True) 
+            
+            ax3.plot(self.FB[:i],self.PX[:i],color='tab:green',linewidth=1.5)
+            ax3.scatter(self.FB[i-1],self.PX[i-1],color='tab:red',s=30)
+            #ax3.set_ylim([-0.25,1])
+            #ax3.set_title('FB='+str(np.round(self.FB[i-1],2))+" Px= "+str(np.round(self.PX[i-1]-self.PX[54],2))  )
+            ax3.set_xlabel('Pull Force [N]',labelpad=-1)  
+            ax3.set_ylabel('Ball Position [m]',labelpad=1) 
+            ax3.grid(True) 
+            
+        
+            #### EPSILON
+            epsilon=np.asarray(self.EPSILON_)
+            ax4.plot(self.time[:i],epsilon[:i],color='tab:blue',linewidth=1.5)
+            ax4.scatter(self.time[i-1],epsilon[i-1],color='tab:red',s=30)
+            ax4.set_title(r'$\epsilon_{1}$='+str(np.round(epsilon[i-1],2)))
+            ax4.set_ylabel('$\epsilon_{1}$',labelpad=1)
+            ax4.set_xlabel('time [s]',labelpad=-2)
+            ax4.xaxis.set_tick_params(width=.25,length=2,pad=1)
+            ax4.yaxis.set_tick_params(width=.25,length=2,pad=1)
+            ax4.grid(True) 
+
+            
+            
+            if self.TRIG1_[i]==0:
+                patch = plt.Circle((self.xc2,self.yc2),.1, fc='tab:red')
+                ax1.add_patch(patch)
+                ax1.plot(x_,y_,color='tab:red',linestyle='dashed',linewidth=1,zorder=2)
+                #axs[0,0].plot(x_,y_,color='tab:red',linestyle='dashed',linewidth=1,zorder=2)
+            else:
+                #axs[0,0].streamplot(X, Y, zeta1, zeta2, color = 'tab:red', density = 1, linewidth = 0.25, arrowsize = 0.5, arrowstyle ='->')
+                patch = plt.Circle((self.xc2,self.yc2),.05, fc='m')
+                ax1.add_patch(patch)
+            xcenter=self.ballx_position[i]
+            ycenter=self.ballz_position[i]
+            
+            x0b=self.ballx_position[2]
+            y0b=self.ballz_position[2]
+            #wxmax=x0b+d
+            #wxmin=x0b-d
+            #wymax=y0b+d
+            #wymin=y0b-d
+            
+     
+            ax1.set_xlim([wxmin,wxmax])
+            ax1.set_ylim([wymin,wymax])
+            #### Square
+            if self.geom=="square":
+                const=self.ball_radius*2
+                rx=const
+                ry=const
+                w=rx/2
+                h=ry/2                    
+                x=[w+xcenter,-w+xcenter,-w+xcenter,w+xcenter,w+xcenter]
+                y=[h+ycenter,h+ycenter,-h+ycenter,-h+ycenter,h+ycenter]
+                (self.segments)=self.create_segment(x,y) 
+            
+            #### Triangle
+            if self.geom=="triangle":
+                #const=self.ball_radius*2*np.pi/3
+                #r=np.sqrt((const**2)/(2-2*np.cos(7*np.pi/6)))
+                
+                const=self.ball_radius*2*np.pi/3
+                #r=np.sqrt((const**2)/(2-2*np.cos(7*np.pi/6)))
+                r=const*np.sqrt(3)/3
+                x1=-r
+                y1=0
+               
+                x2=-r*np.cos(2*np.pi/3)
+                y2=r*np.sin(2*np.pi/3)
+               
+                x3=-r*np.cos(4*np.pi/3)
+                y3=r*np.sin(4*np.pi/3)
+               
+                x__ = [x1,x2,x3,x1]
+                y__ = [y1,y2,y3,y1]
+               
+                (self.segments)=self.create_segment(x__,y__)   
+            #### c shape
+            if self.geom=="c_shape":
+                #x0b,y0b=self.ballx_position[i],self.ballz_position[i]
+                w=self.w/2
+                l=self.l/2
+                t=self.t
+                x__=[w,-w,-w,w,w,-w+t,-w+t,w,w]
+                y__=[-l,-l,l,l,l-t,l-t,-l+t,-l+t,-l]
+                (self.segments)=self.create_segment(x__,y__)
+
+            
+            #ax.plot(x,y)
+            for j in range(0,self.nb):
+                x0,y0=self.bot_position_x[j,i],self.bot_position_z[j,i]
+                if self.geom=="square":
+                    #if self.PHI(x0-xcenter,y0-ycenter,self.segments)<.1:
+                        #patch = plt.Circle((x0, y0),self.bot_width/2, fc='tab:red')
+                        #axs[0].add_patch(patch)
+                   
+                    #else:
+                    patch = plt.Circle((x0, y0),self.bot_width/2, fc='k')
+                    ax1.add_patch(patch) 
+                        
+                if self.geom=="triangle":
+                    if self.PHI(x0-xcenter,y0-ycenter,self.segments)<.1:
+                        patch = plt.Circle((x0, y0),self.bot_width/2, fc='tab:red')
+                        ax1.add_patch(patch)
+                   
+                    else:
+                        patch = plt.Circle((x0, y0),self.bot_width/2, fc='k')
+                        ax1.add_patch(patch)                         
+                
+                        
+                
+                if self.geom=="c_shape":
+                    #difx=self.ballx_position[0]-self.ballx_
+                   
+                    #dify=self.ballz_position[0]-self.ballz_
+                    
+                    #if self.PHI(x0+(x0b-difx),y0+(x0b-difx),self.segments)<.1:
+                       # patch = plt.Circle((x0, y0),self.bot_width/2, fc='tab:red')
+                        #axs[0,0].add_patch(patch)
+                   
+                    #else:
+                    patch = plt.Circle((x0, y0),self.bot_width/2, fc='k')
+                    ax1.add_patch(patch)    
+                        
+                if self.geom=="circle":
+                    
+                    q=np.sqrt((x0-self.ballx_position[i])**2 + (y0-self.ballz_position[i])**2)
+                    #if q<=(2 * self.bot_width/2 + self.ball_radius):
+                        #patch = plt.Circle((x0, y0),self.bot_width/2, fc='tab:red')
+                        #axs[0].add_patch(patch)
+                   
+                    #else:
+                    patch = plt.Circle((x0, y0),self.bot_width/2, fc='k')
+                    ax1.add_patch(patch)  
+                               
+                
+            if membrane==True:
+                for j in range(0,self.nm):
+                    
+                    x0,y0=self.membrane_position_x[j,i],self.membrane_position_z[j,i]  
+                    patch = plt.Circle((x0, y0),self.skin_width/2, fc='tab:red')
+                    ax1.add_patch(patch)
+                
+                
+
+            for j in range(self.ni):
+                x0,y0=self.particle_position_x[j,i],self.particle_position_z[j,i]
+
+                if np.round(self.Rm[j],4)==0.0508:
+                    c='tab:blue'
+                else:
+                    c='tab:green'
+                patch = plt.Circle((x0, y0),self.Rm[j], fc=c)
+                ax1.add_patch(patch)         
+     
+            if self.control_mode=="grasping" or self.control_mode=="grasping_explore" or self.control_mode=="grasping_u":
+
+                if self.geom=="circle":
+                    x0,y0=self.ballx_position[i]+self.ballx,self.ballz_position[i]+self.ballz
+                    patch = plt.Circle((x0, y0),self.ball_radius,fc='none',edgecolor='black',linewidth=1)
+                    ax1.add_patch(patch)
+            
+                if self.geom=="square":
+                    const_=self.ball_radius*2
+                    x0,y0=self.ballx_position[i] - const_/2,self.ballz_position[i] - const_/2
+                    patch = matplotlib.patches.Rectangle((x0, y0),const_, const_,fc='none',edgecolor='black',linewidth=1)     
+                    ax1.add_patch(patch)   
+                    
+                if self.geom=="triangle":
+                    x0,y0=self.ballx_position[i],self.ballz_position[i] 
+                    const=self.ball_radius*2*np.pi/3
+                    #r=np.sqrt((const**2)/(2-2*np.cos(7*np.pi/6)))
+                    r=const*np.sqrt(3)/3
+                    #print(r)
+                    patch = matplotlib.patches.RegularPolygon((x0,y0),int(3),r,orientation=np.pi/2,fc='none',edgecolor='black',linewidth=1)
+                    ax1.add_patch(patch) 
+                    #xp=np.hstack([self.segments[:,0],self.segments[0,0]])
+                    #yp=np.hstack([self.segments[:,1],self.segments[0,1]])
+                    #axs[0].plot(xp+x0,yp+y0,color='tab:red',linestyle='dashed',linewidth=2,zorder=0)
+            
+            
+                if self.geom=="c_shape":
+                   x0b,y0b=self.ballx_position[i],self.ballz_position[i] 
+                   difx=self.ballx_position[0]-self.ballx_
+                   
+                   dify=self.ballz_position[0]-self.ballz_
+                   
+                   x__=x__+np.ones(len(x__))*(x0b-difx)
+                   y__=y__+np.ones(len(x__))*(y0b-dify)
+                   ax1.plot(x__,y__,color='k')
+                   
+                if self.geom=="import":  
+                   x0b,y0b=self.ballx_position[i],self.ballz_position[i] 
+                   difx=self.ballx_position[0]-self.ballx_
+                   
+                   dify=self.ballz_position[0]-self.ballz_
+                   
+                   x__=x__+np.ones(len(x__))*(y0b-dify)
+                   y__=y__+np.ones(len(x__))*(x0b-difx)
+                   ax1.plot(y__,x__,color="k")
+                    
+            ax1.set_title('Time= ' + str(np.round(self.time[i],0)),fontsize=12)
+            #print(str(i)+ "of"+ str(len(self.time-1))+" "+"theta="+str(np.round(theta,2)))
+            print(str(i)+ "of"+ str(len(self.time-1)))
+            #plt.gca().set_aspect('equal', adjustable='box')
+            #fig.delaxes(axs[1,1])
+            plt.savefig(direct+"/frame%04d.jpg" % count)
+                 
+            count=count+1 
+            
+            plt.close('all')          
+        self.create_video('_frames_combinedu4','_frames_combinedu4') 
      def create_frames_target(self,membrane,wxmin,wxmax,wymin,wymax):
         ''' Create frames to show the robot and the pull force and epsilon metric in one plot'''
         fm._rebuild()
@@ -9172,7 +14342,11 @@ class import_data:
                 if self.geom=="square":
                     const_=self.ball_radius*2
                     x0,y0=self.ballx_position[i] - const_/2,self.ballz_position[i] - const_/2
-                    patch = matplotlib.patches.Rectangle((x0, y0),const_, const_,fc='none',edgecolor='black',linewidth=1)     
+                    ts = axs.transData
+ 
+                    tr = matplotlib.transforms.Affine2D().rotate_deg_around(self.ballx_position[i],self.ballz_position[i], -self.pitch[i])
+                    t = tr + ts
+                    patch = matplotlib.patches.Rectangle((x0, y0),const_, const_,fc='none',edgecolor='black',linewidth=1,transform=t)     
                     axs.add_patch(patch) 
                     
             axs.set_yticks(yticks)
@@ -9188,6 +14362,141 @@ class import_data:
             plt.gca().set_aspect('equal', adjustable='box')
             plt.savefig(self.mainDirectory+self.name+"/snap_shot_"+str(self.time[i])+".svg")
             plt.savefig(self.mainDirectory+self.name+"/snap_shot_"+str(self.time[i])+".png")
+            plt.close('all')
+            
+            
+     def create_frames_u4_snapshots(self,membrane,wxmin,wxmax,wymin,wymax,fsx,fsy,xticks,yticks,entry,Directory,name):
+        ''' Create frames to show the robot and the pull force and epsilon metric in one plot'''
+        fm._rebuild()
+        plt.rcParams['font.family'] = 'Times New Roman'
+        plt.rcParams['mathtext.fontset'] = 'dejavuserif'
+        plt.rcParams['font.size'] = 9
+        plt.rcParams['axes.linewidth'] = .1  
+        count=0
+        ratio  = (wymax-wymin)/(wxmax-wxmin)
+        
+        for i in entry:
+            #theta=(1-self.tanh(t))*np.pi/2 + self.tanh(t)*0
+            x_=[]
+            y_=[]
+
+            theta=np.pi/2
+            self.lengtho2_grasp = self.lengtho_grasp + 2*self.width_grasp*np.tan((np.pi/2 - theta)/2)
+            self.length2_grasp = self.length_grasp +self.width_grasp*np.tan((np.pi/2 - theta)/2)
+
+            x_.append(self.length_grasp*np.cos(theta) + self.xcenter_grasp)
+            y_.append(self.length_grasp*np.sin(theta) + self.lengtho_grasp/2 + self.ycenter_grasp)
+
+            x_.append(0 + self.xcenter_grasp)
+            y_.append(self.lengtho_grasp/2 + self.ycenter_grasp)
+
+            x_.append(0 + self.xcenter_grasp)
+            y_.append(-self.lengtho_grasp/2 + self.ycenter_grasp)
+
+            x_.append(self.length_grasp*np.cos(-theta) + self.xcenter_grasp)
+            y_.append(self.length_grasp*np.sin(-theta) - self.lengtho_grasp/2 + self.ycenter_grasp)
+
+
+            x_.append(self.length2_grasp*np.cos(-theta) + self.xcenter_grasp - self.width_grasp)
+            y_.append(self.length2_grasp*np.sin(-theta) - self.lengtho2_grasp/2 + self.ycenter_grasp)
+        
+            x_.append(0 + self.xcenter_grasp - self.width_grasp)
+            y_.append(-self.lengtho2_grasp/2 + self.ycenter_grasp)
+   
+            x_.append(0 + self.xcenter_grasp - self.width_grasp)
+            y_.append(self.lengtho2_grasp/2 + self.ycenter_grasp)
+   
+            x_.append(self.length2_grasp*np.cos(theta) - self.width_grasp + self.xcenter_grasp)
+            y_.append(self.length2_grasp*np.sin(theta) + self.lengtho2_grasp/2 + self.ycenter_grasp)
+        
+            x_.append(self.length_grasp*np.cos(theta) + self.xcenter_grasp)
+            y_.append(self.length_grasp*np.sin(theta) + self.lengtho_grasp/2 + self.ycenter_grasp)
+        
+  
+            fig, axs = plt.subplots(nrows=1, ncols=1,figsize=(fsx,fsy),dpi=300)
+            
+            if self.TRIG1_[i]==0:
+                axs.plot(x_,y_,color='m',linestyle='dashed',linewidth=0.5,zorder=-5)
+            else:    
+                patch = plt.Circle((self.xc2,self.yc2),.1, fc='m')
+                axs.add_patch(patch)
+            
+            xcenter=self.ballx_position[i]
+            ycenter=self.ballz_position[i]
+            
+            x0b=self.ballx_position[2]
+            y0b=self.ballz_position[2]
+
+            axs.set_xlim([wxmin,wxmax])
+            axs.set_ylim([wymin,wymax])
+            #### Square
+            if self.geom=="square":
+                const=self.ball_radius*2
+                rx=const
+                ry=const
+                w=rx/2
+                h=ry/2                    
+                x=[w+xcenter,-w+xcenter,-w+xcenter,w+xcenter,w+xcenter]
+                y=[h+ycenter,h+ycenter,-h+ycenter,-h+ycenter,h+ycenter]
+                (self.segments)=self.create_segment(x,y) 
+            
+      
+  
+            
+            #ax.plot(x,y)
+            for j in range(0,self.nb):
+                x0,y0=self.bot_position_x[j,i],self.bot_position_z[j,i]
+                patch = plt.Circle((x0, y0),self.bot_width/2, fc='k')
+                axs.add_patch(patch) 
+
+            if membrane==True:
+                for j in range(0,self.nm):
+                    x0,y0=self.membrane_position_x[j,i],self.membrane_position_z[j,i]  
+                    patch = plt.Circle((x0, y0),self.skin_width/2, fc='tab:red')
+                    axs.add_patch(patch)
+
+            for j in range(self.ni):
+                x0,y0=self.particle_position_x[j,i],self.particle_position_z[j,i]
+
+                if np.round(self.Rm[j],4)==0.0508:
+                    c='tab:blue'
+                else:
+                    c='tab:green'
+                patch = plt.Circle((x0, y0),self.Rm[j], fc=c)
+                axs.add_patch(patch)         
+     
+            if self.control_mode=="grasping" or self.control_mode=="grasping_explore" or self.control_mode=="grasping_u":
+
+                if self.geom=="circle":
+                    x0,y0=self.ballx_position[i]+self.ballx,self.ballz_position[i]+self.ballz
+                    patch = plt.Circle((x0, y0),self.ball_radius,fc='none',edgecolor='black',linewidth=1)
+                    axs.add_patch(patch)
+            
+                if self.geom=="square":
+                    const_=self.ball_radius*2
+                    x0,y0=self.ballx_position[i] - const_/2,self.ballz_position[i] - const_/2
+                    ts = axs.transData
+ 
+                    tr = matplotlib.transforms.Affine2D().rotate_deg_around(self.ballx_position[i],self.ballz_position[i], -self.pitch[i])
+                    t = tr + ts
+                    patch = matplotlib.patches.Rectangle((x0, y0),const_, const_,fc='none',edgecolor='black',linewidth=1,transform=t)     
+                    axs.add_patch(patch) 
+                    
+            axs.set_yticks(yticks)
+            axs.set_xticks(xticks)
+            axs.set_ylabel("$y$ (m)",labelpad=-1)
+            axs.set_xlabel("$x$(m)",labelpad=-1)
+            axs.xaxis.set_tick_params(width=.25,length=2)
+            axs.yaxis.set_tick_params(width=.25,length=2)
+            plt.axis('off')
+            axs.set_title('T= ' + str(np.floor(self.time[i]))+" s",fontsize=8)
+            print(str(count)+ "of"+ str(len(entry)))
+            count=count+1
+            plt.gca().set_aspect('equal', adjustable='box')
+            plt.savefig(Directory+'/'+name+'_'+'time'+str(np.round(self.time[i],2))+name+'.jpg')
+            plt.savefig(Directory+'/'+name+'_'+'time'+str(np.round(self.time[i],2))+name+'.svg') 
+            #plt.savefig(self.mainDirectory+self.name+"/snap_shot_"+str(self.time[i])+".svg")
+            #plt.savefig(self.mainDirectory+self.name+"/snap_shot_"+str(self.time[i])+".png")
             plt.close('all')
      def create_frames_pull_potfield(self,membrane,wxmin,wxmax,wymin,wymax):
         ''' Create frames to show the robot and the pull force and epsilon metric in one plot'''
@@ -9949,7 +15258,203 @@ class import_data:
             plt.close('all')          
         self.create_video('_frames_combined6','_frames_combined6')    
 
+     def create_frames_pull_epsilon5(self,membrane,d):
+        ''' Create frames to show the robot and the pull force
+            and epsilon metric in one plot'''
+        fm._rebuild()
+        plt.rcParams['font.family'] = 'Times New Roman'
+        plt.rcParams['mathtext.fontset'] = 'dejavuserif'
+        plt.rcParams['font.size'] = 8
+        plt.rcParams['axes.linewidth'] = .1
+        
+        direct = os.path.join(self.mainDirectory+self.name,'_frames_combined5')    
+        if not os.path.isdir(direct):
+            os.makedirs(direct)
+        count=0
+        Num_contact1=[]
+        Num_contact2=[]
+        for i in range(len(self.temp_id2)):
+            Num_contact1.append(len(self.temp_id2[i]))
+            
+        for i in range(len(self.time)-2):    
+  
+            #fig, axs = plt.subplots(nrows=2, ncols=2,figsize=(6.5,6.5),dpi=300)
+            plt.figure(figsize=(10, 6.5),dpi=300)
+            ax1 = plt.subplot(2,3,1)
+            ax2 = plt.subplot(2,3,2)
+            ax3 = plt.subplot(2,3,3)
+            ax4 = plt.subplot(2,1,2)
+            axes = [ax1, ax2, ax3, ax4]
+            #### PULL FORCE
+            ax3.plot(self.FB[:i],self.PX[:i],color='tab:green',linewidth=1.5)
+            ax3.scatter(self.FB[i-1],self.PX[i-1],color='tab:red',s=30)
+            #ax3.set_ylim([-0.25,1])
+            ax3.set_title('FB='+str(np.round(self.FB[i-1],2))+" Px= "+str(np.round(self.PX[i-1]-self.PX[54],2))  )
+            ax3.set_xlabel('Pull Force [N]',labelpad=-1)  
+            ax3.set_ylabel('Ball Position [m]',labelpad=1) 
+            ax3.grid(True) 
+            
+            
+            
+            #### EPSILON
+            epsilon=np.asarray(self.EPSILON_)
+            ax4.plot(self.time[:i],epsilon[:i],color='tab:blue',linewidth=1.5)
+            ax4.scatter(self.time[i-1],epsilon[i-1],color='tab:red',s=30)
+            ax4.set_title(r'$\epsilon_{1}$='+str(np.round(epsilon[i-1],2)))
+            ax4.set_ylabel('$\epsilon_{1}$',labelpad=1)
+            ax4.set_xlabel('time [s]',labelpad=-2)
+            ax4.xaxis.set_tick_params(width=.25,length=2,pad=1)
+            ax4.yaxis.set_tick_params(width=.25,length=2,pad=1)
+            ax4.grid(True) 
 
+            #### Qcm
+            #epsilon=np.asarray(self.EPSILON_)
+            # ax2.plot(self.time[:i],self.Qcm[:i],color='tab:red',linewidth=1.5)
+            # ax2.scatter(self.time[i-1],self.Qcm[i-1],color='k',s=30)
+            # ax2.set_title('Qcm= '+str(np.round(self.Qcm[i-1],2)))
+            # ax2.set_ylabel('Qcm',labelpad=1)
+            # ax2.set_xlabel('time [s]',labelpad=-2)
+            # ax2.xaxis.set_tick_params(width=.25,length=2,pad=1)
+            # ax2.yaxis.set_tick_params(width=.25,length=2,pad=1)
+            # ax2.grid(True) 
+
+            #### ROBOT 
+            xcenter=self.ballx_position[i]
+            ycenter=self.ballz_position[i]
+            
+            x0b=self.ballx_position[2]
+            y0b=self.ballz_position[2]
+            wxmax=x0b+d
+            wxmin=x0b-d
+            wymax=y0b+d
+            wymin=y0b-d
+            
+     
+            ax1.set_xlim([wxmin,wxmax])
+            ax1.set_ylim([wymin,wymax])
+            if self.geom=="square":
+                const=self.ball_radius*2
+                rx=const
+                ry=const
+                w=rx/2
+                h=ry/2                    
+                x=[w+xcenter,-w+xcenter,-w+xcenter,w+xcenter,w+xcenter]
+                y=[h+ycenter,h+ycenter,-h+ycenter,-h+ycenter,h+ycenter]
+                (self.segments)=self.create_segment(x,y) 
+                
+            if self.geom=="triangle":
+                #const=self.ball_radius*2*np.pi/3
+                #r=np.sqrt((const**2)/(2-2*np.cos(7*np.pi/6)))
+                
+                const=self.ball_radius*2*np.pi/3
+                #r=np.sqrt((const**2)/(2-2*np.cos(7*np.pi/6)))
+                r=const*np.sqrt(3)/3
+                x1=-r
+                y1=0
+               
+                x2=-r*np.cos(2*np.pi/3)
+                y2=r*np.sin(2*np.pi/3)
+               
+                x3=-r*np.cos(4*np.pi/3)
+                y3=r*np.sin(4*np.pi/3)
+               
+                x__ = [x1,x2,x3,x1]
+                y__ = [y1,y2,y3,y1]
+               
+                (self.segments)=self.create_segment(x__,y__)   
+            
+            #ax.plot(x,y)
+            for j in range(0,self.nb):
+                x0,y0=self.bot_position_x[j,i],self.bot_position_z[j,i]
+                if self.geom=="square":
+                    if self.PHI(x0,y0,self.segments)<.15:
+                        patch = plt.Circle((x0, y0),self.bot_width/2, fc='tab:red')
+                        ax1.add_patch(patch)
+                   
+                    else:
+                        patch = plt.Circle((x0, y0),self.bot_width/2, fc='k')
+                        ax1.add_patch(patch) 
+                        
+                if self.geom=="triangle":
+                    if self.PHI(x0-xcenter,y0-ycenter,self.segments)<.1:
+                        patch = plt.Circle((x0, y0),self.bot_width/2, fc='tab:red')
+                        ax1.add_patch(patch)
+                   
+                    else:
+                        patch = plt.Circle((x0, y0),self.bot_width/2, fc='k')
+                        ax1.add_patch(patch)                         
+                        
+                if self.geom=="circle":
+                    
+                    q=np.sqrt((x0-self.ballx_position[i])**2 + (y0-self.ballz_position[i])**2)
+                    #if q<=(2 * self.bot_width/2 + self.ball_radius):
+                        #patch = plt.Circle((x0, y0),self.bot_width/2, fc='tab:red')
+                        #ax1.add_patch(patch)
+                   
+                    #else:
+                    patch = plt.Circle((x0, y0),self.bot_width/2, fc='k')
+                    ax1.add_patch(patch)  
+                        
+                        
+                
+            if membrane==True:
+                for j in range(0,self.nm):
+                    
+                    x0,y0=self.membrane_position_x[j,i],self.membrane_position_z[j,i]  
+                    patch = plt.Circle((x0, y0),self.skin_width/2, fc='tab:red')
+                    ax1.add_patch(patch)
+                
+                
+
+            for j in range(self.ni):
+                x0,y0=self.particle_position_x[j,i],self.particle_position_z[j,i]
+
+                if np.round(self.Rm[j],4)==0.0508:
+                    c='tab:blue'
+                else:
+                    c='tab:green'
+                patch = plt.Circle((x0, y0),self.Rm[j], fc=c)
+                ax1.add_patch(patch)         
+     
+            if self.control_mode=="grasping" or self.control_mode=="grasping_epsilon":
+                patch = plt.Circle((self.xc2, self.yc2),self.a2,fc='none',edgecolor='tab:blue',linewidth=1,zorder=2)
+                ax1.add_patch(patch)
+                if self.geom=="circle":
+                    x0,y0=self.ballx_position[i],self.ballz_position[i]
+                    patch = plt.Circle((x0, y0),self.ball_radius,fc='none',edgecolor='black',linewidth=1)
+                    ax1.add_patch(patch)
+            
+                if self.geom=="square":
+                    const_=self.ball_radius*2
+                    x0,y0=self.ballx_position[i] - const_/2,self.ballz_position[i] - const_/2
+                    patch = matplotlib.patches.Rectangle((x0, y0),const_, const_,fc='none',edgecolor='black',linewidth=1)     
+                    ax1.add_patch(patch)   
+                    
+                if self.geom=="triangle":
+                    x0,y0=self.ballx_position[i],self.ballz_position[i] 
+                    const=self.ball_radius*2*np.pi/3
+                    #r=np.sqrt((const**2)/(2-2*np.cos(7*np.pi/6)))
+                    r=const*np.sqrt(3)/3
+                    #print(r)
+                    patch = matplotlib.patches.RegularPolygon((x0,y0),int(3),r,orientation=np.pi/2,fc='none',edgecolor='black',linewidth=1)
+                    ax1.add_patch(patch) 
+                    xp=np.hstack([self.segments[:,0],self.segments[0,0]])
+                    yp=np.hstack([self.segments[:,1],self.segments[0,1]])
+                    ax1.plot(xp+x0,yp+y0,color='tab:red',linestyle='dashed',linewidth=2,zorder=0)
+            
+            ax1.scatter(self.centroidx[i],self.centroidz[i],marker='o',color='tab:orange')
+            ax1.set_title('Time= ' + str(np.round(self.time[i],1)),fontsize=12)
+    
+            print(str(i)+ "of"+ str(len(self.time-1)))
+            #plt.gca().set_aspect('equal', adjustable='box')
+            #fig.delaxes(axs[1,1])
+            plt.savefig(direct+"/frame%04d.jpg" % count)
+                 
+            count=count+1 
+            
+            plt.close('all')          
+        self.create_video('_frames_combined5','_frames_combined5')   
+        
         
      def create_frames_pull_epsilon4(self,membrane,d):
         ''' Create frames to show the robot and the pull force
@@ -10913,7 +16418,279 @@ class import_data:
             plt.close('all')          
         self.create_video('_frames_combined','_frames_combined')        
         
+     def create_frames_pull_epsilon0(self,membrane,wxmin,wxmax,wymin,wymax):
+        ''' Create frames to show the robot and the pull force and epsilon metric in one plot'''
+        fm._rebuild()
+        plt.rcParams['font.family'] = 'Times New Roman'
+        plt.rcParams['mathtext.fontset'] = 'dejavuserif'
+        plt.rcParams['font.size'] = 8
+        plt.rcParams['axes.linewidth'] = .1
+        
+        direct = os.path.join(self.mainDirectory+self.name,'_frames_combined0')    
+        if not os.path.isdir(direct):
+            os.makedirs(direct)
+        count=0
+        #Num_contact1=[]
+       # Num_contact2=[]
+        #for i in range(len(self.temp_id2)):
+        #    Num_contact1.append(len(self.temp_id2[i]))
+            
+        for i in range(len(self.time)-2):    
+  
+            fig, axs = plt.subplots(nrows=1, ncols=1,figsize=(3,3),dpi=300)
+            # epsilon 1
+            
+            #epsilon=np.asarray(self.EPSILON)
+            xcenter=self.ballx_position[i]
+            ycenter=self.ballz_position[i]
+            
+            x0b=self.ballx_position[2]
+            y0b=self.ballz_position[2]
+            #wxmax=x0b+d
+            #wxmin=x0b-d
+            #wymax=y0b+d
+            #wymin=y0b-d
+            
      
+            axs.set_xlim([wxmin,wxmax])
+            axs.set_ylim([wymin,wymax])
+            #### Square
+            if self.geom=="square":
+                const=self.ball_radius*2
+                rx=const
+                ry=const
+                w=rx/2
+                h=ry/2                    
+                x=[w+xcenter,-w+xcenter,-w+xcenter,w+xcenter,w+xcenter]
+                y=[h+ycenter,h+ycenter,-h+ycenter,-h+ycenter,h+ycenter]
+                (self.segments)=self.create_segment(x,y) 
+            
+            #### Triangle
+            if self.geom=="triangle":
+                #const=self.ball_radius*2*np.pi/3
+                #r=np.sqrt((const**2)/(2-2*np.cos(7*np.pi/6)))
+                
+                const=self.ball_radius*2*np.pi/3
+                #r=np.sqrt((const**2)/(2-2*np.cos(7*np.pi/6)))
+                r=const*np.sqrt(3)/3
+                x1=-r
+                y1=0
+               
+                x2=-r*np.cos(2*np.pi/3)
+                y2=r*np.sin(2*np.pi/3)
+               
+                x3=-r*np.cos(4*np.pi/3)
+                y3=r*np.sin(4*np.pi/3)
+               
+                x__ = [x1,x2,x3,x1]
+                y__ = [y1,y2,y3,y1]
+               
+                (self.segments)=self.create_segment(x__,y__)   
+            #### c shape
+            if self.geom=="c_shape":
+                #x0b,y0b=self.ballx_position[i],self.ballz_position[i]
+                w=self.w/2
+                l=self.l/2
+                t=self.t
+                x__=[w,-w,-w,w,w,-w+t,-w+t,w,w]
+                y__=[-l,-l,l,l,l-t,l-t,-l+t,-l+t,-l]
+                (self.segments)=self.create_segment(x__,y__)
+                #x0b=x0b+np.sign(-w/2+(t/2))*(-w/2+(t/2))
+                
+                #z0b=z0b+np.sign(z0b)*(z0b)
+                
+            if self.geom=="import":
+                
+                R=1.25
+                nsides=50
+                theta=np.linspace(3*np.pi/2 + .415,(2*np.pi + 3*np.pi/2) - .415,nsides,endpoint=True)
+                x__=[]
+                y__=[]
+                for iii in range(len(theta)):
+                    x__.append(R*np.cos(theta[iii]))
+                    y__.append(R*np.sin(theta[iii]))
+                    
+                
+                box1_width=1.007974825964066
+                box1_length=box1_width/2
+                box2_width=1.5
+                Rr=np.sqrt(R**2 - (box1_width/2)**2)
+                  
+                box1_x=-(Rr + box1_length/2)
+                #box1_z=0 
+                
+                box2_width=1.5
+                box2_length=.25
+                
+                #box2_x=box1_x - box1_length/2 - box2_length/2
+                #box2_z=0 
+                
+                x__.append(-box1_width/2)
+                y__.append(box1_x - box1_length/2)
+                
+                x__.append(-box2_width/2)
+                y__.append(box1_x - box1_length/2)
+                
+                
+                x__.append(-box2_width/2)
+                y__.append(box1_x - box1_length/2 - box2_length)
+                
+                
+                x__.append(box2_width/2)
+                y__.append(box1_x - box1_length/2 - box2_length)
+                
+                
+                x__.append(box2_width/2)
+                y__.append(box1_x - box1_length/2)
+                
+                x__.append(box1_width/2)
+                y__.append(box1_x - box1_length/2)
+                
+                x__.append(R*np.cos(theta[0]))
+                y__.append(R*np.sin(theta[0]))
+                #x__=np.dot(-1,x__)
+                (self.segments)=self.create_segment(y__,x__)
+            #ax.plot(x,y)
+            for j in range(0,self.nb):
+                x0,y0=self.bot_position_x[j,i],self.bot_position_z[j,i]
+                if self.geom=="square":
+                    #if self.PHI(x0-xcenter,y0-ycenter,self.segments)<.1:
+                        #patch = plt.Circle((x0, y0),self.bot_width/2, fc='tab:red')
+                        #axs[0].add_patch(patch)
+                   
+                    #else:
+                    patch = plt.Circle((x0, y0),self.bot_width/2, fc='k')
+                    axs.add_patch(patch) 
+                        
+                if self.geom=="triangle":
+                    if self.PHI(x0-xcenter,y0-ycenter,self.segments)<.1:
+                        patch = plt.Circle((x0, y0),self.bot_width/2, fc='tab:red')
+                        axs.add_patch(patch)
+                   
+                    else:
+                        patch = plt.Circle((x0, y0),self.bot_width/2, fc='k')
+                        axs.add_patch(patch)                         
+                
+                        
+                
+                if self.geom=="c_shape":
+                    difx=self.ballx_position[0]-self.ballx_
+                   
+                    dify=self.ballz_position[0]-self.ballz_
+                    
+                    if self.PHI(x0+(x0b-difx),y0+(x0b-difx),self.segments)<.1:
+                        patch = plt.Circle((x0, y0),self.bot_width/2, fc='tab:red')
+                        axs.add_patch(patch)
+                   
+                    else:
+                        patch = plt.Circle((x0, y0),self.bot_width/2, fc='k')
+                        axs.add_patch(patch)    
+                        
+                if self.geom=="circle":
+                    
+                    q=np.sqrt((x0-self.ballx_position[i])**2 + (y0-self.ballz_position[i])**2)
+                    #if q<=(2 * self.bot_width/2 + self.ball_radius):
+                        #patch = plt.Circle((x0, y0),self.bot_width/2, fc='tab:red')
+                        #axs[0].add_patch(patch)
+                   
+                    #else:
+                    patch = plt.Circle((x0, y0),self.bot_width/2, fc='k')
+                    axs.add_patch(patch)  
+                        
+                if self.geom=="import":
+                    #if self.PHI(x0-xcenter,y0-ycenter,self.segments)<.5:
+                        #patch = plt.Circle((x0, y0),self.bot_width/2, fc='tab:red')
+                        #axs[0].add_patch(patch)
+                   
+                    #else:
+                    patch = plt.Circle((x0, y0),self.bot_width/2, fc='k')
+                    axs.add_patch(patch)          
+                
+            if membrane==True:
+                for j in range(0,self.nm):
+                    
+                    x0,y0=self.membrane_position_x[j,i],self.membrane_position_z[j,i]  
+                    patch = plt.Circle((x0, y0),self.skin_width/2, fc='tab:red')
+                    axs.add_patch(patch)
+                
+                
+
+            for j in range(self.ni):
+                x0,y0=self.particle_position_x[j,i],self.particle_position_z[j,i]
+
+                if np.round(self.Rm[j],4)==0.0508:
+                    c='tab:blue'
+                else:
+                    c='tab:green'
+                patch = plt.Circle((x0, y0),self.Rm[j], fc=c)
+                axs.add_patch(patch)         
+     
+            if self.control_mode=="grasping" or self.control_mode=="grasping_explore":
+                if self.control_mode=="grasping_explore":
+                    x_=self.Rr_[i]*np.cos(self.THETA[i]) + self.ballx
+                    y_=self.Rr_[i]*np.sin(self.THETA[i]) + self.ballz
+          
+                    #patch = plt.Circle((x_,y_),.1,fc='m',edgecolor='m',linewidth=1,zorder=2)
+                    #axs[0].add_patch(patch)
+                
+                    #patch = plt.Circle((self.centroidx[i],self.centroidz[i]),.1,fc='tab:orange',edgecolor='tab:orange',linewidth=1,zorder=2)
+                    #axs[0].add_patch(patch)
+                if self.geom=="circle":
+                    x0,y0=self.ballx_position[i]+self.ballx,self.ballz_position[i]+self.ballz
+                    patch = plt.Circle((x0, y0),self.ball_radius,fc='none',edgecolor='black',linewidth=1)
+                    axs.add_patch(patch)
+            
+                if self.geom=="square":
+                    const_=self.ball_radius*2
+                    x0,y0=self.ballx_position[i] - const_/2,self.ballz_position[i] - const_/2
+                    patch = matplotlib.patches.Rectangle((x0, y0),const_, const_,fc='none',edgecolor='black',linewidth=1)     
+                    axs.add_patch(patch)   
+                    
+                if self.geom=="triangle":
+                    x0,y0=self.ballx_position[i],self.ballz_position[i] 
+                    const=self.ball_radius*2*np.pi/3
+                    #r=np.sqrt((const**2)/(2-2*np.cos(7*np.pi/6)))
+                    r=const*np.sqrt(3)/3
+                    #print(r)
+                    patch = matplotlib.patches.RegularPolygon((x0,y0),int(3),r,orientation=np.pi/2,fc='none',edgecolor='black',linewidth=1)
+                    axs.add_patch(patch) 
+                    #xp=np.hstack([self.segments[:,0],self.segments[0,0]])
+                    #yp=np.hstack([self.segments[:,1],self.segments[0,1]])
+                    #axs[0].plot(xp+x0,yp+y0,color='tab:red',linestyle='dashed',linewidth=2,zorder=0)
+            
+            
+                if self.geom=="c_shape":
+                   x0b,y0b=self.ballx_position[i],self.ballz_position[i] 
+                   difx=self.ballx_position[0]-self.ballx_
+                   
+                   dify=self.ballz_position[0]-self.ballz_
+                   
+                   x__=x__+np.ones(len(x__))*(x0b-difx)
+                   y__=y__+np.ones(len(x__))*(y0b-dify)
+                   axs.plot(x__,y__)
+                   
+                if self.geom=="import":  
+                   x0b,y0b=self.ballx_position[i],self.ballz_position[i] 
+                   difx=self.ballx_position[0]-self.ballx_
+                   
+                   dify=self.ballz_position[0]-self.ballz_
+                   
+                   x__=x__+np.ones(len(x__))*(y0b-dify)
+                   y__=y__+np.ones(len(x__))*(x0b-difx)
+                   axs.plot(y__,x__,color="k")
+                    
+            axs.set_title('Time= ' + str(np.round(self.time[i],0)),fontsize=12)
+
+            print(str(i)+ "of"+ str(len(self.time-1)))
+            #plt.gca().set_aspect('equal', adjustable='box')
+            #fig.delaxes(axs[1,1])
+            plt.savefig(direct+"/frame%04d.jpg" % count)
+                 
+            count=count+1 
+            
+            plt.close('all')          
+        self.create_video('_frames_combined0','_frames_combined0')            
+
         
         
      def create_video(self,framename,videoname):
@@ -10937,7 +16714,7 @@ class import_data:
          for i in removing_files:
              os.remove(i)
         
-     ####R-function functions
+
 
      def normalize(self,F):
         (fy,fx)=np.gradient(F)
@@ -11699,8 +17476,9 @@ class import_data:
         sum1=sum1 + vertices[0,i]*(vertices[1,0]-vertices[1,i-1])
 
         A=.5*abs(sum1)
-        return (A)     
+        return (A)   
     
+ 
     
 class select_import_data:
      def __init__(self,name,path,wxmin,wxmax,wymin,wymax,Psi=None):  
